@@ -1,13 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = "https://jbtygeofamxmgthhvkwv.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpidHlnZW9mYW14bWd0aGh2a3d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxMTcsImV4cCI6MjA5Mjg0MzExN30.rW_OjaO21qMAYc0YJFssT4UgXdmTUBarbfQiiIRVZCI";
 
-console.log("SUPABASE_URL =", process.env.SUPABASE_URL);
-console.log("SUPABASE_KEY =", process.env.SUPABASE_ANON_KEY);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("ENV Supabase belum kebaca!");
-}
+export default supabase;

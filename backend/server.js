@@ -1,11 +1,34 @@
-import dotenv from "dotenv";
-dotenv.config();
+import express from "express";
+import cors from "cors";
+import supabase from "./src/config/supabase.js";
 
-import app from "./src/app.js";
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+app.get("/", (req, res) => {
+  res.send("Backend nyambung ke Supabase 🚀");
+});
 
-app.listen(PORT, () => {
-  console.log(`Server jalan di port ${PORT}`);
-  console.log("SUPABASE_URL:", process.env.SUPABASE_URL);
+// 🔥 TEST KONEKSI
+app.get("/test-db", async (req, res) => {
+  const { data, error } = await supabase
+    .from("buku")
+    .select("*");
+
+  if (error) {
+    return res.json({
+      status: "error",
+      message: error.message
+    });
+  }
+
+  res.json({
+    status: "success",
+    data: data
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Server jalan di http://localhost:3000");
 });
