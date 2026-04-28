@@ -7,9 +7,16 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.104.1",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.105.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
-  }
+    "express": "^5.2.1",
+    "midtrans-client": "^1.4.3",
+    "pdfkit": "^0.18.0"
+  },
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

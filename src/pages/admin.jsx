@@ -9,6 +9,18 @@ const tabs = [
   { key: "ajukan", label: "Ajukan Peminjaman" },
   { key: "perpanjangan", label: "Perpanjangan" },
   { key: "print", label: "Print Data" },
+  {
+  key: "action",
+  label: "Aksi",
+  render: (row) => (
+    <button
+      onClick={() => markAsReturned(row.id)}
+      className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
+    >
+      Done
+    </button>
+  ),
+}
 ];
 
 const emptyForm = {
@@ -89,30 +101,6 @@ export default function AdminPerpustakaan() {
     }
   };
 
-  const rejectLoanRequest = async (id) => {
-  try {
-    await fetchJson(`${API_BASE}/admin/loan-requests/${id}/reject`, {
-      method: "POST",
-    });
-    await loadData();
-  } catch (err) {
-    console.error(err);
-    alert("Gagal menolak pengajuan.");
-  }
-};
-
-const rejectExtension = async (id) => {
-  try {
-    await fetchJson(`${API_BASE}/admin/extension-requests/${id}/reject`, {
-      method: "POST",
-    });
-    await loadData();
-  } catch (err) {
-    console.error(err);
-    alert("Gagal menolak perpanjangan.");
-  }
-};
-
   useEffect(() => {
     loadData();
   }, []);
@@ -150,6 +138,40 @@ const rejectExtension = async (id) => {
     return [];
   }, [activeTab, data, query]);
 
+  const submitLoanRequest = async (e) => {
+    e.preventDefault();
+    try {
+      await fetchJson(`${API_BASE}/admin/loan-requests`, {
+        method: "POST",
+        body: JSON.stringify(loanForm),
+      });
+      alert("Pengajuan peminjaman berhasil dibuat.");
+      setLoanForm(emptyForm);
+      await loadData();
+      setActiveTab("pinjaman");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengajukan peminjaman.");
+    }
+  };
+
+  const submitExtensionRequest = async (e) => {
+    e.preventDefault();
+    try {
+      await fetchJson(`${API_BASE}/admin/extension-requests`, {
+        method: "POST",
+        body: JSON.stringify(extensionForm),
+      });
+      alert("Pengajuan perpanjangan berhasil dibuat.");
+      setExtensionForm(emptyExtensionForm);
+      await loadData();
+      setActiveTab("perpanjangan");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengajukan perpanjangan.");
+    }
+  };
+
   const approveLoanRequest = async (id) => {
     try {
       await fetchJson(`${API_BASE}/admin/loan-requests/${id}/approve`, {
@@ -176,12 +198,48 @@ const rejectExtension = async (id) => {
     }
   };
 
- const [selectedMonth, setSelectedMonth] = useState("1");
-
-const handlePrint = () => {
-  window.location.href =
-    `${API_BASE}/admin/report/monthly/pdf?month=${selectedMonth}&year=2026`;
+  const rejectLoanRequest = async (id) => {
+  try {
+    await fetchJson(`${API_BASE}/admin/loan-requests/${id}/reject`, {
+      method: "POST",
+    });
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menolak pengajuan.");
+  }
 };
+
+const rejectExtension = async (id) => {
+  try {
+    await fetchJson(`${API_BASE}/admin/extension-requests/${id}/reject`, {
+      method: "POST",
+    });
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menolak perpanjangan.");
+  }
+};
+
+const markAsReturned = async (id) => {
+  try {
+    await fetchJson(`${API_BASE}/admin/loans/${id}/return`, {
+      method: "POST",
+    });
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal update status pengembalian.");
+  }
+};
+
+  const handlePrint = () => {
+    const month = new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
+
+    window.location.href = `${API_BASE}/admin/report/monthly/pdf?month=${month}&year=${year}`;
+  };
 
   const StatCard = ({ title, value, subtitle }) => (
     <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -256,7 +314,7 @@ const handlePrint = () => {
                           </button>
                         </div>
                       )}
-        
+                      
                     </td>
                   )}
                 </tr>
@@ -280,18 +338,6 @@ const handlePrint = () => {
         label: "Status",
         render: (row) => <span className={`rounded-full border px-3 py-1 text-xs font-medium ${badgeClass(row.status)}`}>{row.status}</span>,
       },
-      {
-  key: "action",
-  label: "Aksi",
-  render: (row) => (
-    <button
-      onClick={() => markAsReturned(row.id)}
-      className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
-    >
-      Done
-    </button>
-  ),
-}
     ],
     anggota: [
       { key: "id", label: "ID" },
@@ -380,7 +426,6 @@ const handlePrint = () => {
           <div className="rounded-2xl border border-blue-100 bg-white p-10 text-center text-slate-500">Memuat data...</div>
         ) : (
           <>
-
             <div className="print:mt-0">
               <h2 className="mb-4 text-lg font-semibold text-blue-900">{tabs.find((t) => t.key === activeTab)?.label}</h2>
               <Table columns={columnsByTab[activeTab]} rows={rowsByTab[activeTab] ?? []} emptyText="Tidak ada data." actions={activeTab === "ajukan" || activeTab === "perpanjangan"} />
