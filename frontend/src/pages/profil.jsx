@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import {
   FiHome,
@@ -10,18 +11,36 @@ import {
 } from "react-icons/fi";
 
 export default function Profil() {
+  const location = useLocation();
+  const message = location.state?.message;
   const navigate = useNavigate();
 
   const [profileImage, setProfileImage] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
 
   const [user, setUser] = useState({
-    name: "REVANDA AVRILLITA RIZKY",
-    username: "112045240200829693377",
-    email: "rizkyavrillita@gmail.com",
+    id: "", // 👉 penting untuk update database
+    name: "",
+    email: "",
+    nik: "",
     birth: "",
     gender: "",
   });
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (storedUser) {
+      setUser({
+        id: storedUser.id || "", // 👉 penting
+        name: storedUser.name || "",
+        email: storedUser.email || "",
+        nik: storedUser.nik || "",
+        birth: storedUser.birth || "",
+        gender: storedUser.gender || "",
+      });
+    }
+  }, []);
 
   // upload foto
   const handleImageChange = (e) => {
@@ -31,29 +50,64 @@ export default function Profil() {
     }
   };
 
+  // 👉 FIX: function dipindah ke sini (bukan di dalam button)
+  const handleSave = async () => {
+    try {
+      if (!user.nik || user.nik.length !== 16) {
+        alert("NIK harus 16 digit");
+        return;
+      }
+
+      const res = await fetch("http://localhost:3000/api/update-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+      });
+
+      const data = await res.json();
+
+      if (data.status) {
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("Profil berhasil disimpan");
+        setIsEdit(false);
+
+        // optional redirect
+        // navigate("/halamanutama");
+
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Gagal update profil");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 pb-28 scroll-smooth">
 
       {/* HEADER */}
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
-  <div className="flex gap-6">
-    {[
-      { name: "Beranda", path: "/halamanutama" },
-      { name: "Koleksi", path: "/koleksi" },
-      { name: "Belanja", path: "/belanja" },
-      { name: "Riwayat", path: "/riwayat" },
-    ].map((item, i) => (
-      <Link
-        key={i}
-        to={item.path}
-        className="px-3 py-1 rounded-md transition-all duration-200 
-        hover:text-blue-200 hover:bg-white/10"
-      >
-        {item.name}
-      </Link>
-    ))}
-  </div>
-</div>
+        <div className="flex gap-6">
+          {[
+            { name: "Beranda", path: "/halamanutama" },
+            { name: "Koleksi", path: "/koleksi" },
+            { name: "Belanja", path: "/belanja" },
+            { name: "Riwayat", path: "/riwayat" },
+          ].map((item, i) => (
+            <Link
+              key={i}
+              to={item.path}
+              className="px-3 py-1 rounded-md transition-all duration-200 
+              hover:text-blue-200 hover:bg-white/10"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* BANNER */}
       <div className="relative h-56 bg-blue-500">
@@ -66,6 +120,11 @@ export default function Profil() {
 
       {/* PROFILE */}
       <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10">
+        {message && (
+  <div className="mb-6 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm text-center">
+    {message}
+  </div>
+)}
 
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-end">
 
@@ -76,11 +135,12 @@ export default function Profil() {
                 {profileImage ? (
                   <img src={profileImage} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-white">R</span>
+                  <span className="text-3xl font-bold text-white">
+                    {user.name ? user.name.charAt(0) : "U"}
+                  </span>
                 )}
               </div>
 
-              {/* ICON CAMERA */}
               <div className="absolute bottom-2 right-2 bg-blue-600 p-2 rounded-full text-white">
                 <FiCamera size={16} />
               </div>
@@ -96,10 +156,10 @@ export default function Profil() {
           {/* INFO */}
           <div className="text-center md:text-left">
             <h2 className="text-xl font-bold text-gray-800">
-              {user.name}
+              {user.name || "-"}
             </h2>
             <p className="text-gray-500 text-sm">
-              {user.email}
+              {user.email || "-"}
             </p>
           </div>
 
@@ -116,7 +176,13 @@ export default function Profil() {
                 Biodata Diri
               </h3>
               <button
-                onClick={() => setIsEdit(!isEdit)}
+                onClick={() => {
+                  if (isEdit) {
+                    handleSave();
+                  } else {
+                    setIsEdit(true);
+                  }
+                }}
                 className="text-blue-600 text-sm"
               >
                 {isEdit ? "Simpan" : "Edit"}
@@ -136,18 +202,29 @@ export default function Profil() {
                     className="border rounded px-3 py-1 w-full"
                   />
                 ) : (
-                  <p>{user.name}</p>
+                  <p>{user.name || "-"}</p>
                 )}
               </div>
 
               <div>
-                <p className="text-gray-500">Username</p>
-                <p>{user.username}</p>
+                <p className="text-gray-500">Email</p>
+                <p>{user.email || "-"}</p>
               </div>
 
+              {/* NIK */}
               <div>
-                <p className="text-gray-500">Email</p>
-                <p>{user.email}</p>
+                <p className="text-gray-500">NIK</p>
+                {isEdit ? (
+                  <input
+                    value={user.nik}
+                    onChange={(e) =>
+                      setUser({ ...user, nik: e.target.value })
+                    }
+                    className="border rounded px-3 py-1 w-full"
+                  />
+                ) : (
+                  <p>{user.nik || "-"}</p>
+                )}
               </div>
 
               <div>
@@ -188,53 +265,53 @@ export default function Profil() {
             </div>
           </div>
 
+          {/* KARTU */}
           <div className="bg-white rounded-2xl shadow-md p-6">
+            <h3 className="font-semibold text-gray-700 mb-4">
+              Kartu Anggota
+            </h3>
 
-{/* Kartu */}
-  <h3 className="font-semibold text-gray-700 mb-4">
-    Kartu Anggota
-  </h3>
+            <div className="relative rounded-2xl p-6 text-white overflow-hidden
+                            bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800
+                            shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
 
-  <div className="relative rounded-2xl p-6 text-white overflow-hidden
-                  bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800
-                  shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
 
-    {/* Glow effect */}
-    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+              <p className="text-sm opacity-80">Nomor Anggota</p>
+              <h2 className="text-2xl font-bold mb-4 tracking-wider">
+                235487456
+              </h2>
 
-    {/* Content */}
-    <p className="text-sm opacity-80">Nomor Anggota</p>
-    <h2 className="text-2xl font-bold mb-4 tracking-wider">
-      235487456
-    </h2>
+              <div className="flex justify-between text-sm">
+                <div>
+                  <p className="opacity-80">Nama</p>
+                  <p className="font-semibold">
+                    {user.name || "-"}
+                  </p>
+                </div>
 
-    <div className="flex justify-between text-sm">
-      <div>
-        <p className="opacity-80">Nama</p>
-        <p className="font-semibold">
-          {user.name}
-        </p>
-      </div>
+                <div>
+                  <p className="opacity-80">Status</p>
+                  <p className="font-semibold text-green-300">
+                    Aktif
+                  </p>
+                </div>
+              </div>
 
-      <div>
-        <p className="opacity-80">Status</p>
-        <p className="font-semibold text-green-300">
-          Aktif
-        </p>
-      </div>
-    </div>
-
-  </div>
-
-</div>
+            </div>
+          </div>
 
         </div>
 
         {/* LOGOUT */}
         <div className="mt-10">
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => {
+              localStorage.removeItem("user");
+              localStorage.removeItem("token");
+              navigate("/login");
+            }}
             className="w-full bg-red-500 text-white py-3 rounded-xl font-semibold shadow hover:bg-red-600 transition"
           >
             Keluar

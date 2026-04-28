@@ -1,6 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react"; // ✅ TAMBAHIN
-
 import Beranda from "./pages/beranda";
 import Login from "./pages/login";
 import HalamanUtama from "./pages/halamanutama";
@@ -14,23 +13,78 @@ import AdminPerpustakaan from "./pages/admin";
 function App() {
   const [cart, setCart] = useState([]); // ✅ STATE GLOBAL
 
+  const ProtectedRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!user?.nik || !user?.birth || !user?.gender) {
+    return <Navigate to="/lengkapi-profil" />;
+  }
+
+  return children;
+};
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/halamanutama" element={<HalamanUtama />} />
-        <Route path="/koleksi" element={<Koleksi />} />
-
-        {/* ✅ kirim cart ke belanja */}
-        <Route path="/belanja" element={<Belanja cart={cart} setCart={setCart} />} />
-
-        {/* ✅ kirim cart ke keranjang */}
-        <Route path="/keranjang" element={<Keranjang cart={cart} />} />
-
-        <Route path="/riwayat" element={<Riwayat />} />
         <Route path="/profil" element={<Profil />} />
+        <Route
+          path="/halamanutama"
+          element={
+            <ProtectedRoute>
+              <HalamanUtama />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/koleksi"
+          element={
+            <ProtectedRoute>
+              <Koleksi />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/belanja"
+          element={
+            <ProtectedRoute>
+              <Belanja cart={cart} setCart={setCart} />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/keranjang"
+          element={
+            <ProtectedRoute>
+              <Keranjang cart={cart} />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/riwayat"
+          element={
+            <ProtectedRoute>
+              <Riwayat />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <Profil />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/admin" element={<AdminPerpustakaan />} />
+          
       </Routes>
     </BrowserRouter>
   );

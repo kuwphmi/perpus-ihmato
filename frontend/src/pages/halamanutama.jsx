@@ -8,6 +8,7 @@ import banner3 from "../assets/banner3.png";
 import logo from "../assets/logo.png";
 
 export default function HalamanUtama() {
+  const [user, setUser] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function HalamanUtama() {
   ];
 
   useEffect(() => {
+
     fetch("https://openlibrary.org/search.json?q=programming&limit=10")
       .then((res) => res.json())
       .then((data) => {
@@ -48,7 +50,18 @@ export default function HalamanUtama() {
         setNewBooks(sorted);
       })
       .finally(() => setLoading(false));
-  }, []);
+    
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  if (storedUser) {
+    setUser(storedUser);
+  }
+  
+  const interval = setInterval(() => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div className="bg-white min-h-screen">
@@ -121,39 +134,51 @@ export default function HalamanUtama() {
 
             {/*  PROFIL */}
             <div className="relative">
-              {/* ICON PROFILE */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
-                }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-              >
-                R
-              </div>
 
-              {/* DROPDOWN PROFILE */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 mb-2">R</div>
-                    <h3 className="font-semibold text-gray-700 text-sm">REVANDA AVRILLITA RIZKY</h3>
-                    <p className="text-xs text-gray-500">rizkyavrillita@gmail.com</p>
-                  </div>
+  {/* ICON PROFILE */}
+  <div
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+  >
+   {user.name ? user.name.charAt(0) : "U"}
+  </div>
 
-                  {/* BUTTON PROFIL */}
-                  <div className="px-4 py-4">
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">Profilku</button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+  {/* DROPDOWN PROFILE */}
+  {isProfileOpen && (
+    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+
+      {/* HEADER */}
+      <div className="flex flex-col items-center py-6 bg-gray-50">
+        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 mb-2">
+          {user.name ? user.name.charAt(0) : "U"}
         </div>
+        <h3 className="font-semibold text-gray-700 text-sm">
+          {user.name || "-"}
+        </h3>
+        <p className="text-xs text-gray-500">
+          {user.email || "-"}
+        </p>
       </div>
+
+      {/* BUTTON PROFIL */}
+      <div className="px-4 py-4">
+        <Link to="/profil">
+  <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+    Profilku
+  </button>
+</Link>
+      </div>
+
+    </div>
+  )}
+</div>
+</div>
+</div>
+</div>
+        
 
       {/* ✅ OVERLAY FIX (tidak ganggu klik) */}
       {isNotifOpen && <div className="fixed inset-0 z-30" onClick={() => setIsNotifOpen(false)} />}

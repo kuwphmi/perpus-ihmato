@@ -12,7 +12,6 @@ function getStrength(password) {
   if (/[^A-Za-z0-9]/.test(password)) score++;
   return score;
 }
-
 const strengthColors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
 const strengthLabels = ["Lemah", "Cukup", "Kuat", "Sangat Kuat"];
 
@@ -85,25 +84,37 @@ function LoginForm({ onSwitch }) {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const res = await axios.post("http://localhost:8000/api/login", {
-        email,
-        password,
-      });
+  try {
+    const res = await axios.post("http://localhost:3000/api/login", {
+      email,
+      password,
+    });
 
-      if (res.data.status) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        navigate("/halamanutama"); // sesuaikan route kamu
-      } else {
-        alert(res.data.message || "Login gagal");
-      }
-    } catch (error) {
-      console.log(error);
-      alert("Server error / backend belum jalan");
+    if (!res.data.status) {
+      alert(res.data.message);
+      return;
     }
-  };
+
+    const user = res.data.user;
+
+    // simpan
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", res.data.token);
+
+    // 🔥 CEK PROFIL LENGKAP ATAU BELUM
+    if (!user?.nik || !user?.birth || !user?.gender) {
+      navigate("/profil");
+    } else {
+      navigate("/halamanutama");
+    }
+
+  } catch (error) {
+    console.log(error);
+    alert("Server error");
+  }
+};
 
   return (
     <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
@@ -153,6 +164,7 @@ function LoginForm({ onSwitch }) {
 
 // ─── REGISTER FORM (SUDAH KE DATABASE) ────────────────────────────────────
 function RegisterForm({ onSwitch }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -165,25 +177,35 @@ function RegisterForm({ onSwitch }) {
   const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!form.agree) return alert("Setujui syarat dulu");
+  if (!form.agree) return alert("Setujui syarat dulu");
 
-    try {
-      await axios.post("http://localhost:8000/api/register", {
-        name: form.firstName + " " + form.lastName,
-        email: form.email,
-        password: form.password,
-        phone: form.phone,
-      });
+  try {
+    const res = await axios.post("http://localhost:3000/api/register", {
+      name: form.firstName + " " + form.lastName,
+      email: form.email,
+      password: form.password,
+      phone: form.phone,
+    });
 
-      alert("Register berhasil");
-      onSwitch();
-    } catch (error) {
-      console.log(error);
-      alert("Register gagal");
-    }
-  };
+    if (res.data.status) {
+  alert("Register berhasil, silakan lengkapi profil");
+
+  // simpan user ke localStorage
+  localStorage.setItem("user", JSON.stringify(res.data.data));
+
+  // langsung ke lengkapi profil
+  navigate("/profil");
+}
+else {
+  alert(res.data.message);
+}
+  } catch (error) {
+    console.log(error);
+    alert("Register gagal");
+  }
+};
 
   return (
     <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
