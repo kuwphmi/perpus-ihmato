@@ -7,6 +7,7 @@ import paymentRoutes from "./src/routes/paymentRoutes.js";
 import aiRoutes from "./src/routes/aiRoutes.js";
 import reportRoutes from "./src/routes/reportRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api", reportRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api", authRoutes);
 
 /* ======================
    TEST ROUTE
@@ -40,7 +42,7 @@ app.get("/", (req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
-    message: "Terjadi kesalahan server"
+    message: "Terjadi kesalahan server",
   });
 });
 
@@ -52,6 +54,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
 
 export default app;

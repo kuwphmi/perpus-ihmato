@@ -14,6 +14,7 @@ export default function HalamanUtama() {
   const [bestBooks, setBestBooks] = useState([]);
   const [newBooks, setNewBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const slides = [
     {
       img: banner1,
@@ -33,7 +34,8 @@ export default function HalamanUtama() {
   ];
 
   useEffect(() => {
-    fetch("https://openlibrary.org/search.json?q=programming&limit=10")
+    // Buku Terpopuler - query "popular books"
+    fetch("https://openlibrary.org/search.json?q=programming&sort=rating&limit=10")
       .then((res) => res.json())
       .then((data) => {
         const books = data.docs.map((item) => ({
@@ -42,12 +44,25 @@ export default function HalamanUtama() {
           cover: item.cover_i ?? null,
         }));
         setBestBooks(books);
+      });
 
-        // Terbaru: sort by tahun terbit
-        const sorted = [...books].sort((a, b) => (b.first_publish_year ?? 0) - (a.first_publish_year ?? 0));
-        setNewBooks(sorted);
+    // Buku Terbaru - query berbeda + sort by tahun terbaru
+    fetch("https://openlibrary.org/search.json?q=fiction&sort=new&limit=10")
+      .then((res) => res.json())
+      .then((data) => {
+        const books = data.docs.map((item) => ({
+          title: item.title ?? "-",
+          author: item.author_name?.[0] ?? "-",
+          cover: item.cover_i ?? null,
+        }));
+        setNewBooks(books);
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
   }, []);
 
   return (
@@ -127,26 +142,35 @@ export default function HalamanUtama() {
                   e.stopPropagation();
                   setIsProfileOpen(!isProfileOpen);
                 }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm font-bold cursor-pointer hover:bg-blue-700 transition"
               >
-                R
+                {user?.name?.charAt(0).toUpperCase() ?? "?"}
               </div>
 
               {/* DROPDOWN PROFILE */}
               {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 mb-2">R</div>
-                    <h3 className="font-semibold text-gray-700 text-sm">REVANDA AVRILLITA RIZKY</h3>
-                    <p className="text-xs text-gray-500">rizkyavrillita@gmail.com</p>
+                <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                  {/* HEADER GRADIENT */}
+                  <div className="bg-linear-to-br from-blue-600 to-blue-800 px-6 py-5 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3 ring-2 ring-white/40">{user?.name?.charAt(0).toUpperCase() ?? "?"}</div>
+                    <h3 className="font-semibold text-white text-sm tracking-wide">{user?.name?.toUpperCase() ?? "-"}</h3>
+                    <p className="text-blue-200 text-xs mt-0.5">{user?.email ?? "-"}</p>
                   </div>
 
                   {/* BUTTON PROFIL */}
-                  <div className="px-4 py-4">
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">Profilku</button>
+                  <div className="px-4 py-4 flex flex-col gap-2">
+                    <Link to="/profil" onClick={() => setIsProfileOpen(false)}>
+                      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold text-sm transition">Profilku</button>
                     </Link>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("user");
+                        window.location.href = "/login";
+                      }}
+                      className="w-full border border-red-200 hover:bg-red-50 text-red-500 py-2.5 rounded-xl font-semibold text-sm transition"
+                    >
+                      Keluar
+                    </button>
                   </div>
                 </div>
               )}

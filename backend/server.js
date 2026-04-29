@@ -10,6 +10,8 @@ import bukuRoutes from "./src/routes/bukuRoutes.js";
 import paymentRoutes from "./src/routes/paymentRoutes.js";
 import aiRoutes from "./src/routes/aiRoutes.js";
 import reportRoutes from "./src/routes/reportRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
+import cartRoutes from "./src/routes/cartRoutes.js";
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use("/api/buku", bukuRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api", reportRoutes);
+app.use("/api", authRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

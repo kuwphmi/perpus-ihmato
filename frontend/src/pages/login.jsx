@@ -170,7 +170,7 @@ function RegisterForm({ onSwitch }) {
     if (!form.agree) return alert("Setujui syarat dulu");
 
     try {
-      await axios.post("http://localhost:8000/api/register", {
+      await axios.post("http://localhost:3000/api/register", {
         name: form.firstName + " " + form.lastName,
         email: form.email,
         password: form.password,
