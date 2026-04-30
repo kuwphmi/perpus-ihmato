@@ -44,9 +44,6 @@ export default function AdminPerpustakaan() {
     },
   });
 
-  const [loanForm, setLoanForm] = useState(emptyForm);
-  const [extensionForm, setExtensionForm] = useState(emptyExtensionForm);
-
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(url, {
       headers: {
@@ -92,6 +89,30 @@ export default function AdminPerpustakaan() {
     }
   };
 
+  const rejectLoanRequest = async (id) => {
+  try {
+    await fetchJson(`${API_BASE}/admin/loan-requests/${id}/reject`, {
+      method: "POST",
+    });
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menolak pengajuan.");
+  }
+};
+
+const rejectExtension = async (id) => {
+  try {
+    await fetchJson(`${API_BASE}/admin/extension-requests/${id}/reject`, {
+      method: "POST",
+    });
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menolak perpanjangan.");
+  }
+};
+
   useEffect(() => {
     loadData();
   }, []);
@@ -129,40 +150,6 @@ export default function AdminPerpustakaan() {
     return [];
   }, [activeTab, data, query]);
 
-  const submitLoanRequest = async (e) => {
-    e.preventDefault();
-    try {
-      await fetchJson(`${API_BASE}/admin/loan-requests`, {
-        method: "POST",
-        body: JSON.stringify(loanForm),
-      });
-      alert("Pengajuan peminjaman berhasil dibuat.");
-      setLoanForm(emptyForm);
-      await loadData();
-      setActiveTab("pinjaman");
-    } catch (err) {
-      console.error(err);
-      alert("Gagal mengajukan peminjaman.");
-    }
-  };
-
-  const submitExtensionRequest = async (e) => {
-    e.preventDefault();
-    try {
-      await fetchJson(`${API_BASE}/admin/extension-requests`, {
-        method: "POST",
-        body: JSON.stringify(extensionForm),
-      });
-      alert("Pengajuan perpanjangan berhasil dibuat.");
-      setExtensionForm(emptyExtensionForm);
-      await loadData();
-      setActiveTab("perpanjangan");
-    } catch (err) {
-      console.error(err);
-      alert("Gagal mengajukan perpanjangan.");
-    }
-  };
-
   const approveLoanRequest = async (id) => {
     try {
       await fetchJson(`${API_BASE}/admin/loan-requests/${id}/approve`, {
@@ -189,12 +176,12 @@ export default function AdminPerpustakaan() {
     }
   };
 
-  const handlePrint = () => {
-    const month = new Date().getMonth() + 1;
-    const year = new Date().getFullYear();
+ const [selectedMonth, setSelectedMonth] = useState("1");
 
-    window.location.href = `${API_BASE}/admin/report/monthly/pdf?month=${month}&year=${year}`;
-  };
+const handlePrint = () => {
+  window.location.href =
+    `${API_BASE}/admin/report/monthly/pdf?month=${selectedMonth}&year=2026`;
+};
 
   const StatCard = ({ title, value, subtitle }) => (
     <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -235,19 +222,41 @@ export default function AdminPerpustakaan() {
                   ))}
                   {actions && (
                     <td className="px-4 py-3">
-                      {row._type === "loan_request" && (
-                        <button onClick={() => approveLoanRequest(row.id)} className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">
-                          Setujui
-                        </button>
+                     {row._type === "loan_request" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => approveLoanRequest(row.id)}
+                            className="rounded-xl bg-green-600 px-3 py-2 text-white hover:bg-green-700"
+                          >
+                            Accept
+                          </button>
+
+                          <button
+                            onClick={() => rejectLoanRequest(row.id)}
+                            className="rounded-xl bg-red-600 px-3 py-2 text-white hover:bg-red-700"
+                          >
+                            Reject
+                          </button>
+                        </div>
                       )}
-                      {row._type === "extension_request" && row.status === "pending" && (
-                      <button
-                        onClick={() => approveExtension(row.id)}
-                        className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
-                      >
-                        Setujui
-                      </button>
-                    )}
+                      {row._type === "extension_request" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => approveExtension(row.id)}
+                            className="rounded-xl bg-green-600 px-3 py-2 text-white hover:bg-green-700"
+                          >
+                            Accept
+                          </button>
+
+                          <button
+                            onClick={() => rejectExtension(row.id)}
+                            className="rounded-xl bg-red-600 px-3 py-2 text-white hover:bg-red-700"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+        
                     </td>
                   )}
                 </tr>
@@ -271,6 +280,18 @@ export default function AdminPerpustakaan() {
         label: "Status",
         render: (row) => <span className={`rounded-full border px-3 py-1 text-xs font-medium ${badgeClass(row.status)}`}>{row.status}</span>,
       },
+      {
+  key: "action",
+  label: "Aksi",
+  render: (row) => (
+    <button
+      onClick={() => markAsReturned(row.id)}
+      className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
+    >
+      Done
+    </button>
+  ),
+}
     ],
     anggota: [
       { key: "id", label: "ID" },
@@ -359,41 +380,6 @@ export default function AdminPerpustakaan() {
           <div className="rounded-2xl border border-blue-100 bg-white p-10 text-center text-slate-500">Memuat data...</div>
         ) : (
           <>
-            {activeTab === "ajukan" && (
-              <div className="mb-6 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm print:hidden">
-                <h2 className="text-lg font-semibold text-blue-900">Form Ajukan Peminjaman</h2>
-                <form onSubmit={submitLoanRequest} className="mt-4 grid gap-4 md:grid-cols-2">
-                  <input value={loanForm.member_id} onChange={(e) => setLoanForm({ ...loanForm, member_id: e.target.value })} placeholder="Member ID" className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <input value={loanForm.book_id} onChange={(e) => setLoanForm({ ...loanForm, book_id: e.target.value })} placeholder="Book ID" className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <input type="date" value={loanForm.loan_date} onChange={(e) => setLoanForm({ ...loanForm, loan_date: e.target.value })} className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <input type="date" value={loanForm.due_date} onChange={(e) => setLoanForm({ ...loanForm, due_date: e.target.value })} className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <textarea value={loanForm.notes} onChange={(e) => setLoanForm({ ...loanForm, notes: e.target.value })} placeholder="Catatan" className="rounded-2xl border border-blue-200 px-4 py-3 md:col-span-2" rows={3} />
-                  <div className="md:col-span-2">
-                    <button className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700">Simpan Pengajuan</button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {activeTab === "perpanjangan" && (
-              <div className="mb-6 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm print:hidden">
-                <h2 className="text-lg font-semibold text-blue-900">Form Perpanjangan</h2>
-                <form onSubmit={submitExtensionRequest} className="mt-4 grid gap-4 md:grid-cols-2">
-                  <input value={extensionForm.loan_id} onChange={(e) => setExtensionForm({ ...extensionForm, loan_id: e.target.value })} placeholder="Loan ID" className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <input type="date" value={extensionForm.new_due_date} onChange={(e) => setExtensionForm({ ...extensionForm, new_due_date: e.target.value })} className="rounded-2xl border border-blue-200 px-4 py-3" />
-                  <textarea
-                    value={extensionForm.reason}
-                    onChange={(e) => setExtensionForm({ ...extensionForm, reason: e.target.value })}
-                    placeholder="Alasan perpanjangan"
-                    className="rounded-2xl border border-blue-200 px-4 py-3 md:col-span-2"
-                    rows={3}
-                  />
-                  <div className="md:col-span-2">
-                    <button className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700">Simpan Perpanjangan</button>
-                  </div>
-                </form>
-              </div>
-            )}
 
             <div className="print:mt-0">
               <h2 className="mb-4 text-lg font-semibold text-blue-900">{tabs.find((t) => t.key === activeTab)?.label}</h2>

@@ -182,12 +182,12 @@ function RegisterForm({ onSwitch }) {
   if (!form.agree) return alert("Setujui syarat dulu");
 
   try {
-    const res = await axios.post("http://localhost:3000/api/register", {
-      name: form.firstName + " " + form.lastName,
-      email: form.email,
-      password: form.password,
-      phone: form.phone,
-    });
+  const res = await axios.post("http://localhost:3000/api/register", {
+    name: form.firstName + " " + form.lastName,
+    email: form.email,
+    password: form.password,
+    phone: form.phone,
+  });
 
     if (res.data.status) {
   alert("Register berhasil, silakan lengkapi profil");

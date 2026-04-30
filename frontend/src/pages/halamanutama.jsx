@@ -15,6 +15,7 @@ export default function HalamanUtama() {
   const [bestBooks, setBestBooks] = useState([]);
   const [newBooks, setNewBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const slides = [
     {
       img: banner1,
@@ -34,6 +35,7 @@ export default function HalamanUtama() {
   ];
 
   useEffect(() => {
+
   // ================= BUKU TERPOPULER =================
   fetch("https://openlibrary.org/search.json?q=programming&limit=10")
     .then((res) => res.json())
@@ -83,6 +85,12 @@ export default function HalamanUtama() {
 
   return () => clearInterval(interval);
 }, []);
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
 
   return (
     <div className="bg-white min-h-screen">

@@ -1,4 +1,4 @@
-import { supabase } from "../config/supabase.js";
+import supabase from "../config/supabase.js";
 
 export const getBuku = async (req, res) => {
   const { data, error } = await supabase
