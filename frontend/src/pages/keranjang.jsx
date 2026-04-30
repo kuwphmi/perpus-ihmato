@@ -1,71 +1,81 @@
 import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-export default function Keranjang({ cart = [], setCart }) {
+export default function Keranjang() {
+  const [cart, setCart] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
 
-  // =========================
-  // DUMMY DATA
-  // =========================
-  const dummyBooks = [
-    {
-      title: "Atomic Habits",
-      author: "James Clear",
-      price: 120000,
-      image: "https://covers.openlibrary.org/b/id/10521261-L.jpg",
-    },
-    {
-      title: "Laskar Pelangi",
-      author: "Andrea Hirata",
-      price: 90000,
-      image: "https://covers.openlibrary.org/b/id/8231996-L.jpg",
-    },
-    {
-      title: "Rich Dad Poor Dad",
-      author: "Robert Kiyosaki",
-      price: 150000,
-      image: "https://covers.openlibrary.org/b/id/8228691-L.jpg",
-    },
-  ];
+  /* =========================
+     AMBIL DATA CART
+  ========================= */
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
-  // pakai cart asli kalau ada, kalau tidak pakai dummy
-  const displayCart = cart.length > 0 ? cart : dummyBooks;
+  const fetchCart = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
-  // =========================
-  // CHECKBOX
-  // =========================
-  const handleCheck = (index) => {
-    if (selectedItems.includes(index)) {
-      setSelectedItems(selectedItems.filter((i) => i !== index));
+      const res = await axios.get(
+        `http://localhost:3000/api/cart/${user.id}`
+      );
+
+      if (res.data.status) {
+        setCart(res.data.data);
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  /* =========================
+     CHECKBOX
+  ========================= */
+  const handleCheck = (id) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(
+        selectedItems.filter((item) => item !== id)
+      );
     } else {
-      setSelectedItems([...selectedItems, index]);
+      setSelectedItems([...selectedItems, id]);
     }
   };
 
   const handleSelectAll = () => {
-    if (selectedItems.length === displayCart.length) {
+    if (selectedItems.length === cart.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(displayCart.map((_, i) => i));
+      setSelectedItems(cart.map((item) => item.id));
     }
   };
 
-  // =========================
-  // TOTAL
-  // =========================
-  const total = displayCart
-    .filter((_, i) => selectedItems.includes(i))
+  /* =========================
+     TOTAL
+  ========================= */
+  const total = cart
+    .filter((item) => selectedItems.includes(item.id))
     .reduce((acc, item) => acc + item.price, 0);
 
-  // =========================
-  // HAPUS (hanya kalau cart asli)
-  // =========================
-  const handleRemove = (index) => {
-    if (cart.length === 0) return; // biar dummy ga kehapus
+  /* =========================
+     HAPUS ITEM
+  ========================= */
+  const handleRemove = async (id) => {
+    try {
+      await axios.delete(
+        `http://localhost:3000/api/cart/${id}`
+      );
 
-    const newCart = cart.filter((_, i) => i !== index);
-    setCart(newCart);
-    setSelectedItems(selectedItems.filter((i) => i !== index));
+      setCart(cart.filter((item) => item.id !== id));
+
+      setSelectedItems(
+        selectedItems.filter((item) => item !== id)
+      );
+
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -76,8 +86,9 @@ export default function Keranjang({ cart = [], setCart }) {
         <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
           <FiShoppingCart /> Keranjang
         </h1>
+
         <p className="text-sm text-gray-500">
-          {displayCart.length} item
+          {cart.length} item
         </p>
       </div>
 
@@ -85,66 +96,83 @@ export default function Keranjang({ cart = [], setCart }) {
       <div className="flex items-center gap-2 p-4 bg-white mt-2">
         <input
           type="checkbox"
-          checked={selectedItems.length === displayCart.length}
+          checked={
+            cart.length > 0 &&
+            selectedItems.length === cart.length
+          }
           onChange={handleSelectAll}
         />
-        <span className="text-gray-600 text-sm">Pilih Semua</span>
+
+        <span className="text-gray-600 text-sm">
+          Pilih Semua
+        </span>
       </div>
 
-      {/* LIST PRODUK */}
+      {/* LIST */}
       <div className="mt-2 space-y-2 px-2">
-        {displayCart.map((item, index) => (
+
+        {cart.map((item) => (
           <div
-            key={index}
+            key={item.id}
             className="flex gap-3 bg-white p-3 rounded-lg shadow-sm"
           >
+
             {/* CHECKBOX */}
             <input
               type="checkbox"
-              checked={selectedItems.includes(index)}
-              onChange={() => handleCheck(index)}
+              checked={selectedItems.includes(item.id)}
+              onChange={() => handleCheck(item.id)}
             />
 
-            {/* GAMBAR */}
+            {/* IMAGE */}
             <img
-              src={item.image}
+              src={`https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`}
               alt={item.title}
               className="w-20 h-24 object-cover rounded-md"
             />
 
             {/* INFO */}
             <div className="flex flex-col justify-between flex-1">
+
               <div>
                 <h2 className="text-sm font-semibold text-gray-800">
                   {item.title}
                 </h2>
+
                 <p className="text-xs text-gray-500">
                   {item.author}
                 </p>
               </div>
 
               <p className="text-blue-600 font-bold text-sm">
-                Rp {item.price}
+                Rp {item.price?.toLocaleString("id-ID")}
               </p>
+
             </div>
 
-            {/* HAPUS */}
+            {/* DELETE */}
             <button
-              onClick={() => handleRemove(index)}
+              onClick={() => handleRemove(item.id)}
               className="text-red-500"
             >
               <FiTrash2 size={18} />
             </button>
+
           </div>
         ))}
+
       </div>
 
-      {/* FOOTER CHECKOUT */}
+      {/* FOOTER */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-between items-center shadow-lg">
+
         <div>
-          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-xs text-gray-500">
+            Total
+          </p>
+
           <p className="text-lg font-bold text-blue-600">
-            Rp {total}
+            Rp {total.toLocaleString("id-ID")}
           </p>
         </div>
 
@@ -158,6 +186,7 @@ export default function Keranjang({ cart = [], setCart }) {
         >
           Checkout ({selectedItems.length})
         </button>
+
       </div>
     </div>
   );

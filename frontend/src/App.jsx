@@ -9,6 +9,8 @@ import Keranjang from "./pages/keranjang";
 import Riwayat from "./pages/riwayat";
 import Profil from "./pages/profil";
 import AdminPerpustakaan from "./pages/admin";
+import Genre from "./pages/Genre";
+
 
 function App() {
   const [cart, setCart] = useState([]); // ✅ STATE GLOBAL
@@ -84,6 +86,7 @@ function App() {
         />
 
         <Route path="/admin" element={<AdminPerpustakaan />} />
+        <Route path="/genre/:name" element={<Genre />} />
           
       </Routes>
     </BrowserRouter>

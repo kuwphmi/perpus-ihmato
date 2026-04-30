@@ -34,28 +34,49 @@ export default function HalamanUtama() {
   ];
 
   useEffect(() => {
+  // ================= BUKU TERPOPULER =================
+  fetch("https://openlibrary.org/search.json?q=programming&limit=10")
+    .then((res) => res.json())
+    .then((data) => {
+      const books = data.docs
+      .filter((item) => item.cover_i) // ✅ hanya yang ada cover
+      .map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i,
+        year: item.first_publish_year ?? 0,
+      }));
 
-    fetch("https://openlibrary.org/search.json?q=programming&limit=10")
-      .then((res) => res.json())
-      .then((data) => {
-        const books = data.docs.map((item) => ({
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-        }));
-        setBestBooks(books);
+      setBestBooks(books);
+    });
 
-        // Terbaru: sort by tahun terbit
-        const sorted = [...books].sort((a, b) => (b.first_publish_year ?? 0) - (a.first_publish_year ?? 0));
-        setNewBooks(sorted);
-      })
-      .finally(() => setLoading(false));
-    
+  // ================= BUKU TERBARU (beda query) =================
+  fetch("https://openlibrary.org/search.json?q=technology&sort=new&limit=10")
+    .then((res) => res.json())
+    .then((data) => {
+      const books = data.docs
+      .filter((item) => item.cover_i) // ✅ hanya yang punya cover
+      .map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i,
+        year: item.first_publish_year ?? 0,
+      }));
+
+      // ambil yang paling baru (sort manual biar aman)
+      const sorted = books.sort(
+        (a, b) => (b.year || 0) - (a.year || 0)
+      );
+
+      setNewBooks(sorted);
+    })
+    .finally(() => setLoading(false));
+
   const storedUser = JSON.parse(localStorage.getItem("user"));
   if (storedUser) {
     setUser(storedUser);
   }
-  
+
   const interval = setInterval(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   }, 4000);

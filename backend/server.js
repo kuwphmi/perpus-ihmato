@@ -4,7 +4,12 @@ import supabase from "./src/config/supabase.js";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
+
 app.use(express.json());
 
 /* =======================
@@ -21,10 +26,16 @@ app.get("/test-db", async (req, res) => {
   const { data, error } = await supabase.from("buku").select("*");
 
   if (error) {
-    return res.json({ status: false, message: error.message });
+    return res.json({
+      status: false,
+      message: error.message,
+    });
   }
 
-  return res.json({ status: true, data });
+  return res.json({
+    status: true,
+    data,
+  });
 });
 
 /* =======================
@@ -139,7 +150,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* =======================
-   UPDATE PROFILE (FIX)
+   UPDATE PROFILE
 ======================= */
 app.put("/api/update-profile", async (req, res) => {
   try {
@@ -172,6 +183,117 @@ app.put("/api/update-profile", async (req, res) => {
     return res.json({
       status: true,
       message: "Profil berhasil diupdate",
+    });
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+});
+
+/* =======================
+   TAMBAH CART
+======================= */
+app.post("/api/cart", async (req, res) => {
+  try {
+    const {
+      user_id,
+      title,
+      author,
+      cover,
+      price,
+      stock,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("cart")
+      .insert([
+        {
+          user_id,
+          title,
+          author,
+          cover,
+          price,
+          stock,
+          qty: 1,
+        },
+      ])
+      .select();
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      status: true,
+      data: data?.[0] || null,
+    });
+
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+});
+/* =======================
+   GET CART
+======================= */
+app.get("/api/cart/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    const { data, error } = await supabase
+      .from("cart")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("id", { ascending: false });
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      status: true,
+      data,
+    });
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+});
+
+/* =======================
+   HAPUS CART
+======================= */
+app.delete("/api/cart/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("cart")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      status: true,
+      message: "Item dihapus",
     });
   } catch (err) {
     return res.json({
