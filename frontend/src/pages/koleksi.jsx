@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FiSearch,
@@ -23,6 +23,7 @@ import logo from "../assets/logo.png";
 export default function HalamanUtama() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [user, setUser] = useState({});
 
   const categories = [
     { name: "Art", icon: <FiFeather /> },
@@ -36,6 +37,12 @@ export default function HalamanUtama() {
     { name: "Medicine", icon: <FiSmile /> },
     { name: "Religion", icon: <FiFileText /> },
   ];
+useEffect(() => {
+  const stored = localStorage.getItem("user");
+  if (stored) {
+    setUser(JSON.parse(stored));
+  }
+}, []);
 
   return (
     <div className="bg-white min-h-screen">
@@ -62,9 +69,9 @@ export default function HalamanUtama() {
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center px-6 py-2">
 
-          <img src={logo} className="w-8 h-8 mr-4" />
+          <img src={logo} className="w-12 h-12 mr-4" />
 
           {/* SEARCH */}
           <div className="flex-1 flex justify-center">
@@ -81,12 +88,12 @@ export default function HalamanUtama() {
           {/* ICON */}
           <div className="flex items-center gap-3 ml-4 relative z-50">
 
-            <FiHeart className="text-xl text-gray-600 cursor-pointer" />
+            <FiHeart className="text-2xl text-gray-600 cursor-pointer" />
 
             {/* NOTIF */}
             <div className="relative">
               <FiBell
-                className="text-xl cursor-pointer"
+                className="text-2xl cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsNotifOpen(!isNotifOpen);
@@ -110,29 +117,51 @@ export default function HalamanUtama() {
               )}
             </div>
 
-            {/* PROFILE */}
-            <div className="relative">
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
-                }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full cursor-pointer"
-              >
-                R
-              </div>
+            {/*  PROFIL */}
+<div className="relative">
 
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white shadow rounded-xl p-4">
-                  <p className="font-semibold">REVANDA</p>
-                  <Link to="/profil">
-                    <button className="mt-2 w-full bg-blue-600 text-white py-2 rounded">
-                      Profilku
-                    </button>
-                  </Link>
-                </div>
-              )}
-            </div>
+  {/* ICON PROFILE */}
+  <div
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+  >
+    {user.name ? user.name.charAt(0) : "U"}
+  </div>
+
+  {/* DROPDOWN PROFILE */}
+  {isProfileOpen && (
+    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+
+      {/* HEADER */}
+      <div className="flex flex-col items-center py-6 bg-gray-50">
+        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+          {user.name ? user.name.charAt(0) : "U"}
+        </div>
+
+        <h3 className="font-semibold text-gray-700 text-sm">
+          {user.name || "-"}
+        </h3>
+
+        <p className="text-xs text-gray-500">
+          {user.email || "-"}
+        </p>
+      </div>
+
+      {/* BUTTON PROFIL */}
+      <div className="px-4 py-4">
+        <Link to="/profil">
+          <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+            Profilku
+          </button>
+        </Link>
+      </div>
+
+    </div>
+  )}
+</div>
 
           </div>
         </div>
@@ -198,12 +227,12 @@ export default function HalamanUtama() {
         </div>
       </section>
 
-      {/* MOBILE NAVBAR (TETAP) */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-blue-600 text-white flex justify-around py-3">
-        <Link to="/halamanutama"><FiHome className="text-2xl" /></Link>
-        <Link to="/koleksi"><FiBook className="text-2xl" /></Link>
-        <Link to="/belanja"><FiShoppingCart className="text-2xl" /></Link>
-        <Link to="/riwayat"><FiClock className="text-2xl" /></Link>
+      {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+        <Link to="/halamanutama"><FiHome size={24} /></Link>
+        <Link to="/koleksi"><FiBook size={24} /></Link>
+        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
+        <Link to="/riwayat"><FiClock size={24} /></Link>
       </div>
 
       {/* FOOTER */}

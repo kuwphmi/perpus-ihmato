@@ -211,14 +211,13 @@ export default function Belanja() {
       >
         {/* LOGO */}
         <div className="flex items-center gap-2">
-          <img src={logo} alt="logo" className="w-10 h-10" />
+          <img src={logo} alt="logo" className="w-12 h-12" />
 
           <span
             className={`font-bold ${
               scrolled ? "text-blue-700" : "text-white"
             }`}
           >
-            BukuIn
           </span>
         </div>
 
@@ -245,7 +244,7 @@ export default function Belanja() {
           {/* NOTIF */}
           <div className="relative">
             <FiBell
-              className="text-xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+              className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsNotifOpen(!isNotifOpen);

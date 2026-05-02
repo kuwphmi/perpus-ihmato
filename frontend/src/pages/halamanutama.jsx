@@ -6,6 +6,7 @@ import banner1 from "../assets/banner1.png";
 import banner2 from "../assets/banner2.png";
 import banner3 from "../assets/banner3.png";
 import logo from "../assets/logo.png";
+import Floating from "./floating";
 
 export default function HalamanUtama() {
   const [user, setUser] = useState({});
@@ -15,7 +16,7 @@ export default function HalamanUtama() {
   const [bestBooks, setBestBooks] = useState([]);
   const [newBooks, setNewBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+
   const slides = [
     {
       img: banner1,
@@ -116,10 +117,10 @@ export default function HalamanUtama() {
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center px-6 py-2">
           {/* LOGO */}
           <div className="shrink-0 mr-4">
-            <img src={logo} alt="logo" className="w-8 h-8" />
+            <img src={logo} alt="logo" className="w-12 h-12" />
           </div>
 
           {/* SEARCH */}
@@ -132,12 +133,12 @@ export default function HalamanUtama() {
 
           {/* ICON */}
           <div className="flex items-center gap-3 shrink-0 ml-4 relative z-50">
-            <FiHeart className="text-xl text-gray-600 cursor-pointer hover:text-red-500 transition" />
+            <FiHeart className="text-2xl text-gray-600 cursor-pointer hover:text-red-500 transition" />
 
             {/* 🔔 NOTIFIKASI */}
             <div className="relative">
               <FiBell
-                className="text-xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsNotifOpen(!isNotifOpen);
@@ -228,20 +229,13 @@ export default function HalamanUtama() {
         </div>
 
         {/* MOBILE NAVBAR (TETAP) */}
-        <div className="md:hidden fixed bottom-0 left-0 w-full bg-blue-600 text-white flex justify-around py-3">
-          <Link to="/halamanutama">
-            <FiHome className="text-2xl" />
-          </Link>
-          <Link to="/koleksi">
-            <FiBook className="text-2xl" />
-          </Link>
-          <Link to="/belanja">
-            <FiShoppingCart className="text-2xl" />
-          </Link>
-          <Link to="/riwayat">
-            <FiClock className="text-2xl" />
-          </Link>
-        </div>
+        {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+        <Link to="/halamanutama"><FiHome size={24} /></Link>
+        <Link to="/koleksi"><FiBook size={24} /></Link>
+        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
+        <Link to="/riwayat"><FiClock size={24} /></Link>
+      </div>
 
         {/* DOT */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
@@ -310,6 +304,10 @@ export default function HalamanUtama() {
       <div className="mt-16 bg-gray-900 text-white text-center py-6">
         <p className="text-sm">© 2026 BukuIn. All rights reserved.</p>
       </div>
+
+       {/* MASCOT (INI YANG KAMU TAMBAH) */}
+    <Floating />
+
     </div>
   );
 }
