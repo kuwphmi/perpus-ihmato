@@ -189,6 +189,14 @@ const handleLogout = () => {
 
 <div className="grid md:grid-cols-2 gap-6 mt-10">
 
+  {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+        <Link to="/halamanutama"><FiHome size={24} /></Link>
+        <Link to="/koleksi"><FiBook size={24} /></Link>
+        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
+        <Link to="/riwayat"><FiClock size={24} /></Link>
+      </div>
+
         {/* BIODATA */}
 <div className="bg-white rounded-xl shadow p-6">
   <div className="flex justify-between items-center mb-4">

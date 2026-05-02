@@ -134,10 +134,10 @@ const handleExtension = async (book) => {
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center px-6 py-2">
 
           {/* LOGO */}
-          <img src={logo} alt="logo" className="w-8 h-8 mr-4" />
+          <img src={logo} alt="logo" className="w-12 h-12 mr-4" />
 
           {/* SEARCH */}
           <div className="flex-1 flex justify-center">
@@ -154,12 +154,12 @@ const handleExtension = async (book) => {
           {/* ICON */}
           <div className="flex items-center gap-3 ml-4 relative z-50">
 
-            <FiHeart className="text-xl text-gray-600 hover:text-red-500 cursor-pointer" />
+            <FiHeart className="text-2xl text-gray-600 hover:text-red-500 cursor-pointer" />
 
             {/* 🔔 NOTIF */}
             <div className="relative">
               <FiBell
-                className="text-xl text-gray-600 hover:text-yellow-500 cursor-pointer"
+                className="text-2xl text-gray-600 hover:text-yellow-500 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsNotifOpen(!isNotifOpen);
@@ -253,6 +253,7 @@ const handleExtension = async (book) => {
         </h1>
 
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
+          <div className="bg-white rounded-xl shadow p-6 space-y-4 max-h-80 overflow-y-auto"></div>
 
           {historyBooks.map((book) => (
             <div
@@ -290,12 +291,12 @@ const handleExtension = async (book) => {
 
       </div>
 
-      {/* MOBILE NAVBAR */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-blue-600 text-white flex justify-around py-3">
-        <Link to="/halamanutama"><FiHome className="text-2xl" /></Link>
-        <Link to="/koleksi"><FiBook className="text-2xl" /></Link>
-        <Link to="/belanja"><FiShoppingCart className="text-2xl" /></Link>
-        <Link to="/riwayat"><FiClock className="text-2xl" /></Link>
+      {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+        <Link to="/halamanutama"><FiHome size={24} /></Link>
+        <Link to="/koleksi"><FiBook size={24} /></Link>
+        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
+        <Link to="/riwayat"><FiClock size={24} /></Link>
       </div>
 
       {/* FOOTER */}

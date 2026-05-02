@@ -1,6 +1,10 @@
-@import "tailwindcss";
+/* GOOGLE FONT HARUS PALING ATAS */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+/* TAILWIND */
+@import "tailwindcss";
+
+/* GLOBAL STYLE */
 body {
   font-family: "Poppins", sans-serif;
   background: #f5f7fb;
@@ -11,9 +15,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* AOS ANIMATION FIX */
 [data-aos] {
   will-change: transform, opacity;
 }
+
+/* CUSTOM ANIMATION */
 .custom-rotate-img {
   transform: rotate(-5deg);
   transition: all 0.8s ease;
