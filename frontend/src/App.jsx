@@ -21,7 +21,7 @@ function AppWrapper() {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user?.nik || !user?.birth || !user?.gender) {
-      return <Navigate to="/lengkapi-profil" />;
+      return <Navigate to="/profil" />;
     }
 
     return children;
@@ -89,16 +89,8 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-        <Route
-          path="/profil"
-          element={
-            <ProtectedRoute>
-              <Profil />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/profil" element={<Profil />} />
 
-        {/* 🔥 TAMBAHAN: proteksi ChatAI biar konsisten */}
         <Route
           path="/chatai"
           element={
@@ -113,9 +105,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
       </Routes>
 
       {/* 🔥 Floating hanya di halaman utama */}
-      {location.pathname === "/halamanutama" && (
-        <Floating onClick={() => navigate("/chatai")} />
-      )}
+      {location.pathname === "/halamanutama" && <Floating onClick={() => navigate("/chatai")} />}
     </>
   );
 }
