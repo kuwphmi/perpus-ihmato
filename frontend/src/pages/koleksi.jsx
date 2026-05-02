@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FiSearch,
@@ -23,6 +23,72 @@ import logo from "../assets/logo.png";
 export default function HalamanUtama() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [genreBooks, setGenreBooks] = useState([]);
+  const [rekomendasi, setRekomendasi] = useState([]);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const genreMap = {
+  Art: "art",
+  "Science Fiction": "science fiction",
+  Fantasy: "fantasy",
+  Biographies: "biography",
+  Recipe: "cooking",
+  Romance: "romance",
+  Textbox: "textbook",
+  Children: "children",
+  Medicine: "medicine",
+  Religion: "religion",
+};
+
+const fetchGenreBooks = async (category) => {
+  try {
+    const query = genreMap[category] || category.toLowerCase();
+
+    const res = await fetch(
+      `https://openlibrary.org/search.json?subject=${query}&limit=12`
+    );
+
+    const data = await res.json();
+
+    const books = data.docs.map((item) => ({
+      title: item.title ?? "-",
+      author: item.author_name?.[0] ?? "-",
+      cover: item.cover_i ?? null,
+    }));
+
+    setGenreBooks(books);
+    setActiveCategory(category);
+
+  } catch (err) {
+    console.log("error genre:", err);
+  }
+};
+
+useEffect(() => {
+  const fetchRekomendasi = async () => {
+    try {
+      const res = await fetch(
+        "https://openlibrary.org/search.json?q=popular&limit=12"
+      );
+
+      const data = await res.json();
+
+      const books = data.docs.map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+      }));
+
+      setRekomendasi(books);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  fetchRekomendasi();
+}, []);
 
   const categories = [
     { name: "Art", icon: <FiFeather /> },
@@ -37,8 +103,105 @@ export default function HalamanUtama() {
     { name: "Religion", icon: <FiFileText /> },
   ];
 
+  const handlePinjam = (book) => {
+  setSelectedBook(book);
+  setShowPopup(true);
+  };
+
+  const submitLoanRequest = async () => {
+  try {
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const res = await fetch("http://localhost:3000/api/loan-requests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        book_key: selectedBook.cover + "_" + selectedBook.title,
+        title: selectedBook.title,
+        author: selectedBook.author,
+        cover: selectedBook.cover,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.status) {
+      alert(data.message);
+      return;
+    }
+
+    alert("Pengajuan berhasil dikirim");
+
+    setShowPopup(false);
+    setSelectedBook(null);
+
+  } catch (err) {
+    console.log(err);
+    alert("Gagal mengajukan peminjaman");
+  }
+};
+
+
   return (
     <div className="bg-white min-h-screen">
+
+
+      {showPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+    <div className="w-full max-w-md rounded-2xl bg-white p-6">
+
+      <h2 className="text-xl font-bold text-blue-700">
+        Ajukan Peminjaman
+      </h2>
+
+      <div className="mt-4 space-y-2">
+
+        <p>
+          <span className="font-semibold">Judul:</span>{" "}
+          {selectedBook?.title}
+        </p>
+
+        <p>
+          <span className="font-semibold">Penulis:</span>{" "}
+          {selectedBook?.author}
+        </p>
+
+      </div>
+
+      <p className="mt-4 text-sm text-gray-500">
+        Pengajuan akan dikirim ke petugas perpustakaan untuk disetujui.
+      </p>
+
+      <div className="mt-6 flex justify-end gap-3">
+
+        <button
+          onClick={() => {
+            setShowPopup(false);
+            setSelectedBook(null);
+          }}
+          className="rounded-xl border px-4 py-2 hover:bg-gray-100"
+        >
+          Batal
+        </button>
+
+        <button
+          onClick={submitLoanRequest}
+          className="rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Ajukan
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
       {/* NAVBAR ATAS (TETAP) */}
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
@@ -156,7 +319,12 @@ export default function HalamanUtama() {
           {categories.map((item, i) => (
             <div
               key={i}
-              className="bg-white p-5 rounded-xl shadow hover:shadow-md transition text-center cursor-pointer"
+              onClick={() => fetchGenreBooks(item.name)}
+              className={`bg-white p-5 rounded-xl shadow hover:shadow-md transition text-center cursor-pointer ${
+                activeCategory === item.name
+                  ? "ring-2 ring-blue-600"
+                  : ""
+              }`}
             >
               <div className="text-3xl text-blue-600 mb-2 flex justify-center">
                 {item.icon}
@@ -168,35 +336,76 @@ export default function HalamanUtama() {
       </section>
 
       {/* ================= LIST BUKU ================= */}
-      <section className="px-6 md:px-20 py-12">
-        <h2 className="text-2xl font-bold text-blue-700 mb-6">
-          Rekomendasi Bacaan
-        </h2>
+  <section className="px-6 md:px-20 py-12">
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white border rounded-xl shadow hover:shadow-lg transition"
-            >
-              <div className="h-40 bg-blue-100 flex items-center justify-center">
-                Cover {i + 1}
-              </div>
+  <div className="flex items-center justify-between mb-6">
 
-              <div className="p-4">
-                <h3 className="text-sm font-semibold">
-                  Judul Buku {i + 1}
-                </h3>
-                <p className="text-gray-500 text-xs">Penulis</p>
+    <h2 className="text-2xl font-bold text-blue-700">
+      {activeCategory
+        ? `Genre: ${activeCategory}`
+        : "Rekomendasi Bacaan"}
+    </h2>
 
-                <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg text-sm">
-                  Baca
-                </button>
-              </div>
-            </div>
-          ))}
+    {activeCategory && (
+      <button
+        onClick={() => {
+          setActiveCategory(null);
+          setGenreBooks([]);
+        }}
+        className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+      >
+        Reset
+      </button>
+    )}
+
+  </div>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+
+    {(activeCategory ? genreBooks : rekomendasi).map((book, i) => (
+      <div
+        key={i}
+        className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden"
+      >
+
+        <div className="h-56 bg-blue-100 flex items-center justify-center">
+          {book.cover ? (
+            <img
+              src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+              alt={book.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            "No Cover"
+          )}
         </div>
-      </section>
+
+        <div className="p-4">
+
+          <h3 className="text-sm font-semibold line-clamp-2">
+            {book.title}
+          </h3>
+
+          <p className="text-gray-500 text-xs mb-3">
+            {book.author}
+          </p>
+
+          <button
+            onClick={() => handlePinjam(book)}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700"
+          >
+            Pinjam
+          </button>
+
+        </div>
+
+      </div>
+    ))}
+
+  </div>
+
+</section>
+
 
       {/* MOBILE NAVBAR (TETAP) */}
       <div className="md:hidden fixed bottom-0 left-0 w-full bg-blue-600 text-white flex justify-around py-3">

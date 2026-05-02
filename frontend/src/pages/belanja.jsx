@@ -35,6 +35,9 @@ export default function Belanja() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Beranda");
+  const [isBuyOpen, setIsBuyOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [qty, setQty] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -421,6 +424,8 @@ export default function Belanja() {
             stock={book.stock}
             cart={cart}
             setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
           />
         </div>
       ))}
@@ -443,7 +448,13 @@ export default function Belanja() {
 
       {/* ================= BUKU TERLARIS ================= */}
       {!activeCategory && (
-  <BukuTerlaris data={terlaris} cart={cart} setCart={setCart} />
+  <BukuTerlaris
+  data={terlaris}
+  cart={cart}
+  setCart={setCart}
+  setIsBuyOpen={setIsBuyOpen}
+  setSelectedBook={setSelectedBook}
+/>
 )}
 
       {/* ================= LANDSCAPE ================= */}
@@ -458,8 +469,14 @@ export default function Belanja() {
 
       {/* ================= BUKU TERBARU ================= */}
     {!activeCategory && (
-  <BukuTerbaru data={terbaru} cart={cart} setCart={setCart} />
-)}
+  <BukuTerbaru
+  data={terbaru}
+  cart={cart}
+  setCart={setCart}
+  setIsBuyOpen={setIsBuyOpen}
+  setSelectedBook={setSelectedBook}
+/>
+    )}
 
       {/* FOOTER */}
       <footer className="mt-16 bg-gray-900 text-white text-center py-6">
@@ -478,6 +495,8 @@ function BookCard({
   stock,
   cart,
   setCart,
+  setIsBuyOpen,
+  setSelectedBook,
 }) {
 
   const tambahKeKeranjang = async () => {
@@ -586,7 +605,20 @@ function BookCard({
               Keranjang
             </button>
 
-            <button className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition">
+            <button
+              onClick={() => {
+                setSelectedBook({
+                  title,
+                  author,
+                  cover,
+                  price,
+                  stock,
+                });
+
+                setIsBuyOpen(true);
+              }}
+              className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
+            >
               Beli
             </button>
 
@@ -601,7 +633,13 @@ function BookCard({
 }
 
 /* ================= BUKU TERLARIS ================= */
-function BukuTerlaris({ data, cart, setCart }) {
+function BukuTerlaris({
+  data,
+  cart,
+  setCart,
+  setIsBuyOpen,
+  setSelectedBook,
+}) {
   const scrollRef = useRef(null);
 
   const scroll = (dir) => {
@@ -649,6 +687,8 @@ function BukuTerlaris({ data, cart, setCart }) {
               stock={book.stock}
               cart={cart}
               setCart={setCart}
+              setIsBuyOpen={setIsBuyOpen}
+              setSelectedBook={setSelectedBook}
             />
           </div>
         ))}
@@ -658,7 +698,13 @@ function BukuTerlaris({ data, cart, setCart }) {
 }
 
 /* ================= BUKU TERBARU ================= */
-function BukuTerbaru({ data, cart, setCart }) {
+function BukuTerbaru({
+  data,
+  cart,
+  setCart,
+  setIsBuyOpen,
+  setSelectedBook,
+}) {
   const scrollRef = useRef(null);
 
   const scroll = (dir) => {
@@ -697,18 +743,20 @@ function BukuTerbaru({ data, cart, setCart }) {
         className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
       >
         {data.map((book, index) => (
-          <div key={index} className="min-w-[250px] snap-start">
-            <BookCard
-              title={book.title}
-              author={book.author}
-              cover={book.cover}
-              price={book.price}
-              stock={book.stock}
-              cart={cart}
-              setCart={setCart}
-            />
-          </div>
-        ))}
+        <div key={index} className="min-w-[250px] snap-start">
+          <BookCard
+            title={book.title}
+            author={book.author}
+            cover={book.cover}
+            price={book.price}
+            stock={book.stock}
+            cart={cart}
+            setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
+          />
+        </div>
+      ))}
       </div>
     </section>
   );

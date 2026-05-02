@@ -15,7 +15,6 @@ export default function HalamanUtama() {
   const [bestBooks, setBestBooks] = useState([]);
   const [newBooks, setNewBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const slides = [
     {
       img: banner1,

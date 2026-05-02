@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 const tabs = [
   { key: "pinjaman", label: "Daftar Pinjaman" },
@@ -8,7 +8,6 @@ const tabs = [
   { key: "pengembalian", label: "Buku Dikembalikan" },
   { key: "ajukan", label: "Ajukan Peminjaman" },
   { key: "perpanjangan", label: "Perpanjangan" },
-  { key: "print", label: "Print Data" },
 ];
 
 const emptyForm = {
@@ -29,6 +28,7 @@ export default function AdminPerpustakaan() {
   const [activeTab, setActiveTab] = useState("pinjaman");
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
+  
 
   const [data, setData] = useState({
     loans: [],
@@ -144,8 +144,17 @@ const rejectExtension = async (id) => {
     if (activeTab === "pinjaman") return data.loans.filter(match);
     if (activeTab === "anggota") return data.members.filter(match);
     if (activeTab === "pengembalian") return data.returns.filter(match);
-    if (activeTab === "ajukan") return data.loanRequests.filter(match);
-    if (activeTab === "perpanjangan") return data.extensionRequests.filter(match);
+    if (activeTab === "ajukan") {
+       return data.loanRequests
+        .map((x) => ({ ...x, _type: "loan_request" }))
+        .filter(match);
+    }
+
+    if (activeTab === "perpanjangan") {
+      return data.extensionRequests
+        .map((x) => ({ ...x, _type: "extension_request" }))
+        .filter(match);
+    }
 
     return [];
   }, [activeTab, data, query]);
@@ -162,6 +171,23 @@ const rejectExtension = async (id) => {
       alert("Gagal menyetujui pengajuan.");
     }
   };
+
+  const markAsReturned = async (id) => {
+  try {
+
+    await fetchJson(`${API_BASE}/admin/loans/${id}/return`, {
+      method: "POST",
+    });
+
+    alert("Buku berhasil dikembalikan");
+
+    await loadData();
+
+  } catch (err) {
+    console.error(err);
+    alert("Gagal update pengembalian");
+  }
+};
 
   const approveExtension = async (id) => {
     try {
@@ -214,7 +240,7 @@ const handlePrint = () => {
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="hover:bg-blue-50/30">
+                <tr key={row.loan_id || row.id} className="hover:bg-blue-50/30">
                   {columns.map((col) => (
                     <td key={col.key} className="px-4 py-3 text-slate-700">
                       {col.render ? col.render(row) : (row[col.key] ?? "-")}
@@ -267,10 +293,11 @@ const handlePrint = () => {
       </div>
     </div>
   );
-
+  
+  const getId = (row) => row.loan_id || row.id;
   const columnsByTab = {
     pinjaman: [
-      { key: "id", label: "ID" },
+      { key: "member_code", label: "ID" },
       { key: "member_name", label: "Anggota" },
       { key: "book_title", label: "Buku" },
       { key: "loan_date", label: "Tanggal Pinjam" },
@@ -285,7 +312,7 @@ const handlePrint = () => {
   label: "Aksi",
   render: (row) => (
     <button
-      onClick={() => markAsReturned(row.id)}
+      onClick={() => markAsReturned(getId(row))}
       className="rounded-xl bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
     >
       Done
@@ -294,21 +321,21 @@ const handlePrint = () => {
 }
     ],
     anggota: [
-      { key: "id", label: "ID" },
+      { key: "member_code", label: "ID" },
       { key: "name", label: "Nama" },
-      { key: "member_code", label: "Kode Anggota" },
+      { key: "email", label: "Email" },
+      { key: "nik", label: "NIK" },
       { key: "phone", label: "Telepon" },
-      { key: "status", label: "Status" },
     ],
     pengembalian: [
-      { key: "id", label: "ID" },
+      { key: "member_code", label: "ID" },
       { key: "member_name", label: "Anggota" },
       { key: "book_title", label: "Buku" },
       { key: "return_date", label: "Tanggal Kembali" },
       { key: "fine", label: "Denda" },
     ],
     ajukan: [
-      { key: "id", label: "ID" },
+      { key: "member_code", label: "ID" },
       { key: "member_name", label: "Anggota" },
       { key: "book_title", label: "Buku" },
       { key: "request_date", label: "Tanggal Ajukan" },
@@ -319,7 +346,7 @@ const handlePrint = () => {
       },
     ],
     perpanjangan: [
-      { key: "id", label: "ID" },
+      { key: "member_code", label: "ID" },
       { key: "member_name", label: "Anggota" },
       { key: "book_title", label: "Buku" },
       { key: "old_due_date", label: "Tempo Lama" },
@@ -383,7 +410,15 @@ const handlePrint = () => {
 
             <div className="print:mt-0">
               <h2 className="mb-4 text-lg font-semibold text-blue-900">{tabs.find((t) => t.key === activeTab)?.label}</h2>
-              <Table columns={columnsByTab[activeTab]} rows={rowsByTab[activeTab] ?? []} emptyText="Tidak ada data." actions={activeTab === "ajukan" || activeTab === "perpanjangan"} />
+              <Table
+              columns={columnsByTab[activeTab]}
+              rows={filtered}
+              emptyText="Tidak ada data."
+              actions={
+                activeTab === "ajukan" ||
+                activeTab === "perpanjangan" 
+              }
+            />
             </div>
           </>
         )}

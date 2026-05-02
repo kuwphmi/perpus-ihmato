@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FiSearch,
@@ -16,12 +16,97 @@ export default function Riwayat() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const historyBooks = [
-    { id: 1, title: "Algoritma Dasar", date: "20 April 2026" },
-    { id: 2, title: "React untuk Pemula", date: "18 April 2026" },
-    { id: 3, title: "UI UX Design", date: "15 April 2026" },
-    { id: 4, title: "Database MySQL", date: "10 April 2026" },
-  ];
+  const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
+const [historyBooks, setHistoryBooks] = useState([]);
+
+const storedUser = localStorage.getItem("user");
+
+const user = storedUser ? JSON.parse(storedUser) : null;
+
+useEffect(() => {
+  fetchHistory();
+}, []);
+
+const fetchHistory = async () => {
+  try {
+    const res = await fetch(
+      `${API_BASE}/history/${user.id}`
+    );
+
+    const data = await res.json();
+
+    setHistoryBooks(data || []);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const requestExtension = async (loanId) => {
+  try {
+    const res = await fetch(
+      `${API_BASE}/extensions/request`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          loan_id: loanId,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Pengajuan perpanjangan berhasil");
+      fetchHistory();
+    } else {
+      alert(data.message || "Gagal mengajukan");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi kesalahan");
+  }
+};
+
+const handleExtension = async (book) => {
+  try {
+
+    const res = await fetch(
+      `${API_BASE}/extensions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          loan_id: book.id,
+          book_title: book.title,
+          old_due_date: book.due_date,
+          new_due_date: book.due_date,
+          status: "pending",
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.status) {
+      alert("Pengajuan perpanjangan berhasil");
+    } else {
+      alert(data.message);
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -164,7 +249,7 @@ export default function Riwayat() {
       <div className="max-w-6xl mx-auto px-6 py-10">
 
         <h1 className="text-3xl font-bold text-blue-700 mb-6">
-          Riwayat Membaca
+          Riwayat Peminjaman
         </h1>
 
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -176,12 +261,28 @@ export default function Riwayat() {
             >
               <div>
                 <h3 className="font-semibold">{book.title}</h3>
-                <p className="text-sm text-gray-500">{book.date}</p>
+                <p className="text-sm text-gray-500">
+                {book.loan_date
+                  ? new Date(book.loan_date).toLocaleDateString("id-ID")
+                  : "-"}
+              </p>
               </div>
 
+              <div className="flex gap-3">
+
               <button className="text-blue-600 text-sm hover:underline">
-                Lihat Lagi
+                Detail
               </button>
+
+              {book.status !== "returned" && (
+                <button
+                  onClick={() => handleExtension(book)}
+                  className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
+                >
+                  Ajukan Perpanjangan
+                </button>
+              )}
+            </div>
             </div>
           ))}
 
