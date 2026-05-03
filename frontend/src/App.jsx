@@ -13,6 +13,7 @@ import AdminPerpustakaan from "./pages/admin";
 import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
+import Favorit from "./pages/favorite";
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -100,6 +101,14 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
+<Route
+  path="/favorite"
+  element={
+    <ProtectedRoute>
+      <Favorit />
+    </ProtectedRoute>
+  }
+/>
         <Route path="/admin" element={<AdminPerpustakaan />} />
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>

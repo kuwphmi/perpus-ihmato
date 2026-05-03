@@ -1,6 +1,8 @@
 import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRef } from "react";
+import { Link } from "react-router-dom";
 
 export default function Keranjang() {
   const [cart, setCart] = useState([]);
@@ -12,6 +14,7 @@ export default function Keranjang() {
   useEffect(() => {
     fetchCart();
   }, []);
+  
 
   const fetchCart = async () => {
     try {
@@ -78,18 +81,80 @@ export default function Keranjang() {
     }
   };
 
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+const user = JSON.parse(localStorage.getItem("user")) || {};
+const popupRef = useRef();
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (popupRef.current && !popupRef.current.contains(e.target)) {
+      setIsProfileOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
+
   return (
     <div className="min-h-screen bg-blue-50 pb-28">
 
       {/* HEADER */}
-      <div className="bg-white p-4 shadow-sm flex justify-between items-center">
+      <div className="bg-white p-4 shadow-sm flex justify-between items-center relative">
         <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
           <FiShoppingCart /> Keranjang
         </h1>
 
-        <p className="text-sm text-gray-500">
-          {cart.length} item
+        <div className="flex items-center gap-3">
+
+  <p className="text-sm text-gray-500">
+    {cart.length} item
+  </p>
+
+  {/* PROFILE */}
+  <div
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+  >
+    {user.name ? user.name.charAt(0) : "U"}
+  </div>
+
+</div>
+
+ {/* modal popup */}
+
+{isProfileOpen && (
+  <div
+    ref={popupRef}
+    className="absolute right-4 top-16 z-50"
+  >
+    <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
+
+      <div className="flex flex-col items-center py-6">
+        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
+          {user.name ? user.name.charAt(0) : "U"}
+        </div>
+
+        <h2 className="font-semibold text-gray-800">
+          {user.name || "-"}
+        </h2>
+
+        <p className="text-sm text-gray-500 mb-5">
+          {user.email || "-"}
         </p>
+
+        <Link to="/profil">
+          <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
+            Profilku
+          </button>
+        </Link>
+      </div>
+    </div>
+  </div>
+)}
       </div>
 
       {/* SELECT ALL */}
