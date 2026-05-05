@@ -12,32 +12,52 @@ export default function ChatAI() {
   // =========================
   // KIRIM PESAN
   // =========================
-  const handleSend = () => {
-    if (!input.trim()) return;
+const handleSend = async () => {
+  if (!input.trim()) return;
 
-    const newMessages = [
-      ...messages,
-      { role: "user", text: input },
-    ];
+  const userMessage = input;
 
-    setMessages(newMessages);
-    setInput("");
+  // tampilkan user
+  setMessages((prev) => [
+    ...prev,
+    { role: "user", text: userMessage },
+    { role: "bot", text: "BukuBot lagi mikir... 📚" }, // loading
+  ]);
 
-    // =========================
-    // AUTO REPLY BOT (simple)
-    // =========================
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          text:
-            "Menarik! 📚 Aku sarankan kamu cari buku terkait: " +
-            input,
-        },
-      ]);
-    }, 800);
-  };
+  setInput("");
+
+  try {
+    const res = await fetch("http://localhost:3000/api/ai/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ prompt: userMessage }),
+});
+
+    const data = await res.json();
+
+    // replace loading jadi jawaban asli
+    setMessages((prev) => {
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        role: "bot",
+        text: data.message,
+      };
+      return updated;
+    });
+
+  } catch (error) {
+    setMessages((prev) => {
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        role: "bot",
+        text: "Server error 😭",
+      };
+      return updated;
+    });
+  }
+};
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100">

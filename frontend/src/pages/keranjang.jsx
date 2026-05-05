@@ -33,6 +33,60 @@ export default function Keranjang() {
     }
   };
 
+  const handleCheckout = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      alert("Login dulu ya");
+      return;
+    }
+
+    // ambil item yang dicentang
+    const selectedCart = cart.filter((item) =>
+      selectedItems.includes(item.id)
+    );
+
+    if (selectedCart.length === 0) {
+      alert("Pilih barang dulu");
+      return;
+    }
+
+    const items = selectedCart.map((item) => ({
+      book_key: item.id,
+      title: item.title,
+      price: item.price,
+      qty: item.qty || 1,
+    }));
+
+    const res = await axios.post(
+      "http://localhost:3000/api/payment/create",
+      {
+        user_id: user.id,
+        items,
+      }
+    );
+
+    const token = res.data.token;
+
+    // MIDTRANS POPUP
+    window.snap.pay(token, {
+      onSuccess: function () {
+        alert("Pembayaran berhasil 🎉");
+      },
+      onPending: function () {
+        alert("Menunggu pembayaran ⏳");
+      },
+      onError: function () {
+        alert("Pembayaran gagal ❌");
+      },
+    });
+
+  } catch (err) {
+    console.log(err);
+    alert("Checkout gagal");
+  }
+};
   /* =========================
      CHECKBOX
   ========================= */
@@ -242,7 +296,8 @@ useEffect(() => {
         </div>
 
         <button
-          disabled={selectedItems.length === 0}
+  onClick={handleCheckout}
+  disabled={selectedItems.length === 0}
           className={`px-6 py-2 rounded-lg text-white text-sm ${
             selectedItems.length === 0
               ? "bg-gray-400"

@@ -497,6 +497,53 @@ function BookCard({
   setIsBuyOpen,
   setSelectedBook,
 }) {
+  const handleBuy = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      alert("Login dulu ya");
+      return;
+    }
+
+    const res = await axios.post(
+      "http://localhost:3000/api/payment/create",
+      {
+        user_id: user.id,
+        items: [
+          {
+            book_key: title,
+            title,
+            price,
+            qty: 1,
+          },
+        ],
+      }
+    );
+
+    const token = res.data.token;
+
+    // 🔥 MIDTRANS POPUP
+    window.snap.pay(token, {
+      onSuccess: function () {
+        alert("Pembayaran berhasil 🎉");
+      },
+      onPending: function () {
+        alert("Menunggu pembayaran ⏳");
+      },
+      onError: function () {
+        alert("Pembayaran gagal ❌");
+      },
+      onClose: function () {
+        console.log("User tutup popup");
+      },
+    });
+
+  } catch (err) {
+    console.log(err);
+    alert("Gagal connect ke payment");
+  }
+};
 
   const tambahKeKeranjang = async () => {
 
@@ -605,21 +652,12 @@ function BookCard({
             </button>
 
             <button
-              onClick={() => {
-                setSelectedBook({
-                  title,
-                  author,
-                  cover,
-                  price,
-                  stock,
-                });
-
-                setIsBuyOpen(true);
-              }}
+                onClick={handleBuy}
               className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Beli
             </button>
+            
 
           </div>
 

@@ -54,4 +54,38 @@ export const createTransaction = async (req, res) => {
       error: error.message,
     });
   }
+  export const midtransNotification = async (req, res) => {
+  try {
+    const status = req.body.transaction_status;
+    const order_id = req.body.order_id;
+
+    console.log("NOTIF MIDTRANS:", req.body);
+
+    if (status === "settlement") {
+      await supabase
+        .from("payments")
+        .update({ status: "success" })
+        .eq("order_id", order_id);
+    }
+
+    if (status === "pending") {
+      await supabase
+        .from("payments")
+        .update({ status: "pending" })
+        .eq("order_id", order_id);
+    }
+
+    if (status === "expire" || status === "cancel") {
+      await supabase
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("order_id", order_id);
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+};
 };
