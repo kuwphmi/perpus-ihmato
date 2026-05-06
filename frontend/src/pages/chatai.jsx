@@ -21,8 +21,7 @@ const handleSend = async () => {
   setMessages((prev) => [
     ...prev,
     { role: "user", text: userMessage },
-    { role: "bot", text: "BukuBot lagi mikir... 📚" }, // loading
-  ]);
+    { role: "bot", text: "..." },  ]);
 
   setInput("");
 
