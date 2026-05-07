@@ -78,8 +78,8 @@ const handleSend = async () => {
         </div>
 
         <div>
-          <h1 className="font-semibold text-sm">BukuBot AI</h1>
-          <p className="text-xs text-blue-100">online • siap bantu kamu</p>
+          <h1 className="font-semibold text-sm">liby</h1>
+          <p className="text-xs text-blue-100">online • Liby is ready to help you</p>
         </div>
 
       </div>
@@ -117,7 +117,7 @@ const handleSend = async () => {
 
         <input
           type="text"
-          placeholder="Tulis pesan..."
+          placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}

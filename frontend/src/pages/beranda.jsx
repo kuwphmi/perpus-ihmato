@@ -125,7 +125,7 @@ function Beranda() {
             {["Beranda", "Keunggulan", "Mulai Gratis"].map((item, i) => (
               <a
                 key={i}
-                href={item === "Keunggulan" ? "#keunggulan" : item === "Mulai Gratis" ? "#cta" : "#"}
+                href={item === "Benefits" ? "#Benefits" : item === "Start for Free" ? "#cta" : "#"}
                 onClick={(e) => {
                   e.preventDefault();
                   setIsClicking(true);
@@ -335,13 +335,13 @@ function Beranda() {
 
       {/* CTA */}
       <div id="cta" className="bg-blue-700 py-16 px-6 text-center" data-aos="fade-up">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Siap Digitalisasi Perpustakaanmu?</h2>
-        <p className="text-blue-200 text-sm mb-7 max-w-md mx-auto">Bergabunglah bersama ribuan perpustakaan yang telah mempercayai BukuIn.</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Ready to Digitize Your Library?</h2>
+        <p className="text-blue-200 text-sm mb-7 max-w-md mx-auto">Join thousands of libraries that trust BukuIn.</p>
         <div className="flex gap-3 justify-center flex-wrap">
           <button onClick={() => navigate("/")} className="bg-white hover:bg-blue-50 active:scale-95 text-blue-700 font-semibold px-7 py-2.5 rounded-full text-sm transition-all">
-            Mulai Gratis
+            Start for Free
           </button>
-          <button className="border border-white/50 hover:bg-white/10 text-white font-medium px-7 py-2.5 rounded-full text-sm transition-all">Pelajari Lebih Lanjut</button>
+          
         </div>
       </div>
 
@@ -350,15 +350,15 @@ function Beranda() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={logo} alt="logo" className="w-7 h-7 object-contain opacity-80" />
-            <span className="font-bold text-blue-400">BukuIn</span>
+            <span className="font-bold text-blue-400"></span>
           </div>
-          <p className="text-xs text-gray-500 text-center">© {new Date().getFullYear()} BukuIn. Semua hak dilindungi.</p>
+          <p className="text-xs text-gray-500 text-center">© {new Date().getFullYear()} BukuIn. All rights reserved.</p>
           <div className="flex gap-5 text-xs text-gray-400">
             <a href="#" className="hover:text-white transition">
-              Kebijakan Privas1
+              Privacy Policy
             </a>
             <a href="#" className="hover:text-white transition">
-              Syarat & Ketentuan
+              Terms & Conditions
             </a>
           </div>
         </div>

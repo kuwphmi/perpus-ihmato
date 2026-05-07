@@ -24,7 +24,7 @@ export default function Floating() {
 
         {/* Tooltip */}
         <div className="absolute right-28 bottom-10 bg-blue-600 text-white text-xs px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-          Halo! ada yang bisa aku bantu?
+         Hi! Liby can help you ?
         </div>
 
       </button>

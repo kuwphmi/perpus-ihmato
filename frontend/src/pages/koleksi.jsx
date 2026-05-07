@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
+=======
+import { Link } from "react-router-dom";
+import { FaUserDoctor } from "react-icons/fa6";
+
+>>>>>>> 341ea93a5382f3676fd96c29c6f1dc79d695cc29
 import {
   FiSearch,
   FiBell,
@@ -9,14 +15,17 @@ import {
   FiUser,
   FiShoppingCart,
   FiClock,
-  FiFeather,
-  FiBriefcase,
-  FiTrendingUp,
   FiGlobe,
   FiTool,
   FiSmile,
   FiFileText,
 } from "react-icons/fi";
+
+import { MdOutlinePalette } from "react-icons/md";
+import { GiSpellBook } from "react-icons/gi";
+import { LuChefHat } from "react-icons/lu";
+import { FaRegHeart } from "react-icons/fa";
+import Floating from "./floating";
 
 import logo from "../assets/logo.png";
 
@@ -68,8 +77,42 @@ const fetchGenreBooks = async (category) => {
   }
 };
 
+<<<<<<< HEAD
 const handleSearch = (e) => {
 
+=======
+const [currentSlide, setCurrentSlide] = useState(0);
+
+const slides = [
+  {
+    img: "https://images.unsplash.com/photo-1512820790803-83ca734da794",
+    title: "Find Your Favorite Books",
+subtitle: "Thousands of digital book collections are waiting for you.",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da",
+    title: "Read Anywhere",
+subtitle: "Enjoy a modern and comfortable reading experience.",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353",
+    title: "Shop & Borrow Books",
+subtitle: "All your reading needs in one platform.",
+  },
+];
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentSlide((prev) =>
+      prev === slides.length - 1 ? 0 : prev + 1
+    );
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, []);
+
+const handleSearch = async (e) => {
+>>>>>>> 341ea93a5382f3676fd96c29c6f1dc79d695cc29
   if (e.key === "Enter") {
 
     if (!search.trim()) return;
@@ -107,17 +150,57 @@ useEffect(() => {
 
 
   const categories = [
-    { name: "Art", icon: <FiFeather /> },
-    { name: "Science Fiction", icon: <FiUser /> },
-    { name: "Fantasy", icon: <FiBriefcase /> },
-    { name: "Biographies", icon: <FiBook /> },
-    { name: "Recipe", icon: <FiHeart /> },
-    { name: "Romance", icon: <FiTrendingUp /> },
-    { name: "Textbox", icon: <FiGlobe /> },
-    { name: "Children", icon: <FiTool /> },
-    { name: "Medicine", icon: <FiSmile /> },
-    { name: "Religion", icon: <FiFileText /> },
-  ];
+  {
+    name: "Art",
+    icon: <MdOutlinePalette />,
+  },
+
+  {
+    name: "Science Fiction",
+    icon: <FiGlobe />,
+  },
+
+  {
+    name: "Fantasy",
+    icon: <GiSpellBook />,
+  },
+
+  {
+    name: "Biographies",
+    icon: <FiUser />,
+  },
+
+  {
+    name: "Recipe",
+    icon: <LuChefHat />,
+  },
+
+  {
+    name: "Romance",
+    icon: <FaRegHeart />,
+  },
+
+  {
+    name: "Textbox",
+    icon: <FiBook />,
+  },
+
+  {
+    name: "Children",
+    icon: <FiSmile />,
+  },
+
+ {
+  name: "Medicine",
+  icon: <FaUserDoctor />,
+},
+
+  {
+    name: "Religion",
+    icon: <FiFileText />,
+  },
+
+];
 useEffect(() => {
   const stored = localStorage.getItem("user");
   if (stored) {
@@ -229,10 +312,9 @@ useEffect(() => {
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
           {[
-            { name: "Beranda", path: "/halamanutama" },
-            { name: "Koleksi", path: "/koleksi" },
-            { name: "Belanja", path: "/belanja" },
-            { name: "Riwayat", path: "/riwayat" },
+            { name: "Home", path: "/koleksi" },
+            { name: "Shop", path: "/belanja" },
+            { name: "History", path: "/riwayat" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -257,7 +339,7 @@ useEffect(() => {
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cari buku favoritmu..."
+                placeholder="Find your favorite books..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearch}
@@ -349,17 +431,52 @@ useEffect(() => {
       </div>
 
       {/* OVERLAY */}
-      {isNotifOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setIsNotifOpen(false)}
+      {/* ✅ OVERLAY FIX (tidak ganggu klik popup/navbar) */}
+{isNotifOpen && (
+  <div
+    className="fixed inset-0 z-30"
+    onClick={() => setIsNotifOpen(false)}
+  />
+)}
+
+{/* BANNER FULLSCREEN */}
+<div className="relative w-full h-screen overflow-hidden">
+
+  <div
+    className="flex h-full transition-transform duration-700"
+    style={{
+      transform: `translateX(-${currentSlide * 100}%)`,
+    }}
+  >
+
+    {slides.map((slide, i) => (
+      <div key={i} className="min-w-full h-full relative">
+
+        <img
+          src={slide.img}
+          className="w-full h-full object-cover"
         />
-      )}
+
+        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center px-4">
+
+          <h1 className="text-3xl md:text-6xl font-bold text-white mb-4">
+            {slide.title}
+          </h1>
+
+          <p className="text-white/80 text-sm md:text-lg max-w-xl">
+            {slide.subtitle}
+          </p>
+
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
       {/* ================= KATEGORI ================= */}
       <section className="bg-blue-50 py-12 px-6 md:px-20">
         <h2 className="text-2xl font-bold text-blue-700 text-center mb-8">
-          Kategori Buku
+          Book Categories
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
@@ -385,25 +502,25 @@ useEffect(() => {
       {/* ================= LIST BUKU ================= */}
   <section className="px-6 md:px-20 py-12">
 
-  <div className="flex items-center justify-between mb-6">
+ <div className="relative flex items-center justify-center mb-6">
 
-    <h2 className="text-2xl font-bold text-blue-700">
-      {activeCategory
-        ? `Genre: ${activeCategory}`
-        : "Rekomendasi Bacaan"}
-    </h2>
+    <h2 className="text-2xl font-bold text-blue-700 text-center">
+  {activeCategory
+    ? `Genre: ${activeCategory}`
+    : "Recommended Books"}
+</h2>
 
     {activeCategory && (
-      <button
-        onClick={() => {
-          setActiveCategory(null);
-          setGenreBooks([]);
-        }}
-        className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-      >
-        Reset
-      </button>
-    )}
+  <button
+    onClick={() => {
+      setActiveCategory(null);
+      setGenreBooks([]);
+    }}
+    className="absolute right-0 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+  >
+    Reset
+  </button>
+)}
 
   </div>
 
@@ -454,19 +571,77 @@ useEffect(() => {
 </section>
 
 
+
       {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-        <Link to="/halamanutama"><FiHome size={24} /></Link>
-        <Link to="/koleksi"><FiBook size={24} /></Link>
+        <Link to="/koleksi"><FiHome size={24} /></Link>
         <Link to="/belanja"><FiShoppingCart size={24} /></Link>
         <Link to="/riwayat"><FiClock size={24} /></Link>
       </div>
 
       {/* FOOTER */}
-      <div className="mt-16 bg-gray-900 text-white text-center py-6">
-        © 2026 BukuIn
+<footer className="mt-20 bg-gray-900 text-white">
+
+  <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+
+    {/* BRAND */}
+    <div>
+      <h2 className="text-2xl font-bold text-blue-400 mb-3">
+        BukuIn
+      </h2>
+
+      <p className="text-gray-400 text-sm leading-relaxed">
+        Discover thousands of books, explore new worlds,
+        and enjoy a modern digital library experience.
+      </p>
+    </div>
+
+    {/* MENU */}
+    <div>
+      <h3 className="font-semibold text-lg mb-4">
+        Navigation
+      </h3>
+
+      <div className="flex flex-col gap-2 text-gray-400 text-sm">
+        <Link to="/koleksi" className="hover:text-white">
+          Home
+        </Link>
+
+        <Link to="/belanja" className="hover:text-white">
+          Shop
+        </Link>
+
+        <Link to="/riwayat" className="hover:text-white">
+          History
+        </Link>
       </div>
+    </div>
+
+    {/* CONTACT */}
+    <div>
+      <h3 className="font-semibold text-lg mb-4">
+        About
+      </h3>
+
+      <p className="text-gray-400 text-sm leading-relaxed">
+        Built for book lovers who want a simple,
+        elegant, and interactive reading platform.
+      </p>
+    </div>
+
+  </div>
+
+  {/* BOTTOM */}
+  <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+    © 2026 BukuIn. All rights reserved.
+  </div>
+
+</footer>
+{/* MASCOT (INI YANG KAMU TAMBAH) */}
+    <Floating />
+
 
     </div>
   );
+}
 }

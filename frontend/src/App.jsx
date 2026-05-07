@@ -17,6 +17,7 @@ import Favorit from "./pages/favorite";
 import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
 
+import ResetPassword from "./pages/ResetPassword";
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -48,10 +49,9 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/google-success"
-          element={<GoogleSuccess />}
-        />
+        <Route path="/google-success" element={<GoogleSuccess />} />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/halamanutama"
@@ -123,6 +123,15 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
   <Route path="/admin" element={<AdminPerpustakaan />} />
   <Route path="/genre/:name" element={<Genre />} />
   </Routes>
+
+        <Route
+          path="/favorite"
+          element={
+            <ProtectedRoute>
+              <Favorit />
+            </ProtectedRoute>
+          }
+        />
 
       {/* 🔥 Floating hanya di halaman utama */}
       {location.pathname === "/halamanutama" && <Floating onClick={() => navigate("/chatai")} />}
