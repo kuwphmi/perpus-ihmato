@@ -166,6 +166,7 @@ const handleSubmit = async (e) => {
       </button>
     </div>
   );
+}
 
 
 // ─── REGISTER FORM ────────────────────────────────────────────────────────
