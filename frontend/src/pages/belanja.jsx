@@ -497,54 +497,71 @@ function BookCard({
   setIsBuyOpen,
   setSelectedBook,
 }) {
+
+  // ================= NOTIF =================
+  const [notif, setNotif] = useState("");
+
+  const showNotif = (message) => {
+    setNotif(message);
+
+    setTimeout(() => {
+      setNotif("");
+    }, 2000);
+  };
+
+  // ================= HANDLE BUY =================
   const handleBuy = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!user) {
-      alert("Login dulu ya");
-      return;
-    }
-
-    const res = await axios.post(
-      "http://localhost:3000/api/payment/create",
-      {
-        user_id: user.id,
-        items: [
-          {
-            book_key: title,
-            title,
-            price,
-            qty: 1,
-          },
-        ],
+      if (!user) {
+        showNotif("Login dulu ya");
+        return;
       }
-    );
 
-    const token = res.data.token;
+      const res = await axios.post(
+        "http://localhost:3000/api/payment/create",
+        {
+          user_id: user.id,
+          items: [
+            {
+              book_key: title,
+              title,
+              price,
+              qty: 1,
+            },
+          ],
+        }
+      );
 
-    // 🔥 MIDTRANS POPUP
-    window.snap.pay(token, {
-      onSuccess: function () {
-        alert("Pembayaran berhasil 🎉");
-      },
-      onPending: function () {
-        alert("Menunggu pembayaran ⏳");
-      },
-      onError: function () {
-        alert("Pembayaran gagal ❌");
-      },
-      onClose: function () {
-        console.log("User tutup popup");
-      },
-    });
+      const token = res.data.token;
 
-  } catch (err) {
-    console.log(err);
-    alert("Gagal connect ke payment");
-  }
-};
+      // 🔥 MIDTRANS POPUP
+      window.snap.pay(token, {
+        onSuccess: function () {
+          showNotif("Pembayaran berhasil 🎉");
+        },
 
+        onPending: function () {
+          showNotif("Menunggu pembayaran ⏳");
+        },
+
+        onError: function () {
+          showNotif("Pembayaran gagal ❌");
+        },
+
+        onClose: function () {
+          console.log("User tutup popup");
+        },
+      });
+
+    } catch (err) {
+      console.log(err);
+      showNotif("Gagal connect ke payment");
+    }
+  };
+
+  // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
 
     console.log("TOMBOL DIKLIK");
@@ -556,7 +573,7 @@ function BookCard({
       console.log("USER:", user);
 
       if (!user) {
-        alert("Silakan login dulu");
+        showNotif("Silakan login dulu");
         return;
       }
 
@@ -581,15 +598,15 @@ function BookCard({
       if (res.data.status) {
 
         setCart((prev) => {
-  if (!Array.isArray(prev)) prev = [];
-  return [...prev, res.data.data];
-});
+          if (!Array.isArray(prev)) prev = [];
+          return [...prev, res.data.data];
+        });
 
-        alert("Buku masuk keranjang");
+        showNotif("Buku masuk keranjang");
 
       } else {
 
-        alert(res.data.message);
+        showNotif(res.data.message);
 
       }
 
@@ -597,75 +614,86 @@ function BookCard({
 
       console.log("ERROR:", err);
 
-      alert("Terjadi error");
+      showNotif("Terjadi error");
 
     }
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden w-[250px] flex flex-col">
+    <>
+      {/* ================= NOTIF ================= */}
+      {notif && (
+<div className="fixed inset-0 flex items-center justify-center z-[9999]">
+  <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium animate-bounce">
+    {notif}
+  </div>
+        </div>
+      )}
 
-      <div className="h-48 bg-blue-100 flex items-center justify-center">
-        {cover ? (
-          <img
-            src={`https://covers.openlibrary.org/b/id/${cover}-M.jpg`}
-            alt={title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          "No Cover"
-        )}
-      </div>
+      {/* ================= CARD ================= */}
+      <div className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden w-[250px] flex flex-col">
 
-      <div className="p-4 flex flex-col h-full">
+        <div className="h-48 bg-blue-100 flex items-center justify-center">
+          {cover ? (
+            <img
+              src={`https://covers.openlibrary.org/b/id/${cover}-M.jpg`}
+              alt={title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            "No Cover"
+          )}
+        </div>
 
-        <h3 className="text-sm font-bold text-gray-800 line-clamp-2">
-          {title}
-        </h3>
+        <div className="p-4 flex flex-col h-full">
 
-        <p className="text-blue-600 text-xs mb-2">
-          {author}
-        </p>
+          <h3 className="text-sm font-bold text-gray-800 line-clamp-2">
+            {title}
+          </h3>
 
-        <div className="mt-auto">
+          <p className="text-blue-600 text-xs mb-2">
+            {author}
+          </p>
 
-          <div className="flex justify-between items-center mb-3">
+          <div className="mt-auto">
 
-            <p className="text-blue-700 font-bold text-sm">
-              Rp {(price || 0).toLocaleString("id-ID")}
-            </p>
+            <div className="flex justify-between items-center mb-3">
 
-            <p className="text-xs text-gray-500">
-              Stok: {stock}
-            </p>
+              <p className="text-blue-700 font-bold text-sm">
+                Rp {(price || 0).toLocaleString("id-ID")}
+              </p>
 
-          </div>
+              <p className="text-xs text-gray-500">
+                Stok: {stock}
+              </p>
 
-          <div className="flex gap-2">
+            </div>
 
-            <button
-              type="button"
-              onClick={() => tambahKeKeranjang()}
-              className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
-            >
-              Keranjang
-            </button>
+            <div className="flex gap-2">
 
-            <button
+              <button
+                type="button"
+                onClick={() => tambahKeKeranjang()}
+                className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
+              >
+                Keranjang
+              </button>
+
+              <button
                 onClick={handleBuy}
-              className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Beli
-            </button>
-            
+                className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Beli
+              </button>
+
+            </div>
 
           </div>
 
         </div>
 
       </div>
-
-    </div>
+    </>
   );
 }
 

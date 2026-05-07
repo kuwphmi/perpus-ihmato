@@ -22,7 +22,7 @@ import logo from "../assets/logo.png";
 
 export default function HalamanUtama() {
   const [user, setUser] = useState({});
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [search, setSearch] = useState("");  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
@@ -66,6 +66,35 @@ const fetchGenreBooks = async (category) => {
   }
 };
 
+const handleSearch = async (e) => {
+  if (e.key === "Enter") {
+
+    if (!search.trim()) return;
+
+    try {
+
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${search}&limit=12`
+      );
+
+      const data = await res.json();
+
+      const books = data.docs.map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+      }));
+
+      setGenreBooks(books);
+
+      // supaya judul berubah
+      setActiveCategory(`Hasil pencarian: ${search}`);
+
+    } catch (err) {
+      console.log(err);
+    }
+  }
+};
 useEffect(() => {
   const fetchRekomendasi = async () => {
     try {
@@ -244,6 +273,9 @@ useEffect(() => {
               <input
                 type="text"
                 placeholder="Cari buku favoritmu..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleSearch}
                 className="w-full pl-10 pr-4 py-2 border rounded-full"
               />
             </div>

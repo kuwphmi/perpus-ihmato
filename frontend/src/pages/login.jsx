@@ -154,10 +154,16 @@ function LoginForm({ onSwitch }) {
         <div className="flex-1 h-px bg-gray-100" />
       </div>
 
-      <button className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-        <GoogleIcon />
-        Masuk dengan Google
-      </button>
+<button
+  onClick={() => {
+    window.location.href =
+      "http://localhost:3000/api/auth/google";
+  }}
+  className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+>
+  <GoogleIcon />
+  Login with Google
+</button>
     </div>
   );
 }

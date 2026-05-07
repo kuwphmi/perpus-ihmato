@@ -14,6 +14,8 @@ import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
+import GoogleSuccess from "./pages/googlesuccess";
+
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -44,6 +46,11 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
       <Routes>
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/google-success"
+          element={<GoogleSuccess />}
+        />
 
         <Route
           path="/halamanutama"

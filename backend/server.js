@@ -3,8 +3,11 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import session from "express-session";
+import passport from "passport";
 
 import supabase from "./src/config/supabase.js";
+import "./src/config/passport.js";
 
 import bukuRoutes from "./src/routes/bukuRoutes.js";
 import paymentRoutes from "./src/routes/paymentRoutes.js";
@@ -23,7 +26,16 @@ app.use(
 );
 
 app.use(express.json());
+app.use(
+  session({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
+app.use(passport.initialize());
+app.use(passport.session());
 
 /* =======================
    HEALTH CHECK
@@ -1138,6 +1150,61 @@ app.post("/api/extensions", async (req, res) => {
     });
   }
 });
+
+/* =======================
+   GOOGLE LOGIN
+======================= */
+
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+  }),
+  async (req, res) => {
+    try {
+      const profile = req.user;
+
+      // cek user sudah ada atau belum
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", profile.emails[0].value)
+        .single();
+
+      // kalau belum ada → insert
+      if (!existingUser) {
+        const { count } = await supabase
+          .from("users")
+          .select("*", {
+            count: "exact",
+            head: true,
+          });
+
+        const memberCode = String((count || 0) + 1).padStart(4, "0");
+
+        await supabase.from("users").insert([
+          {
+            name: profile.displayName,
+            email: profile.emails[0].value,
+            member_code: `24${memberCode}`,
+            role: "user",
+          },
+        ]);
+      }
+
+      res.redirect("http://localhost:5173");
+    } catch (err) {
+      res.send(err.message);
+    }
+  }
+);
 
 /* =======================
    START SERVER

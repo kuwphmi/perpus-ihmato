@@ -141,20 +141,51 @@ const rejectExtension = async (id) => {
           .includes(q),
       );
 
-    if (activeTab === "pinjaman") return data.loans.filter(match);
-    if (activeTab === "anggota") return data.members.filter(match);
-    if (activeTab === "pengembalian") return data.returns.filter(match);
-    if (activeTab === "ajukan") {
-       return data.loanRequests
-        .map((x) => ({ ...x, _type: "loan_request" }))
-        .filter(match);
-    }
+if (activeTab === "pinjaman") {
+  return data.loans
+    .filter(
+      (x) =>
+        x.status?.toLowerCase() !== "returned" &&
+        x.status?.toLowerCase() !== "selesai"
+    )
+    .filter(match);
+}
 
-    if (activeTab === "perpanjangan") {
-      return data.extensionRequests
-        .map((x) => ({ ...x, _type: "extension_request" }))
-        .filter(match);
-    }
+if (activeTab === "anggota") {
+  return data.members.filter(match);
+}
+
+if (activeTab === "pengembalian") {
+  return data.returns.filter(match);
+}
+
+if (activeTab === "ajukan") {
+  return data.loanRequests
+    .filter(
+      (x) =>
+        x.status?.toLowerCase() !== "approved" &&
+        x.status?.toLowerCase() !== "rejected"
+    )
+    .map((x) => ({
+      ...x,
+      _type: "loan_request",
+    }))
+    .filter(match);
+}
+
+if (activeTab === "perpanjangan") {
+  return data.extensionRequests
+    .filter(
+      (x) =>
+        x.status?.toLowerCase() !== "approved" &&
+        x.status?.toLowerCase() !== "rejected"
+    )
+    .map((x) => ({
+      ...x,
+      _type: "extension_request",
+    }))
+    .filter(match);
+}
 
     return [];
   }, [activeTab, data, query]);
@@ -359,13 +390,7 @@ const handlePrint = () => {
     ],
   };
 
-  const rowsByTab = {
-    pinjaman: data.loans,
-    anggota: data.members,
-    pengembalian: data.returns,
-    ajukan: data.loanRequests.map((x) => ({ ...x, _type: "loan_request" })),
-    perpanjangan: data.extensionRequests.map((x) => ({ ...x, _type: "extension_request" })),
-  };
+
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-white text-slate-900 print:bg-white">
