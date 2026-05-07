@@ -15,7 +15,7 @@ import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import GoogleSuccess from "./pages/googlesuccess";
-
+import ResetPassword from "./pages/ResetPassword";
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -47,10 +47,9 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/google-success"
-          element={<GoogleSuccess />}
-        />
+        <Route path="/google-success" element={<GoogleSuccess />} />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/halamanutama"
@@ -108,14 +107,14 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-<Route
-  path="/favorite"
-  element={
-    <ProtectedRoute>
-      <Favorit />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/favorite"
+          element={
+            <ProtectedRoute>
+              <Favorit />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin" element={<AdminPerpustakaan />} />
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>
