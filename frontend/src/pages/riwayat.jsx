@@ -152,8 +152,7 @@ const handleExtension = async (book) => {
           </div>
 
           {/* ICON */}
-          <div className="flex items-center gap-3 ml-4 relative z-50">
-
+            <div className="flex items-center gap-3 ml-4 relative">
             <FiHeart className="text-2xl text-gray-600 hover:text-red-500 cursor-pointer" />
 
             {/* 🔔 NOTIF */}
@@ -190,43 +189,49 @@ const handleExtension = async (book) => {
             </div>
 
             {/* 👤 PROFILE */}
-            <div className="relative">
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
-                  setIsNotifOpen(false);
-                }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-              >
-                R
+          <div className="relative">
+
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsProfileOpen(!isProfileOpen);
+              }}
+              className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+            >
+              {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+            </div>
+
+          {isProfileOpen && (
+            <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+
+              {/* HEADER */}
+              <div className="flex flex-col items-center py-6 bg-gray-50">
+
+                <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                </div>
+
+                <h3 className="font-semibold text-gray-700 text-sm">
+                  {user?.name || "-"}
+                </h3>
+
+                <p className="text-xs text-gray-500">
+                  {user?.email || "-"}
+                </p>
+
               </div>
 
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+              {/* BUTTON */}
+              <div className="px-4 py-4">
+                <Link to="/profil">
+                  <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+                    Profilku
+                  </button>
+                </Link>
+              </div>
 
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 mb-2">
-                      R
-                    </div>
-                    <h3 className="font-semibold text-gray-700 text-sm">
-                      REVANDA AVRILLITA RIZKY
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      rizkyavrillita@gmail.com
-                    </p>
-                  </div>
-
-                  {/* BUTTON */}
-                  <div className="px-4 py-4">
-                    <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                      Profilku
-                    </button>
-                  </div>
-
-                </div>
-              )}
+            </div>
+          )}
             </div>
 
           </div>
@@ -237,7 +242,7 @@ const handleExtension = async (book) => {
       {/* OVERLAY */}
       {(isNotifOpen || isProfileOpen) && (
         <div
-          className="fixed inset-0 z-30"
+          className="fixed inset-0 bg-black/10 z-40"
           onClick={() => {
             setIsNotifOpen(false);
             setIsProfileOpen(false);

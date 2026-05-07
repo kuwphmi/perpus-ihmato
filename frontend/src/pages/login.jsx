@@ -97,18 +97,23 @@ function LoginForm({ onSwitch }) {
       return;
     }
 
-    const user = res.data.user;
+  const user = res.data.user;
 
-    // simpan
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", res.data.token);
+  localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("token", res.data.token);
 
-    // 🔥 CEK PROFIL LENGKAP ATAU BELUM
-    if (!user?.nik || !user?.birth || !user?.gender) {
-      navigate("/profil");
-    } else {
-      navigate("/halamanutama");
-    }
+  // CEK ROLE
+  if (user.role === "admin") {
+    navigate("/admin");
+    return;
+  }
+
+  // CEK PROFIL MEMBER
+  if (!user?.nik || !user?.birth || !user?.gender) {
+    navigate("/profil");
+  } else {
+    navigate("/halamanutama");
+  }
 
   } catch (error) {
     console.log(error);

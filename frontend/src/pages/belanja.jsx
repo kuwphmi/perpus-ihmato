@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // IMPORT ASSETS
@@ -31,7 +31,9 @@ export default function Belanja() {
   const [terbaru, setTerbaru] = useState([]);
   const [terlaris, setTerlaris] = useState([]);
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  const [user, setUser] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Beranda");
@@ -41,6 +43,17 @@ export default function Belanja() {
   const [isOpen, setIsOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  useEffect(() => {
+
+  const stored = localStorage.getItem("user");
+
+  if (stored) {
+    setUser(JSON.parse(stored));
+  }
+
+}, []);
+
   const genreMap = {
   Art: "art",
   "Science Fiction": "science fiction",
@@ -173,20 +186,12 @@ export default function Belanja() {
   }, [isNotifOpen]);
 
   /* ================= SEARCH ================= */
-  const cariBuku = () => {
-    fetch(`https://openlibrary.org/search.json?q=${search}&limit=8`)
-      .then((res) => res.json())
-      .then((data) => {
-        const books = data.docs.map((item) => ({
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-          price: Math.floor(Math.random() * 100000) + 50000,
-          stock: Math.floor(Math.random() * 20) + 1,
-        }));
+  const handleSearch = () => {
 
-        setTerbaru(books);
-      });
+    if (!search.trim()) return;
+
+    navigate(`/search?source=belanja&q=${search}`);
+
   };
 
   const categories = [
@@ -276,43 +281,50 @@ export default function Belanja() {
           </div>
 
           {/* PROFILE */}
-          <div className="relative">
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsProfileOpen(!isProfileOpen);
-              }}
-              className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-            >
-              R
-            </div>
+{/* PROFILE */}
+<div className="relative">
 
-            {isProfileOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
-                <div className="flex flex-col items-center py-6 bg-gray-50">
-                  <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-                    R
-                  </div>
+  <div
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+  >
+    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+  </div>
 
-                  <h3 className="font-semibold text-gray-700 text-sm">
-                    REVANDA AVRILLITA RIZKY
-                  </h3>
+  {isProfileOpen && (
+    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
 
-                  <p className="text-xs text-gray-500">
-                    rizkyavrillita@gmail.com
-                  </p>
-                </div>
+      <div className="flex flex-col items-center py-6 bg-gray-50">
 
-                <div className="px-4 py-4">
-                  <Link to="/profil">
-                    <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                      Profilku
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+        </div>
+
+        <h3 className="font-semibold text-gray-700 text-sm">
+          {user.name || "-"}
+        </h3>
+
+        <p className="text-xs text-gray-500">
+          {user.email || "-"}
+        </p>
+
+      </div>
+
+      <div className="px-4 py-4">
+        <Link to="/profil">
+          <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+            Profilku
+          </button>
+        </Link>
+      </div>
+
+    </div>
+  )}
+
+</div>
 
           {/* CART */}
           <div className="relative">
@@ -375,7 +387,7 @@ export default function Belanja() {
             />
 
             <button
-              onClick={cariBuku}
+              onClick={handleSearch}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg"
             >
               Cari

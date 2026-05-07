@@ -15,6 +15,7 @@ import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import GoogleSuccess from "./pages/googlesuccess";
+import SearchPage from "./pages/searchpage";
 
 
 function AppWrapper() {
@@ -116,9 +117,12 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
     </ProtectedRoute>
   }
 />
-        <Route path="/admin" element={<AdminPerpustakaan />} />
-        <Route path="/genre/:name" element={<Genre />} />
-      </Routes>
+
+  <Route path="/search" element={<SearchPage />} />
+
+  <Route path="/admin" element={<AdminPerpustakaan />} />
+  <Route path="/genre/:name" element={<Genre />} />
+  </Routes>
 
       {/* 🔥 Floating hanya di halaman utama */}
       {location.pathname === "/halamanutama" && <Floating onClick={() => navigate("/chatai")} />}
