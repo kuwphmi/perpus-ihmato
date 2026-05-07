@@ -230,7 +230,6 @@ export default function HalamanUtama() {
         {/* MOBILE NAVBAR (TETAP) */}
         {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-        <Link to="/halamanutama"><FiHome size={24} /></Link>
         <Link to="/koleksi"><FiBook size={24} /></Link>
         <Link to="/belanja"><FiShoppingCart size={24} /></Link>
         <Link to="/riwayat"><FiClock size={24} /></Link>
