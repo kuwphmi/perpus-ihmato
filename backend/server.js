@@ -682,12 +682,26 @@ app.post("/api/admin/loan-requests/:id/approve", async (req, res) => {
     }
 
     // update request jadi approved
-    await supabase
-      .from("loan_requests")
-      .update({
-        status: "approved",
-      })
-      .eq("id", id);
+    // update request jadi approved
+await supabase
+  .from("loan_requests")
+  .update({
+    status: "approved",
+  })
+  .eq("id", id);
+
+// kirim notifikasi
+await supabase
+  .from("notifications")
+  .insert([
+    {
+      user_id: requestData.user_id,
+      type: "loan_approved",
+      title: "Peminjaman Disetujui",
+      message: `Pengajuan buku "${requestData.book_title}" telah disetujui admin.`,
+      is_read: false,
+    },
+  ]);
 
     return res.json({
       status: true,
@@ -710,6 +724,12 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
   try {
 
     const { id } = req.params;
+
+    const { data: requestData } = await supabase
+      .from("loan_requests")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     const { error } = await supabase
       .from("loan_requests")
@@ -1130,6 +1150,38 @@ app.post("/api/extensions", async (req, res) => {
       status: true,
       message: "Perpanjangan diajukan",
     });
+
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+});
+
+/* =======================
+   GET NOTIFICATIONS
+======================= */
+
+app.get("/api/notifications/:userId", async (req, res) => {
+  try {
+
+    const { userId } = req.params;
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json(data);
 
   } catch (err) {
     return res.json({

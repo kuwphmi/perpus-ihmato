@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-
-export default function Notifikasi() {
+export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
@@ -13,46 +12,44 @@ export default function Notifikasi() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(
-        `${API_BASE}/notifications/${user.id}`
+      const res = await axios.get(
+        `http://localhost:3000/api/notifications/${user.id}`
       );
 
-      const data = await res.json();
-
-      setNotifications(data || []);
+      setNotifications(res.data);
     } catch (err) {
-      console.error(err);
+      console.log(err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <h1 className="mb-6 text-2xl font-bold text-blue-900">
+    <div className="min-h-screen bg-gray-100 p-5">
+      <h1 className="text-2xl font-bold mb-5">
         Notifikasi
       </h1>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {notifications.length === 0 ? (
-          <div className="rounded-2xl bg-white p-6 shadow">
-            Belum ada notifikasi.
+          <div className="bg-white p-4 rounded-xl">
+            Belum ada notifikasi
           </div>
         ) : (
           notifications.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl bg-white p-5 shadow"
+              className="bg-white p-4 rounded-xl shadow"
             >
-              <div className="font-semibold text-slate-800">
+              <h2 className="font-semibold">
                 {item.title}
-              </div>
+              </h2>
 
-              <div className="mt-1 text-sm text-slate-600">
+              <p className="text-gray-600 text-sm mt-1">
                 {item.message}
-              </div>
+              </p>
 
-              <div className="mt-2 text-xs text-slate-400">
+              <p className="text-xs text-gray-400 mt-2">
                 {new Date(item.created_at).toLocaleString()}
-              </div>
+              </p>
             </div>
           ))
         )}

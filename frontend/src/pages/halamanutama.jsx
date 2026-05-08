@@ -11,9 +11,9 @@ import Floating from "./floating";
 export default function HalamanUtama() {
   const [user, setUser] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [bestBooks, setBestBooks] = useState([]);
+  const [notifCount, setNotifCount] = useState(0);
   const [newBooks, setNewBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const slides = [
@@ -33,6 +33,30 @@ export default function HalamanUtama() {
       subtitle: "Solusi perpustakaan masa depan",
     },
   ];
+
+useEffect(() => {
+  const fetchNotif = async () => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (!storedUser) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/notifications/${storedUser.id}`
+      );
+
+      const data = await res.json();
+
+      const unread = data.filter((item) => item.is_read === false);
+
+      setNotifCount(unread.length);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  fetchNotif();
+}, []);
 
   useEffect(() => {
 
@@ -135,32 +159,15 @@ export default function HalamanUtama() {
             <FiHeart className="text-2xl text-gray-600 cursor-pointer hover:text-red-500 transition" />
 
             {/* 🔔 NOTIFIKASI */}
-            <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsNotifOpen(!isNotifOpen);
-                }}
-              />
+<Link to="/notifications" className="relative">
+  <FiBell className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition" />
 
-              {/* DROPDOWN */}
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  {/* ARROW */}
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">Pemberitahuanmu</h3>
-
-                    <div className="py-6 text-sm text-gray-400 border-b">Belum ada notifikasi baru</div>
-
-                    <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">Lihat Semua</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
+  {notifCount > 0 && (
+    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+      {notifCount}
+    </div>
+  )}
+</Link>
             {/*  PROFIL */}
             <div className="relative">
 
@@ -208,9 +215,6 @@ export default function HalamanUtama() {
 </div>
 </div>
         
-
-      {/* ✅ OVERLAY FIX (tidak ganggu klik) */}
-      {isNotifOpen && <div className="fixed inset-0 z-30" onClick={() => setIsNotifOpen(false)} />}
 
       {/* BANNER FULLSCREEN */}
       <div className="relative w-full h-screen overflow-hidden">

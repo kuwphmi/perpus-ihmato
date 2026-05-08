@@ -14,6 +14,9 @@ import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
+import Notifications from "./pages/notifikasi";
+
+
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -100,6 +103,11 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+  path="/notifications"
+  element={<Notifications />}
+/>
 
 <Route
   path="/favorite"
