@@ -121,10 +121,10 @@ useEffect(() => {
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
           {[
-            { name: "Beranda", path: "/halamanutama" },
-            { name: "Koleksi", path: "/koleksi" },
-            { name: "Belanja", path: "/belanja" },
-            { name: "Riwayat", path: "/riwayat" },
+           
+            { name: "home", path: "/koleksi" },
+            { name: "Shop", path: "/belanja" },
+            { name: "History", path: "/riwayat" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -234,7 +234,6 @@ useEffect(() => {
         {/* MOBILE NAVBAR (TETAP) */}
         {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-        <Link to="/halamanutama"><FiHome size={24} /></Link>
         <Link to="/koleksi"><FiBook size={24} /></Link>
         <Link to="/belanja"><FiShoppingCart size={24} /></Link>
         <Link to="/riwayat"><FiClock size={24} /></Link>

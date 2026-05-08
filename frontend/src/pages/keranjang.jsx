@@ -14,7 +14,7 @@ export default function Keranjang() {
   useEffect(() => {
     fetchCart();
   }, []);
-  
+
 
   const fetchCart = async () => {
     try {
@@ -33,6 +33,71 @@ export default function Keranjang() {
     }
   };
 
+  const handleCheckout = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (!user) {
+        alert("Login dulu ya");
+        return;
+      }
+
+      // ambil item yang dicentang
+      const selectedCart = cart.filter((item) =>
+        selectedItems.includes(item.id)
+      );
+
+      if (selectedCart.length === 0) {
+        alert("Pilih barang dulu");
+        return;
+      }
+
+      const items = selectedCart.map((item) => ({
+        book_key: item.id,
+        title: item.title,
+        price: item.price,
+        qty: item.qty || 1,
+      }));
+
+      const res = await axios.post(
+        "http://localhost:3000/api/payment/create",
+        {
+          user_id: user.id,
+          items,
+        }
+      );
+
+      const token = res.data.token;
+
+      // MIDTRANS POPUP
+      window.snap.pay(token, {
+        onSuccess: async function () {
+
+          alert("Pembayaran berhasil 🎉");
+
+          // hapus item yang dicheckout
+          for (const item of selectedCart) {
+
+            await axios.delete(
+              `http://localhost:3000/api/cart/${item.id}`
+            );
+
+          }
+
+          // refresh cart
+          fetchCart();
+
+          // reset checkbox
+          setSelectedItems([]);
+
+        },
+      });
+
+    } catch (err) {
+      console.log(err);
+      alert("Checkout gagal");
+    }
+  };
   /* =========================
      CHECKBOX
   ========================= */
@@ -59,7 +124,7 @@ export default function Keranjang() {
   ========================= */
   const total = cart
     .filter((item) => selectedItems.includes(item.id))
-    .reduce((acc, item) => acc + item.price, 0);
+    .reduce((acc, item) => acc + (item.price * item.qty), 0);
 
   /* =========================
      HAPUS ITEM
@@ -82,19 +147,19 @@ export default function Keranjang() {
   };
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-const user = JSON.parse(localStorage.getItem("user")) || {};
-const popupRef = useRef();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const popupRef = useRef();
 
-useEffect(() => {
-  const handleClickOutside = (e) => {
-    if (popupRef.current && !popupRef.current.contains(e.target)) {
-      setIsProfileOpen(false);
-    }
-  };
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
+        setIsProfileOpen(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="min-h-screen bg-blue-50 pb-28">
@@ -102,59 +167,59 @@ useEffect(() => {
       {/* HEADER */}
       <div className="bg-white p-4 shadow-sm flex justify-between items-center relative">
         <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
-          <FiShoppingCart /> Keranjang
+          <FiShoppingCart /> Cart
         </h1>
 
         <div className="flex items-center gap-3">
 
-  <p className="text-sm text-gray-500">
-    {cart.length} item
-  </p>
+          <p className="text-sm text-gray-500">
+            {cart.length} item
+          </p>
 
-  {/* PROFILE */}
-  <div
-    onClick={(e) => {
-      e.stopPropagation();
-      setIsProfileOpen(!isProfileOpen);
-    }}
-    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-  >
-    {user.name ? user.name.charAt(0) : "U"}
-  </div>
+          {/* PROFILE */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsProfileOpen(!isProfileOpen);
+            }}
+            className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+          >
+            {user.name ? user.name.charAt(0) : "U"}
+          </div>
 
-</div>
-
- {/* modal popup */}
-
-{isProfileOpen && (
-  <div
-    ref={popupRef}
-    className="absolute right-4 top-16 z-50"
-  >
-    <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
-
-      <div className="flex flex-col items-center py-6">
-        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
-          {user.name ? user.name.charAt(0) : "U"}
         </div>
 
-        <h2 className="font-semibold text-gray-800">
-          {user.name || "-"}
-        </h2>
+        {/* modal popup */}
 
-        <p className="text-sm text-gray-500 mb-5">
-          {user.email || "-"}
-        </p>
+        {isProfileOpen && (
+          <div
+            ref={popupRef}
+            className="absolute right-4 top-16 z-50"
+          >
+            <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
 
-        <Link to="/profil">
-          <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-            Profilku
-          </button>
-        </Link>
-      </div>
-    </div>
-  </div>
-)}
+              <div className="flex flex-col items-center py-6">
+                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
+                  {user.name ? user.name.charAt(0) : "U"}
+                </div>
+
+                <h2 className="font-semibold text-gray-800">
+                  {user.name || "-"}
+                </h2>
+
+                <p className="text-sm text-gray-500 mb-5">
+                  {user.email || "-"}
+                </p>
+
+                <Link to="/profil">
+                  <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
+                    My Profile
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* SELECT ALL */}
@@ -169,7 +234,7 @@ useEffect(() => {
         />
 
         <span className="text-gray-600 text-sm">
-          Pilih Semua
+          Select Items
         </span>
       </div>
 
@@ -209,6 +274,10 @@ useEffect(() => {
                 </p>
               </div>
 
+              <p className="text-xs text-gray-400">
+                Qty: {item.qty}
+              </p>
+
               <p className="text-blue-600 font-bold text-sm">
                 Rp {item.price?.toLocaleString("id-ID")}
               </p>
@@ -242,12 +311,12 @@ useEffect(() => {
         </div>
 
         <button
+          onClick={handleCheckout}
           disabled={selectedItems.length === 0}
-          className={`px-6 py-2 rounded-lg text-white text-sm ${
-            selectedItems.length === 0
-              ? "bg-gray-400"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
+          className={`px-6 py-2 rounded-lg text-white text-sm ${selectedItems.length === 0
+            ? "bg-gray-400"
+            : "bg-blue-600 hover:bg-blue-700"
+            }`}
         >
           Checkout ({selectedItems.length})
         </button>

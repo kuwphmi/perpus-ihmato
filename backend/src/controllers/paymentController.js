@@ -32,7 +32,6 @@ export const createTransaction = async (req, res) => {
 
     const transaction = await snap.createTransaction(parameter);
 
-    // SIMPAN KE DATABASE
     await supabase.from("payments").insert([
       {
         user_id,
@@ -48,10 +47,49 @@ export const createTransaction = async (req, res) => {
       token: transaction.token,
       redirect_url: transaction.redirect_url,
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Payment error",
       error: error.message,
     });
+  }
+};
+
+// 🔥 INI DI LUAR FUNCTION
+export const midtransNotification = async (req, res) => {
+  try {
+
+    const status = req.body.transaction_status;
+    const order_id = req.body.order_id;
+
+    console.log("NOTIF MIDTRANS:", req.body);
+
+    if (status === "settlement") {
+      await supabase
+        .from("payments")
+        .update({ status: "success" })
+        .eq("order_id", order_id);
+    }
+
+    if (status === "pending") {
+      await supabase
+        .from("payments")
+        .update({ status: "pending" })
+        .eq("order_id", order_id);
+    }
+
+    if (status === "expire" || status === "cancel") {
+      await supabase
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("order_id", order_id);
+    }
+
+    res.sendStatus(200);
+
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
   }
 };

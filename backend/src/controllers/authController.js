@@ -54,3 +54,42 @@ export const updateProfile = async (req, res) => {
 
   res.json({ status: true, user: data });
 };
+
+export const googleCallback = async (req, res) => {
+  try {
+    const profile = req.user;
+
+    const email = profile.emails[0].value;
+
+    // cek user ada di database
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    // kalau akun tidak ada
+    if (!existingUser) {
+      return res.redirect(
+        "http://localhost:5173/login"
+      );
+    }
+
+    // encode data user
+    const userData = encodeURIComponent(
+      JSON.stringify(existingUser)
+    );
+
+    // redirect ke frontend
+    return res.redirect(
+      `http://localhost:5173/google-success?user=${userData}`
+    );
+
+  } catch (err) {
+    console.log(err);
+
+    return res.redirect(
+      "http://localhost:5173/login"
+    );
+  }
+};

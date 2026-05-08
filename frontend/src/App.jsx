@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import Beranda from "./pages/beranda";
 import Login from "./pages/login";
-import HalamanUtama from "./pages/halamanutama";
 import Koleksi from "./pages/koleksi";
 import Belanja from "./pages/belanja";
 import Keranjang from "./pages/keranjang";
@@ -16,6 +15,11 @@ import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import Notifications from "./pages/notifikasi";
 
+
+import GoogleSuccess from "./pages/googlesuccess";
+import SearchPage from "./pages/searchpage";
+import ResetPassword from "./pages/ResetPassword";
+import Notip from "./pages/notip";
 
 
 function AppWrapper() {
@@ -48,14 +52,10 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/halamanutama"
-          element={
-            <ProtectedRoute>
-              <HalamanUtama />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/google-success" element={<GoogleSuccess />} />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
+
 
         <Route
           path="/koleksi"
@@ -103,6 +103,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+
         
         <Route
   path="/notifications"
@@ -111,18 +112,41 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
 
 <Route
   path="/favorite"
-  element={
+    element={
     <ProtectedRoute>
       <Favorit />
     </ProtectedRoute>
   }
+  />
+
+<Route
+  path="/notip"
+
+  element={
+    <ProtectedRoute>
+      <Notip />
+    </ProtectedRoute>
+  }
 />
+
+        <Route
+          path="/favorite"
+          element={
+            <ProtectedRoute>
+              <Favorit />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/search" element={<SearchPage />} />
+
         <Route path="/admin" element={<AdminPerpustakaan />} />
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>
 
-      {/* 🔥 Floating hanya di halaman utama */}
-      {location.pathname === "/halamanutama" && <Floating onClick={() => navigate("/chatai")} />}
+      {location.pathname === "/halamanutama" && (
+        <Floating onClick={() => navigate("/chatai")} />
+      )}
     </>
   );
 }
