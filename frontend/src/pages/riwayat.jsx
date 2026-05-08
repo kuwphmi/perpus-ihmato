@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 
 import logo from "../assets/logo.png";
+import Floating from "./floating";
 
 export default function Riwayat() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -115,10 +116,9 @@ const handleExtension = async (book) => {
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
           {[
-            { name: "Beranda", path: "/halamanutama" },
-            { name: "Koleksi", path: "/koleksi" },
-            { name: "Belanja", path: "/belanja" },
-            { name: "Riwayat", path: "/riwayat" },
+            { name: "Home", path: "/koleksi" },
+            { name: "Shop", path: "/belanja" },
+            { name: "History", path: "/riwayat" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -145,7 +145,7 @@ const handleExtension = async (book) => {
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cari buku..."
+                placeholder="Search Books..."
                 className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-blue-500"
               />
             </div>
@@ -173,15 +173,15 @@ const handleExtension = async (book) => {
 
                   <div className="py-3 text-center">
                     <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Pemberitahuanmu
+                      Your Notifications
                     </h3>
 
                     <div className="py-6 text-sm text-gray-400 border-b">
-                      Belum ada notifikasi baru
+                      No new notifications yet
                     </div>
 
                     <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                      Lihat Semua
+                      View All
                     </button>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ const handleExtension = async (book) => {
               <div className="px-4 py-4">
                 <Link to="/profil">
                   <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                    Profilku
+                    My profile
                   </button>
                 </Link>
               </div>
@@ -254,7 +254,7 @@ const handleExtension = async (book) => {
       <div className="max-w-6xl mx-auto px-6 py-10">
 
         <h1 className="text-3xl font-bold text-blue-700 mb-6">
-          Riwayat Peminjaman
+          Borrowing History
         </h1>
 
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -285,7 +285,7 @@ const handleExtension = async (book) => {
                   onClick={() => handleExtension(book)}
                   className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
                 >
-                  Ajukan Perpanjangan
+                  Borrow Request
                 </button>
               )}
             </div>
@@ -298,16 +298,82 @@ const handleExtension = async (book) => {
 
       {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-        <Link to="/halamanutama"><FiHome size={24} /></Link>
         <Link to="/koleksi"><FiBook size={24} /></Link>
         <Link to="/belanja"><FiShoppingCart size={24} /></Link>
         <Link to="/riwayat"><FiClock size={24} /></Link>
       </div>
 
-      {/* FOOTER */}
-      <div className="mt-16 bg-gray-900 text-white text-center py-6">
-        <p className="text-sm">© 2026 BukuIn. All rights reserved.</p>
+       <div className="min-h-screen flex flex-col bg-gray-900">
+
+  {/* CONTENT */}
+  <main className="flex-1 bg-white">
+    {/* semua isi halaman */}
+  </main>
+
+  {/* FOOTER */}
+  <footer className="bg-gray-900 text-white">
+    
+    <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+
+      {/* BRAND */}
+      <div>
+        <h2 className="text-2xl font-bold text-blue-400 mb-3">
+          BukuIn
+        </h2>
+
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Discover thousands of books, explore new worlds,
+          and enjoy a modern digital library experience.
+        </p>
       </div>
+
+      {/* MENU */}
+      <div>
+        <h3 className="font-semibold text-lg mb-4">
+          Navigation
+        </h3>
+
+        <div className="flex flex-col gap-2 text-gray-400 text-sm">
+          <Link to="/koleksi" className="hover:text-white">
+            Home
+          </Link>
+
+          <Link to="/belanja" className="hover:text-white">
+            Shop
+          </Link>
+
+          <Link to="/riwayat" className="hover:text-white">
+            History
+          </Link>
+        </div>
+      </div>
+
+      {/* ABOUT */}
+      <div>
+        <h3 className="font-semibold text-lg mb-4">
+          About
+        </h3>
+
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Built for book lovers who want a simple,
+          elegant, and interactive reading platform.
+        </p>
+      </div>
+
+    </div>
+
+    {/* BOTTOM */}
+    <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+      © 2026 BukuIn. All rights reserved.
+    </div>
+
+  </footer>
+
+  {/* MASCOT */}
+  <Floating />
+
+</div>
+      
 
     </div>
   );

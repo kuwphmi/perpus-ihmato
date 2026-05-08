@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Heart, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; // ✅ ditambahin
+import Floating from "./floating";
 
 export default function Favorit() {
   const [favorites, setFavorites] = useState([]);
@@ -45,7 +46,7 @@ export default function Favorit() {
         <div className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-blue-600 fill-blue-600" />
           <h1 className="text-lg font-semibold text-blue-600 tracking-tight">
-            Favorit
+             My Favorite
           </h1>
         </div>
 
@@ -63,7 +64,7 @@ export default function Favorit() {
           <Search className="text-gray-400 w-4 h-4 mr-2" />
           <input
             type="text"
-            placeholder="Cari favorit..."
+            placeholder="Search favorites..."
             className="outline-none text-sm w-full bg-transparent"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -107,7 +108,7 @@ export default function Favorit() {
             {/* ❌ PUNYA KAMU (TIDAK DIHAPUS) */}
             <div className="text-center mt-24">
               <p className="text-gray-400 text-sm">
-                Belum ada favorit 💙
+                No favorites yet 💙
               </p>
             </div>
 
@@ -118,14 +119,14 @@ export default function Favorit() {
               </div>
 
               <p className="text-gray-400 text-sm mb-4">
-                Simpan buku yang kamu suka biar gampang ditemukan lagi
+               Save the books you love so they’re easier to find later.
               </p>
 
               <button
                 onClick={() => navigate("/koleksi")}
                 className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
               >
-                Jelajahi Buku
+                Explore Books
               </button>
             </div>
           </>
@@ -154,17 +155,73 @@ export default function Favorit() {
 
               <Link to="/profil">
                 <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-                  Profilku
+                  My Profile
                 </button>
               </Link>
             </div>
           </div>
         </div>
       )}
-      {/* FOOTER */}
-      <div className="mt-16 bg-gray-900 text-white text-center py-6">
-        <p className="text-sm">© 2026 BukuIn. All rights reserved.</p>
-      </div>
+       {/* FOOTER */}
+      <footer className="mt-20 bg-gray-900 text-white">
+      
+        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+      
+          {/* BRAND */}
+          <div>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">
+              BukuIn
+            </h2>
+      
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Discover thousands of books, explore new worlds,
+              and enjoy a modern digital library experience.
+            </p>
+          </div>
+      
+          {/* MENU */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              Navigation
+            </h3>
+      
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/koleksi" className="hover:text-white">
+                Home
+              </Link>
+      
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
+      
+              <Link to="/riwayat" className="hover:text-white">
+                History
+              </Link>
+            </div>
+          </div>
+      
+          {/* CONTACT */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              About
+            </h3>
+      
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Built for book lovers who want a simple,
+              elegant, and interactive reading platform.
+            </p>
+          </div>
+      
+        </div>
+      
+        {/* BOTTOM */}
+        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+          © 2026 BukuIn. All rights reserved.
+        </div>
+      
+      </footer>
+      {/* MASCOT (INI YANG KAMU TAMBAH) */}
+          <Floating />
     </div>
   );
 }

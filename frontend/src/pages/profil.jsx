@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import logo from "../assets/logo.png";
+import Floating from "./floating";
 
 import { FiHome, FiBook, FiShoppingCart, FiClock, FiCamera } from "react-icons/fi";
 
@@ -313,6 +314,9 @@ export default function Profil() {
             </div>
           </div>
         </div>
+
+        {/* MASCOT (INI YANG KAMU TAMBAH) */}
+            <Floating />
 
         {/* LOGOUT */}
         <div className="mt-8">

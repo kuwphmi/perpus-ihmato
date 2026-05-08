@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { FaUserDoctor } from "react-icons/fa6";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   FiSearch,
@@ -27,9 +27,7 @@ import logo from "../assets/logo.png";
 
 export default function HalamanUtama() {
   const [user, setUser] = useState({});
-  const [search, setSearch] = useState(""); 
-  const navigate = useNavigate(); 
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [search, setSearch] = useState("");  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
@@ -49,6 +47,7 @@ export default function HalamanUtama() {
   Religion: "religion",
 };
 
+const navigate = useNavigate();
 const fetchGenreBooks = async (category) => {
   try {
     const query = genreMap[category] || category.toLowerCase();
@@ -72,7 +71,6 @@ const fetchGenreBooks = async (category) => {
     console.log("error genre:", err);
   }
 };
-
 
 const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -109,12 +107,30 @@ const handleSearch = async (e) => {
 
     if (!search.trim()) return;
 
-    navigate(`/search?source=koleksi&q=${search}`);
+    try {
 
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${search}&limit=12`
+      );
+
+      const data = await res.json();
+
+      const books = data.docs.map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+      }));
+
+      setGenreBooks(books);
+
+      // supaya judul berubah
+      setActiveCategory(`Hasil pencarian: ${search}`);
+
+    } catch (err) {
+      console.log(err);
+    }
   }
-
 };
-
 useEffect(() => {
   const fetchRekomendasi = async () => {
     try {
@@ -343,29 +359,29 @@ useEffect(() => {
           {/* ICON */}
           <div className="flex items-center gap-3 ml-4 relative z-50">
 
-            <FiHeart className="text-2xl text-gray-600 cursor-pointer" />
+            <FiHeart className="text-2xl text-gray-600 cursor-pointer transition duration-300 hover:text-yellow-400" />
 
             {/* NOTIF */}
             <div className="relative">
-              <FiBell
-                className="text-2xl cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsNotifOpen(!isNotifOpen);
-                }}
-              />
+             <FiBell
+  className="text-2xl cursor-pointer transition duration-300 hover:text-yellow-400"
+  onClick={(e) => {
+    e.stopPropagation();
+    setIsNotifOpen(!isNotifOpen);
+  }}
+/>
 
               {isNotifOpen && (
                 <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
                   <div className="py-3 text-center">
                     <h3 className="font-semibold border-b pb-2">
-                      Pemberitahuanmu
+                       Your Notifications
                     </h3>
                     <div className="py-6 text-gray-400">
-                      Belum ada notifikasi
+                       No notifications yet
                     </div>
                     <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                      Lihat Semua
+                       View All
                     </button>
                   </div>
                 </div>
@@ -409,7 +425,7 @@ useEffect(() => {
       <div className="px-4 py-4">
         <Link to="/profil">
           <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-            Profilku
+              My Profile
           </button>
         </Link>
       </div>
@@ -431,39 +447,50 @@ useEffect(() => {
   />
 )}
 
-{/* BANNER FULLSCREEN */}
-<div className="relative w-full h-screen overflow-hidden">
+{/* BANNER */}
+<section className="relative w-full overflow-hidden">
 
-  <div
-    className="flex h-full transition-transform duration-700"
-    style={{
-      transform: `translateX(-${currentSlide * 100}%)`,
-    }}
-  >
+  <div className="relative w-full aspect-[16/13] md:aspect-[16/7]">
 
-    {slides.map((slide, i) => (
-      <div key={i} className="min-w-full h-full relative">
+    <div
+      className="flex h-full transition-transform duration-700"
+      style={{
+        transform: `translateX(-${currentSlide * 100}%)`,
+      }}
+    >
 
-        <img
-          src={slide.img}
-          className="w-full h-full object-cover"
-        />
+      {slides.map((slide, i) => (
+        <div
+          key={i}
+          className="min-w-full h-full relative"
+        >
 
-        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center px-4">
+          <img
+            src={slide.img}
+            className="w-full h-full object-cover"
+          />
 
-          <h1 className="text-3xl md:text-6xl font-bold text-white mb-4">
-            {slide.title}
-          </h1>
+          {/* OVERLAY */}
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-center px-6">
 
-          <p className="text-white/80 text-sm md:text-lg max-w-xl">
-            {slide.subtitle}
-          </p>
+            <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+              {slide.title}
+            </h1>
+
+            <p className="text-white/90 text-sm md:text-lg max-w-2xl">
+              {slide.subtitle}
+            </p>
+
+          </div>
 
         </div>
-      </div>
-    ))}
+      ))}
+
+    </div>
+
   </div>
-</div>
+
+</section>
 
       {/* ================= KATEGORI ================= */}
       <section className="bg-blue-50 py-12 px-6 md:px-20">

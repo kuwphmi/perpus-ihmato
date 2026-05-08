@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // IMPORT ASSETS
-import banner1 from "../assets/banner1.png";
-import banner2 from "../assets/banner2.png";
-import banner3 from "../assets/banner3.png";
+import banner5 from "../assets/banner5.webp";
+import banner4 from "../assets/banner4.webp";
+import banner6 from "../assets/banner6.webp";
+import banner8 from "../assets/banner8.webp";
+import banner9 from "../assets/banner9.webp";
 import logo from "../assets/logo.png";
+import Floating from "./floating";
 
-// ICONS
 import {
   FiBook,
   FiUser,
@@ -23,7 +25,18 @@ import {
   FiMenu,
   FiX,
   FiBell,
+  FiSearch,
+  FiHome,
+  FiShoppingCart,
+  FiClock,
 } from "react-icons/fi";
+
+import { MdOutlinePalette } from "react-icons/md";
+import { GiSpellBook } from "react-icons/gi";
+import { LuChefHat } from "react-icons/lu";
+import { FaRegHeart } from "react-icons/fa";
+import { FaUserDoctor } from "react-icons/fa6";
+
 
 export default function Belanja() {
   const [activeCategory, setActiveCategory] = useState(null);
@@ -54,20 +67,9 @@ export default function Belanja() {
 
   }, []);
 
-  const genreMap = {
-    Art: "art",
-    "Science Fiction": "science fiction",
-    Fantasy: "fantasy",
-    Biographies: "biography",
-    Recipe: "cooking",
-    Romance: "romance",
-    Textbook: "textbook",
-    Children: "children",
-    Medicine: "medicine",
-    Religion: "religion",
-  };
+ 
 
-  const banners = [banner1, banner2, banner3];
+  const banners = [banner5, banner4, banner6, banner9,banner5];
 
   /* ================= GENRE MAP ================= */
   const fetchGenreBooks = async (category) => {
@@ -195,16 +197,55 @@ export default function Belanja() {
   };
 
   const categories = [
-    { name: "Art", icon: <FiFeather /> },
-    { name: "Science Fiction", icon: <FiUser /> },
-    { name: "Fantasy", icon: <FiBriefcase /> },
-    { name: "Biographies", icon: <FiBook /> },
-    { name: "Recipe", icon: <FiHeart /> },
-    { name: "Romance", icon: <FiTrendingUp /> },
-    { name: "Textbook", icon: <FiGlobe /> },
-    { name: "Children", icon: <FiTool /> },
-    { name: "Medicine", icon: <FiSmile /> },
-    { name: "Religion", icon: <FiFileText /> },
+      {
+        name: "Art",
+        icon: <MdOutlinePalette />,
+      },
+    
+      {
+        name: "Science Fiction",
+        icon: <FiGlobe />,
+      },
+    
+      {
+        name: "Fantasy",
+        icon: <GiSpellBook />,
+      },
+    
+      {
+        name: "Biographies",
+        icon: <FiUser />,
+      },
+    
+      {
+        name: "Recipe",
+        icon: <LuChefHat />,
+      },
+    
+      {
+        name: "Romance",
+        icon: <FaRegHeart />,
+      },
+    
+      {
+        name: "Textbox",
+        icon: <FiBook />,
+      },
+    
+      {
+        name: "Children",
+        icon: <FiSmile />,
+      },
+    
+     {
+      name: "Medicine",
+      icon: <FaUserDoctor />,
+    },
+    
+      {
+        name: "Religion",
+        icon: <FiFileText />,
+      },
   ];
 
   return (
@@ -262,15 +303,15 @@ export default function Belanja() {
 
                 <div className="py-3 text-center">
                   <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                    Pemberitahuanmu
+                    Your Notification
                   </h3>
 
                   <div className="py-6 text-sm text-gray-400 border-b">
-                    Belum ada notifikasi baru
+                    No new notifications yet.
                   </div>
 
                   <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                    Lihat Semua
+                    View All
                   </button>
                 </div>
               </div>
@@ -312,7 +353,7 @@ export default function Belanja() {
       <div className="px-4 py-4">
         <Link to="/profil">
           <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-            Profilku
+            My profile
           </button>
         </Link>
       </div>
@@ -355,40 +396,43 @@ export default function Belanja() {
         </div>
       </header>
 
-      {/* ================= BANNER ================= */}
-      <section className="relative h-[90vh] w-full overflow-hidden">
-        {banners.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt=""
-            className={`absolute w-full h-full object-cover transition-opacity duration-700 ${currentSlide === index ? "opacity-100" : "opacity-0"
-              }`}
-          />
-        ))}
-      </section>
+     {/* ================= BANNER ================= */}
+<section className="relative w-full overflow-hidden bg-[#0B5DFF]">
+  <div className="relative w-full aspect-[16/9] md:h-[90vh]">
+    {banners.map((img, index) => (
+      <img
+        key={index}
+        src={img}
+        alt=""
+        className={`absolute inset-0 w-full h-full object-fill transition-opacity duration-700 ${
+          currentSlide === index ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    ))}
+  </div>
+</section>
 
       {/* ================= SEARCH ================= */}
-      <section className="relative z-20 -mt-20 px-6 md:px-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-xl shadow-xl p-4 flex items-center">
-            <input
-              type="text"
-              placeholder="Cari judul buku..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 px-5 py-3 text-sm focus:outline-none"
-            />
+<section className="relative z-20 -mt-10 md:-mt-20 px-4 md:px-20">
+  <div className="max-w-6xl mx-auto">
+    <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
+      <input
+        type="text"
+        placeholder="Search book titles..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="flex-1 px-4 md:px-5 py-3 text-sm rounded-lg focus:outline-none"
+      />
 
-            <button
-              onClick={handleSearch}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg"
-            >
-              Cari
-            </button>
-          </div>
-        </div>
-      </section>
+      <button
+        onClick={handleSearch}
+        className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 md:px-6 py-3 rounded-xl text-sm font-medium whitespace-nowrap"
+      >
+        Search
+      </button>
+    </div>
+  </div>
+</section>
 
       {/* ================= KATEGORI ================= */}
       <section className="bg-blue-50 py-12 px-6 md:px-20">
@@ -462,14 +506,15 @@ export default function Belanja() {
       )}
 
       {/* ================= LANDSCAPE ================= */}
-      <section className="px-6 md:px-20 pb-14">
-        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl">
-          <img
-            src={banner1}
-            className="w-full h-80 md:h-[28rem] object-cover"
-          />
-        </div>
-      </section>
+<section className="px-4 md:px-20 pb-14">
+  <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
+    <img
+      src={banner5}
+      className="w-full h-auto object-contain"
+      alt="Banner"
+    />
+  </div>
+</section>
 
       {/* ================= BUKU TERBARU ================= */}
       {!activeCategory && (
@@ -483,9 +528,63 @@ export default function Belanja() {
       )}
 
       {/* FOOTER */}
-      <footer className="mt-16 bg-gray-900 text-white text-center py-6">
-        <p className="text-sm">© 2026 BukuIn. All rights reserved.</p>
-      </footer>
+<footer className="mt-20 bg-gray-900 text-white">
+
+  <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+
+    {/* BRAND */}
+    <div>
+      <h2 className="text-2xl font-bold text-blue-400 mb-3">
+        BukuIn
+      </h2>
+
+      <p className="text-gray-400 text-sm leading-relaxed">
+        Discover thousands of books, explore new worlds,
+        and enjoy a modern digital library experience.
+      </p>
+    </div>
+
+    {/* MENU */}
+    <div>
+      <h3 className="font-semibold text-lg mb-4">
+        Navigation
+      </h3>
+
+      <div className="flex flex-col gap-2 text-gray-400 text-sm">
+        <Link to="/koleksi" className="hover:text-white">
+          Home
+        </Link>
+
+        <Link to="/belanja" className="hover:text-white">
+          Shop
+        </Link>
+
+        <Link to="/riwayat" className="hover:text-white">
+          History
+        </Link>
+      </div>
+    </div>
+
+    {/* CONTACT */}
+    <div>
+      <h3 className="font-semibold text-lg mb-4">
+        About
+      </h3>
+
+      <p className="text-gray-400 text-sm leading-relaxed">
+        Built for book lovers who want a simple,
+        elegant, and interactive reading platform.
+      </p>
+    </div>
+
+  </div>
+
+  {/* BOTTOM */}
+  <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+    © 2026 BukuIn. All rights reserved.
+  </div>
+
+</footer>
     </div>
   );
 }
@@ -681,14 +780,14 @@ function BookCard({
                 onClick={() => tambahKeKeranjang()}
                 className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
               >
-                Keranjang
+                Cart
               </button>
 
               <button
                 onClick={handleBuy}
                 className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
               >
-                Beli
+                Buy
               </button>
 
             </div>
@@ -724,7 +823,7 @@ function BukuTerlaris({
   return (
     <section className="px-6 md:px-20 pb-14">
       <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-        Buku Terlaris
+        Best Selling Books
       </h2>
 
       <div className="flex justify-end gap-2 mb-3">
@@ -789,7 +888,7 @@ function BukuTerbaru({
   return (
     <section className="px-6 md:px-20 pb-14">
       <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-        Buku Terbaru
+        Newest Books
       </h2>
 
       <div className="flex justify-end gap-2 mb-3">
@@ -829,5 +928,8 @@ function BukuTerbaru({
         ))}
       </div>
     </section>
+  
   );
+  {/* MASCOT (INI YANG KAMU TAMBAH) */}
+    <Floating />
 }

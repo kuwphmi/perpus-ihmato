@@ -213,7 +213,7 @@ export default function Keranjang() {
 
                 <Link to="/profil">
                   <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-                    Profilku
+                    My Profile
                   </button>
                 </Link>
               </div>
