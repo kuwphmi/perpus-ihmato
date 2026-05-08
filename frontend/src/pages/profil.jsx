@@ -95,14 +95,14 @@ export default function Profil() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-28">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
           {[
-            { name: "Beranda", path: "/halamanutama" },
-            { name: "Koleksi", path: "/koleksi" },
-            { name: "Belanja", path: "/belanja" },
-            { name: "Riwayat", path: "/riwayat" },
+
+            { name: "Home", path: "/koleksi" },
+            { name: "Shop", path: "/belanja" },
+            { name: "History", path: "/riwayat" },
           ].map((item, i) => (
             <Link key={i} to={item.path} className="px-3 py-1 rounded-md hover:text-blue-200 hover:bg-white/10 transition">
               {item.name}
@@ -116,7 +116,7 @@ export default function Profil() {
         <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" className="w-full h-full object-cover opacity-40" alt="banner" />
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10">
+      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10 flex-1 w-full">
         {message && <div className="mb-6 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm text-center">{message}</div>}
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-end">
           {/* FOTO */}
@@ -143,9 +143,7 @@ export default function Profil() {
         <div className="grid md:grid-cols-2 gap-6 mt-10">
           {/* MOBILE NAV */}
           <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-            <Link to="/halamanutama">
-              <FiHome size={24} />
-            </Link>
+    
             <Link to="/koleksi">
               <FiBook size={24} />
             </Link>
@@ -160,20 +158,20 @@ export default function Profil() {
           {/* BIODATA */}
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-700">Biodata Diri</h3>
+              <h3 className="font-semibold text-gray-700">Personal Information</h3>
 
               <button
                 onClick={isEdit ? handleSave : () => setIsEdit(true)}
                 className={`text-sm font-medium px-4 py-1.5 rounded-lg transition ${isEdit ? "bg-blue-600 text-white hover:bg-blue-700" : "text-blue-600 border border-blue-200 hover:bg-blue-50"}`}
               >
-                {isEdit ? "Simpan" : "Edit"}
+                {isEdit ? "Save" : "Edit"}
               </button>
             </div>
 
             <div className="space-y-4 text-sm">
               {/* Nama */}
               <div>
-                <p className="text-gray-500 mb-1">Nama Lengkap</p>
+                <p className="text-gray-500 mb-1">Full Name</p>
 
                 {isEdit ? (
                   <input
@@ -201,7 +199,7 @@ export default function Profil() {
 
               {/* No Telepon */}
               <div>
-                <p className="text-gray-500 mb-1">No Telepon</p>
+                <p className="text-gray-500 mb-1">Phone Number</p>
 
                 {isEdit ? (
                   <input
@@ -243,7 +241,7 @@ export default function Profil() {
 
               {/* Tanggal Lahir */}
               <div>
-                <p className="text-gray-500 mb-1">Tanggal Lahir</p>
+                <p className="text-gray-500 mb-1">Date of Birth</p>
 
                 {isEdit ? (
                   <input
@@ -264,7 +262,7 @@ export default function Profil() {
 
               {/* Jenis Kelamin */}
               <div>
-                <p className="text-gray-500 mb-1">Jenis Kelamin</p>
+                <p className="text-gray-500 mb-1">Gender</p>
 
                 {isEdit ? (
                   <select
@@ -277,9 +275,9 @@ export default function Profil() {
                     }
                     className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
                   >
-                    <option value="">Pilih</option>
-                    <option value="Laki-laki">Laki-laki</option>
-                    <option value="Perempuan">Perempuan</option>
+                    <option value="">Select</option>
+<option value="Male">Male</option>
+<option value="Female">Female</option>
                   </select>
                 ) : (
                   <p className="font-medium">{user.gender || "-"}</p>
@@ -290,41 +288,101 @@ export default function Profil() {
 
           {/* KARTU ANGGOTA */}
           <div className="bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-semibold text-gray-700 mb-4">Kartu Anggota</h3>
+            <h3 className="font-semibold text-gray-700 mb-4">Member Card</h3>
 
             <div className="relative rounded-2xl p-6 text-white overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-blue-800 shadow-lg">
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
 
-              <p className="text-xs opacity-70 mb-1">Nomor Anggota</p>
+              <p className="text-xs opacity-70 mb-1">Member Number</p>
 
               <h2 className="text-2xl font-bold mb-6 tracking-wider">{user.member_code || user.id?.slice(0, 8).toUpperCase() || "-"}</h2>
 
               <div className="flex justify-between text-sm">
                 <div>
-                  <p className="opacity-70 text-xs">Nama</p>
+                  <p className="opacity-70 text-xs">Name</p>
                   <p className="font-semibold">{user.name?.toUpperCase()}</p>
                 </div>
 
                 <div className="text-right">
                   <p className="opacity-70 text-xs">Status</p>
-                  <p className="font-semibold text-green-300">Aktif</p>
+                  <p className="font-semibold text-green-300">Active</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+    
         {/* MASCOT (INI YANG KAMU TAMBAH) */}
             <Floating />
 
         {/* LOGOUT */}
-        <div className="mt-8">
+        <div className="mt-8 mb-16">
           <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold shadow transition">
-            Keluar
+            Logout
           </button>
         </div>
       </div>
+      {/* FOOTER */}
+  <footer className="bg-gray-900 text-white">
+    
+    <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+
+      {/* BRAND */}
+      <div>
+        <h2 className="text-2xl font-bold text-blue-400 mb-3">
+          BukuIn
+        </h2>
+
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Discover thousands of books, explore new worlds,
+          and enjoy a modern digital library experience.
+        </p>
+      </div>
+
+      {/* MENU */}
+      <div>
+        <h3 className="font-semibold text-lg mb-4">
+          Navigation
+        </h3>
+
+        <div className="flex flex-col gap-2 text-gray-400 text-sm">
+          <Link to="/koleksi" className="hover:text-white">
+            Home
+          </Link>
+
+          <Link to="/belanja" className="hover:text-white">
+            Shop
+          </Link>
+
+          <Link to="/riwayat" className="hover:text-white">
+            History
+          </Link>
+        </div>
+      </div>
+
+      {/* ABOUT */}
+      <div>
+        <h3 className="font-semibold text-lg mb-4">
+          About
+        </h3>
+
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Built for book lovers who want a simple,
+          elegant, and interactive reading platform.
+        </p>
+      </div>
+
+    </div>
+
+    {/* BOTTOM */}
+    <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+      © 2026 BukuIn. All rights reserved.
+    </div>
+
+  </footer>
+      
     </div>
   );
 }

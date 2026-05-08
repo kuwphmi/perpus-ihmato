@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Heart, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; // ✅ ditambahin
 import Floating from "./floating";
+import { FiBell } from "react-icons/fi";
 
 export default function Favorit() {
   const [favorites, setFavorites] = useState([]);
@@ -10,6 +11,7 @@ export default function Favorit() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const popupRef = useRef();
   const navigate = useNavigate(); // ✅ ditambahin
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("favorites")) || [];
@@ -41,127 +43,176 @@ export default function Favorit() {
     <div className="min-h-screen bg-[#f7faff]">
 
       {/* 🔹 HEADER */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b px-6 py-3 flex items-center justify-between">
-        
-        <div className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-blue-600 fill-blue-600" />
-          <h1 className="text-lg font-semibold text-blue-600 tracking-tight">
-             My Favorite
-          </h1>
+<div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b px-6 py-3 flex items-center justify-between">
+  
+  {/* LEFT */}
+  <div className="flex items-center gap-2">
+    <Heart className="w-5 h-5 text-blue-600 fill-blue-600" />
+
+    <h1 className="text-lg font-semibold text-blue-600 tracking-tight">
+      My Favorite
+    </h1>
+  </div>
+
+  {/* RIGHT */}
+  <div className="flex items-center gap-4">
+
+    {/* NOTIF */}
+              <div className="relative">
+                <FiBell
+                  className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsNotifOpen(!isNotifOpen);
+                  }}
+                />
+    
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
+                    <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+    
+                    <div className="py-3 text-center">
+                      <h3 className="font-semibold text-gray-700 pb-2 border-b">
+                        Your Notification
+                      </h3>
+    
+                      <div className="py-6 text-sm text-gray-400 border-b">
+                        No new notifications yet.
+                      </div>
+    
+                      <button
+      onClick={() => navigate("/notip")}
+      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+    >
+      View All
+    </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+    {/* 👤 PROFILE */}
+    <div
+      onClick={() => setIsProfileOpen(true)}
+      className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer hover:scale-105 transition"
+    >
+      {user.name ? user.name.charAt(0) : "U"}
+    </div>
+
+  </div>
+</div>
+
+{/* 🔹 SEARCH */}
+<div className="px-5 py-3">
+  <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-blue-400 transition">
+    <Search className="text-gray-400 w-4 h-4 mr-2" />
+
+    <input
+      type="text"
+      placeholder="Search favorites..."
+      className="outline-none text-sm w-full bg-transparent"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </div>
+</div>
+
+{/* 🔹 LIST */}
+<div className="px-5 pb-6 space-y-3 max-h-[70vh] overflow-y-auto">
+  {filtered.length > 0 ? (
+    filtered.map((book) => (
+      <div
+        key={book.id}
+        className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group"
+      >
+        <img
+          src={book.cover}
+          alt={book.title}
+          className="w-14 h-20 object-cover rounded-lg group-hover:scale-[1.03] transition duration-300"
+        />
+
+        <div className="flex-1">
+          <h2 className="text-sm font-semibold text-gray-800 line-clamp-1">
+            {book.title}
+          </h2>
+
+          <p className="text-xs text-gray-500">
+            {book.author || "Unknown"}
+          </p>
         </div>
 
-        <div
-          onClick={() => setIsProfileOpen(true)}
-          className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer hover:scale-105 transition"
+        <button
+          onClick={() => removeFavorite(book.id)}
+          className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-red-100 transition-all duration-300 active:scale-90"
         >
+          <Heart className="w-5 h-5 text-red-500 fill-red-500 transition-transform duration-300 group-hover:scale-110" />
+        </button>
+      </div>
+    ))
+  ) : (
+    <>
+      {/* EMPTY TEXT */}
+      <div className="text-center mt-24">
+        <p className="text-gray-400 text-sm">
+          No favorites yet 💙
+        </p>
+      </div>
+
+      {/* EMPTY STATE */}
+      <div className="flex flex-col items-center justify-center mt-6 text-center">
+        <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-4">
+          <Heart className="w-6 h-6 text-blue-500" />
+        </div>
+
+        <p className="text-gray-400 text-sm mb-4">
+          Save the books you love so they’re easier to find later.
+        </p>
+
+        <button
+          onClick={() => navigate("/koleksi")}
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+        >
+          Explore Books
+        </button>
+      </div>
+    </>
+  )}
+</div>
+
+{/* 🔥 POPUP PROFILE */}
+{isProfileOpen && (
+  <div
+    ref={popupRef}
+    className="absolute right-0 translate-x-[-15%] top-14"
+  >
+    <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
+
+      <div className="flex flex-col items-center py-6">
+
+        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
           {user.name ? user.name.charAt(0) : "U"}
         </div>
+
+        <h2 className="font-semibold text-gray-800">
+          {user.name || "-"}
+        </h2>
+
+        <p className="text-sm text-gray-500 mb-5">
+          {user.email || "-"}
+        </p>
+
+        <Link to="/profil">
+          <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
+            My Profile
+          </button>
+        </Link>
+
       </div>
+    </div>
+  </div>
+)}
 
-      {/* 🔹 SEARCH */}
-      <div className="px-5 py-3">
-        <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-blue-400 transition">
-          <Search className="text-gray-400 w-4 h-4 mr-2" />
-          <input
-            type="text"
-            placeholder="Search favorites..."
-            className="outline-none text-sm w-full bg-transparent"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
 
-      {/* 🔹 LIST */}
-     <div className="px-5 pb-6 space-y-3 max-h-[70vh] overflow-y-auto">
-        {filtered.length > 0 ? (
-          filtered.map((book) => (
-            <div
-              key={book.id}
-              className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group"
-            >
-              <img
-                src={book.cover}
-                alt={book.title}
-                className="w-14 h-20 object-cover rounded-lg group-hover:scale-[1.03] transition duration-300"
-              />
-
-              <div className="flex-1">
-                <h2 className="text-sm font-semibold text-gray-800 line-clamp-1">
-                  {book.title}
-                </h2>
-                <p className="text-xs text-gray-500">
-                  {book.author || "Unknown"}
-                </p>
-              </div>
-
-              <button
-                onClick={() => removeFavorite(book.id)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-red-100 transition-all duration-300 active:scale-90"
-              >
-                <Heart className="w-5 h-5 text-red-500 fill-red-500 transition-transform duration-300 group-hover:scale-110" />
-              </button>
-            </div>
-          ))
-        ) : (
-          <>
-            {/* ❌ PUNYA KAMU (TIDAK DIHAPUS) */}
-            <div className="text-center mt-24">
-              <p className="text-gray-400 text-sm">
-                No favorites yet 💙
-              </p>
-            </div>
-
-            {/* ✅ TAMBAHAN (BIAR LEBIH HIDUP) */}
-            <div className="flex flex-col items-center justify-center mt-6 text-center">
-              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-4">
-                <Heart className="w-6 h-6 text-blue-500" />
-              </div>
-
-              <p className="text-gray-400 text-sm mb-4">
-               Save the books you love so they’re easier to find later.
-              </p>
-
-              <button
-                onClick={() => navigate("/koleksi")}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              >
-                Explore Books
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* 🔥 POPUP PROFILE */}
-      {isProfileOpen && (
-        <div
-          ref={popupRef}
-          className="absolute right-0 translate-x-[-15%] top-14"
-        >
-          <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
-            <div className="flex flex-col items-center py-6">
-              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
-                {user.name ? user.name.charAt(0) : "U"}
-              </div>
-
-              <h2 className="font-semibold text-gray-800">
-                {user.name || "-"}
-              </h2>
-
-              <p className="text-sm text-gray-500 mb-5">
-                {user.email || "-"}
-              </p>
-
-              <Link to="/profil">
-                <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-                  My Profile
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
        {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
       

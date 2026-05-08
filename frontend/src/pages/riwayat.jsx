@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiSearch,
   FiBell,
@@ -16,6 +16,7 @@ import Floating from "./floating";
 export default function Riwayat() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
 
   const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
@@ -153,40 +154,43 @@ const handleExtension = async (book) => {
 
           {/* ICON */}
             <div className="flex items-center gap-3 ml-4 relative">
-            <FiHeart className="text-2xl text-gray-600 hover:text-red-500 cursor-pointer" />
+            <Link to="/favorite">
+  <FiHeart className="text-2xl text-gray-600 cursor-pointer transition duration-300 hover:text-yellow-400" />
+</Link>
 
-            {/* 🔔 NOTIF */}
-            <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 hover:text-yellow-500 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsNotifOpen(!isNotifOpen);
-                  setIsProfileOpen(false);
-                }}
-              />
-
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Your Notifications
-                    </h3>
-
-                    <div className="py-6 text-sm text-gray-400 border-b">
-                      No new notifications yet
+          {/* NOTIF */}
+                    <div className="relative">
+                      <FiBell
+                        className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNotifOpen(!isNotifOpen);
+                        }}
+                      />
+          
+                      {isNotifOpen && (
+                        <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
+                          <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+          
+                          <div className="py-3 text-center">
+                            <h3 className="font-semibold text-gray-700 pb-2 border-b">
+                              Your Notification
+                            </h3>
+          
+                            <div className="py-6 text-sm text-gray-400 border-b">
+                              No new notifications yet.
+                            </div>
+          
+                            <button
+            onClick={() => navigate("/notip")}
+            className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+          >
+            View All
+          </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-
-                    <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                      View All
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* 👤 PROFILE */}
           <div className="relative">

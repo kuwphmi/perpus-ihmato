@@ -97,10 +97,10 @@ export default function HalamanUtama() {
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
           {[
-            { name: "Beranda", path: "/halamanutama" },
-            { name: "Koleksi", path: "/koleksi" },
-            { name: "Belanja", path: "/belanja" },
-            { name: "Riwayat", path: "/riwayat" },
+           
+            { name: "home", path: "/koleksi" },
+            { name: "Shop", path: "/belanja" },
+            { name: "History", path: "/riwayat" },
           ].map((item, i) => (
             <Link
               key={i}

@@ -299,7 +299,7 @@ useEffect(() => {
           }}
           className="rounded-xl border px-4 py-2 hover:bg-gray-100"
         >
-          Batal
+          Cancel
         </button>
 
         <button
@@ -359,7 +359,9 @@ useEffect(() => {
           {/* ICON */}
           <div className="flex items-center gap-3 ml-4 relative z-50">
 
-            <FiHeart className="text-2xl text-gray-600 cursor-pointer transition duration-300 hover:text-yellow-400" />
+            <Link to="/favorite">
+  <FiHeart className="text-2xl text-gray-600 cursor-pointer transition duration-300 hover:text-yellow-400" />
+</Link>
 
             {/* NOTIF */}
             <div className="relative">
@@ -380,9 +382,12 @@ useEffect(() => {
                     <div className="py-6 text-gray-400">
                        No notifications yet
                     </div>
-                    <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                       View All
-                    </button>
+                    <button
+  onClick={() => navigate("/notip")}
+  className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+>
+  View All
+</button>
                   </div>
                 </div>
               )}
@@ -577,7 +582,7 @@ useEffect(() => {
             onClick={() => handlePinjam(book)}
             className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700"
           >
-            Pinjam
+           Borrow
           </button>
 
         </div>

@@ -21,7 +21,7 @@ export default function GoogleSuccess() {
       );
 
       // redirect ke halaman utama
-      window.location.href = "/halamanutama";
+      window.location.href = "/koleksi";
     } else {
       // kalau gagal login
       window.location.href = "/login";

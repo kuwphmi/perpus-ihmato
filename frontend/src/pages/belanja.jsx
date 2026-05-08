@@ -310,9 +310,12 @@ export default function Belanja() {
                     No new notifications yet.
                   </div>
 
-                  <button className="pt-2 text-sm text-gray-600 hover:text-blue-600">
-                    View All
-                  </button>
+                  <button
+  onClick={() => navigate("/notip")}
+  className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+>
+  View All
+</button>
                 </div>
               </div>
             )}

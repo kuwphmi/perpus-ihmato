@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import Beranda from "./pages/beranda";
 import Login from "./pages/login";
-import HalamanUtama from "./pages/halamanutama";
 import Koleksi from "./pages/koleksi";
 import Belanja from "./pages/belanja";
 import Keranjang from "./pages/keranjang";
@@ -16,8 +15,8 @@ import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
-
 import ResetPassword from "./pages/ResetPassword";
+import Notip from "./pages/notip";
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -53,14 +52,6 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
 
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route
-          path="/halamanutama"
-          element={
-            <ProtectedRoute>
-              <HalamanUtama />
-            </ProtectedRoute>
-          }
-        />
 
         <Route
           path="/koleksi"
@@ -108,6 +99,14 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/notip"
+  element={
+    <ProtectedRoute>
+      <Notip />
+    </ProtectedRoute>
+  }
+/>
 
         <Route
           path="/favorite"
