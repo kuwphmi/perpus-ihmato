@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
 
 export default function SearchPage() {
 
@@ -14,7 +15,7 @@ export default function SearchPage() {
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // FETCH BOOKS
+  // ================= FETCH BOOK =================
   const fetchBooks = async (keyword) => {
 
     try {
@@ -41,7 +42,7 @@ export default function SearchPage() {
 
   };
 
-  // SEARCH AWAL
+  // ================= SEARCH AWAL =================
   useEffect(() => {
 
     if (initialQuery) {
@@ -50,7 +51,7 @@ export default function SearchPage() {
 
   }, [initialQuery]);
 
-  // HANDLE SEARCH
+  // ================= HANDLE SEARCH =================
   const handleSearch = (e) => {
 
     if (e.key === "Enter") {
@@ -65,10 +66,162 @@ export default function SearchPage() {
 
   };
 
+  // ================= CART =================
+const tambahKeKeranjang = async (book) => {
+
+  try {
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      alert("Login dulu");
+      return;
+    }
+
+    await axios.post(
+      "http://localhost:3000/api/cart",
+      {
+        user_id: user.id,
+        book_key: book.cover + "_" + book.title,
+        title: book.title,
+        author: book.author,
+        cover: book.cover,
+        price: book.price,
+        stock: book.stock,
+      }
+    );
+
+    alert("Masuk keranjang");
+
+  } catch (err) {
+
+    console.log(err);
+    alert("Gagal tambah keranjang");
+
+  }
+
+};
+
+
+  // ================= BUY =================
+  const handleBuy = async (book) => {
+
+    try {
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (!user) {
+        alert("Login dulu");
+        return;
+      }
+
+      const res = await fetch(
+        "http://localhost:3000/api/payment/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            items: [
+              {
+                book_key: book.title,
+                title: book.title,
+                price: book.price,
+                qty: 1,
+              },
+            ],
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      window.snap.pay(data.token);
+
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  // ================= WISHLIST =================
+  const handleWishlist = async (book) => {
+
+    try {
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (!user) {
+        alert("Login dulu");
+        return;
+      }
+
+      await fetch(
+        "http://localhost:3000/api/favorites",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            title: book.title,
+            author: book.author,
+            cover: book.cover,
+          }),
+        }
+      );
+
+      alert("Masuk wishlist");
+
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  // ================= BORROW =================
+  const handleBorrow = async (book) => {
+
+    try {
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (!user) {
+        alert("Login dulu");
+        return;
+      }
+
+      await fetch(
+        "http://localhost:3000/api/loan-requests",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            title: book.title,
+            author: book.author,
+            cover: book.cover,
+            book_key: book.title,
+          }),
+        }
+      );
+
+      alert("Pengajuan pinjam berhasil");
+
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 px-6 py-10">
 
-      {/* SEARCH BAR */}
       <div className="max-w-3xl mx-auto mb-10">
 
         <input
@@ -82,12 +235,10 @@ export default function SearchPage() {
 
       </div>
 
-      {/* TITLE */}
       <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">
         Search Result: "{search}"
       </h2>
 
-      {/* BOOK GRID */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
 
         {books.map((book, index) => (
@@ -97,7 +248,6 @@ export default function SearchPage() {
             className="w-full bg-white border rounded-2xl shadow hover:shadow-xl transition overflow-hidden"
           >
 
-            {/* COVER */}
             <div className="h-52 bg-gray-100">
 
               {book.cover ? (
@@ -114,7 +264,6 @@ export default function SearchPage() {
 
             </div>
 
-            {/* CONTENT */}
             <div className="p-4 flex flex-col">
 
               <h3 className="font-bold text-gray-800 line-clamp-2 text-sm">
@@ -125,7 +274,6 @@ export default function SearchPage() {
                 {book.author}
               </p>
 
-              {/* PRICE */}
               {source === "belanja" && (
                 <div className="flex justify-between items-center mb-3">
 
@@ -134,32 +282,43 @@ export default function SearchPage() {
                   </p>
 
                   <p className="text-xs text-gray-500">
-                    Sto: {book.stock}
+                    Stock: {book.stock}
                   </p>
 
                 </div>
               )}
 
-              {/* BUTTON */}
               <div className="flex gap-2 mt-auto">
 
                 {source === "koleksi" ? (
                   <>
-                    <button className="flex-1 border border-pink-500 text-pink-500 py-2 rounded-xl text-sm hover:bg-pink-50">
+                    <button
+                      onClick={() => handleWishlist(book)}
+                      className="flex-1 border border-pink-500 text-pink-500 py-2 rounded-xl text-sm hover:bg-pink-50"
+                    >
                       Wishlist
                     </button>
 
-                    <button className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700">
+                    <button
+                      onClick={() => handleBorrow(book)}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700"
+                    >
                       Borrow
                     </button>
                   </>
                 ) : (
                   <>
-                    <button className="flex-1 border border-blue-600 text-blue-600 py-2 rounded-xl text-sm hover:bg-blue-50">
+                    <button
+                      onClick={() => tambahKeKeranjang(book)}
+                      className="flex-1 border border-blue-600 text-blue-600 py-2 rounded-xl text-sm hover:bg-blue-50"
+                    >
                       Cart
                     </button>
 
-                    <button className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700">
+                    <button
+                      onClick={() => handleBuy(book)}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700"
+                    >
                       Buy
                     </button>
                   </>
@@ -167,7 +326,6 @@ export default function SearchPage() {
 
               </div>
 
-              {/* SHOW DETAIL */}
               <button
                 onClick={() => setSelectedBook(book)}
                 className="mt-3 bg-gray-100 py-2 rounded-xl hover:bg-gray-200 text-sm"
@@ -182,112 +340,6 @@ export default function SearchPage() {
         ))}
 
       </div>
-
-      {/* POPUP DETAIL */}
-      {selectedBook && (
-
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-
-          <div className="bg-white rounded-3xl w-full max-w-3xl p-6 relative">
-
-            {/* CLOSE */}
-            <button
-              onClick={() => setSelectedBook(null)}
-              className="absolute top-4 right-4 text-2xl hover:text-red-500"
-            >
-              ✕
-            </button>
-
-            <div className="grid md:grid-cols-2 gap-6">
-
-              {/* COVER */}
-              <div>
-
-                <img
-                  src={
-                    selectedBook.cover
-                      ? `https://covers.openlibrary.org/b/id/${selectedBook.cover}-L.jpg`
-                      : "https://via.placeholder.com/300x400"
-                  }
-                  alt={selectedBook.title}
-                  className="w-full h-[420px] object-cover rounded-2xl shadow"
-                />
-
-              </div>
-
-              {/* DETAIL */}
-              <div className="flex flex-col">
-
-                <h2 className="text-3xl font-bold text-gray-800">
-                  {selectedBook.title}
-                </h2>
-
-                <p className="text-blue-600 mt-2 text-lg">
-                  {selectedBook.author}
-                </p>
-
-                {/* PRICE */}
-                {source === "belanja" && (
-                  <div className="mt-5">
-
-                    <p className="text-3xl font-bold text-blue-700">
-                      Rp {selectedBook.price.toLocaleString("id-ID")}
-                    </p>
-
-                    <p className="text-gray-500 mt-1">
-                      Stock: {selectedBook.stock}
-                    </p>
-
-                  </div>
-                )}
-
-                {/* DESC */}
-                <div className="mt-6 text-sm text-gray-600 leading-relaxed">
-
-                  Buku ini tersedia di platform BukuIn.
-                  Kamu bisa membaca detail buku,
-                  melakukan pembelian,
-                  menyimpan ke favorit,
-                  atau mengajukan peminjaman buku.
-
-                </div>
-
-                {/* ACTION */}
-                <div className="flex gap-3 mt-auto pt-8">
-
-                  {source === "koleksi" ? (
-                    <>
-                      <button className="flex-1 border border-pink-500 text-pink-500 py-3 rounded-xl hover:bg-pink-50">
-                        Wishlist
-                      </button>
-
-                      <button className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">
-                        Borrow
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="flex-1 border border-blue-600 text-blue-600 py-3 rounded-xl hover:bg-blue-50">
-                        Cart
-                      </button>
-
-                      <button className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">
-                        Buy
-                      </button>
-                    </>
-                  )}
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
 
     </div>
   );

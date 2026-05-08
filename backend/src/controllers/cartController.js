@@ -4,9 +4,48 @@ import supabase from "../config/supabase.js";
    TAMBAH KE CART
 ====================== */
 export const addToCart = async (req, res) => {
-  try {
-    const { user_id, book_key, title, author, cover } = req.body;
 
+  try {
+
+    const {
+      user_id,
+      book_key,
+      title,
+      author,
+      cover,
+      price,
+      stock,
+    } = req.body;
+
+    // cek item sudah ada belum
+    const { data: existing, error: checkError } = await supabase
+      .from("cart")
+      .select("*")
+      .eq("user_id", user_id)
+      .eq("book_key", book_key)
+      .single();
+
+    // kalau ada → tambah qty
+    if (existing) {
+
+      const { data, error } = await supabase
+        .from("cart")
+        .update({
+          qty: existing.qty + 1,
+        })
+        .eq("id", existing.id)
+        .select();
+
+      if (error) throw error;
+
+      return res.json({
+        message: "Qty bertambah",
+        data,
+      });
+
+    }
+
+    // kalau belum ada → insert baru
     const { data, error } = await supabase
       .from("cart")
       .insert([
@@ -16,6 +55,9 @@ export const addToCart = async (req, res) => {
           title,
           author,
           cover,
+          price,
+          stock,
+          qty: 1,
         },
       ])
       .select();
@@ -26,12 +68,16 @@ export const addToCart = async (req, res) => {
       message: "Berhasil masuk keranjang",
       data,
     });
+
   } catch (error) {
+
     res.status(500).json({
       message: "Gagal tambah cart",
       error: error.message,
     });
+
   }
+
 };
 
 /* ======================
