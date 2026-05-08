@@ -109,21 +109,6 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-<Route
-  path="/favorite"
-  element={
-    <ProtectedRoute>
-      <Favorit />
-    </ProtectedRoute>
-  }
-/>
-
-  <Route path="/search" element={<SearchPage />} />
-
-  <Route path="/admin" element={<AdminPerpustakaan />} />
-  <Route path="/genre/:name" element={<Genre />} />
-  </Routes>
-
         <Route
           path="/favorite"
           element={
@@ -133,8 +118,15 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-      {/* 🔥 Floating hanya di halaman utama */}
-      {location.pathname === "/halamanutama" && <Floating onClick={() => navigate("/chatai")} />}
+        <Route path="/search" element={<SearchPage />} />
+
+        <Route path="/admin" element={<AdminPerpustakaan />} />
+        <Route path="/genre/:name" element={<Genre />} />
+      </Routes>
+
+      {location.pathname === "/halamanutama" && (
+        <Floating onClick={() => navigate("/chatai")} />
+      )}
     </>
   );
 }

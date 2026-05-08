@@ -1,36 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaUserDoctor } from "react-icons/fa6";
-// IMPORT ASSETS
-import banner4 from "../assets/banner4.webp";
-import banner6 from "../assets/banner6.webp";
-import banner9 from "../assets/banner9.webp";
-import banner5 from "../assets/banner5.webp";
-import logo from "../assets/logo.png";
-import Floating from "./floating";
 
+// IMPORT ASSETS
+import banner1 from "../assets/banner1.png";
+import banner2 from "../assets/banner2.png";
+import banner3 from "../assets/banner3.png";
+import logo from "../assets/logo.png";
+
+// ICONS
 import {
-  FiSearch,
-  FiBell,
-  FiHeart,
-  FiHome,
   FiBook,
   FiUser,
-  FiShoppingCart,
-  FiClock,
+  FiBriefcase,
+  FiFeather,
+  FiHeart,
+  FiTrendingUp,
   FiGlobe,
   FiTool,
   FiSmile,
   FiFileText,
   FiMenu,
   FiX,
+  FiBell,
 } from "react-icons/fi";
-
-import { MdOutlinePalette } from "react-icons/md";
-import { GiSpellBook } from "react-icons/gi";
-import { LuChefHat } from "react-icons/lu";
-import { FaRegHeart } from "react-icons/fa"
 
 export default function Belanja() {
   const [activeCategory, setActiveCategory] = useState(null);
@@ -53,55 +46,55 @@ export default function Belanja() {
 
   useEffect(() => {
 
-  const stored = localStorage.getItem("user");
+    const stored = localStorage.getItem("user");
 
-  if (stored) {
-    setUser(JSON.parse(stored));
-  }
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
 
-}, []);
+  }, []);
 
   const genreMap = {
-  Art: "art",
-  "Science Fiction": "science fiction",
-  Fantasy: "fantasy",
-  Biographies: "biography",
-  Recipe: "cooking",
-  Romance: "romance",
-  Textbook: "textbook",
-  Children: "children",
-  Medicine: "medicine",
-  Religion: "religion",
-};
+    Art: "art",
+    "Science Fiction": "science fiction",
+    Fantasy: "fantasy",
+    Biographies: "biography",
+    Recipe: "cooking",
+    Romance: "romance",
+    Textbook: "textbook",
+    Children: "children",
+    Medicine: "medicine",
+    Religion: "religion",
+  };
 
-  const banners = [banner4, banner6, banner9];
+  const banners = [banner1, banner2, banner3];
 
-   /* ================= GENRE MAP ================= */
+  /* ================= GENRE MAP ================= */
   const fetchGenreBooks = async (category) => {
-  try {
-    const query = genreMap[category] || category.toLowerCase();
+    try {
+      const query = genreMap[category] || category.toLowerCase();
 
-    const res = await fetch(
-      `https://openlibrary.org/search.json?subject=${query}&limit=12`
-    );
+      const res = await fetch(
+        `https://openlibrary.org/search.json?subject=${query}&limit=12`
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    const books = data.docs.map((item) => ({
-      title: item.title ?? "-",
-      author: item.author_name?.[0] ?? "-",
-      cover: item.cover_i ?? null,
-      price: Math.floor(Math.random() * 100000) + 50000,
-      stock: Math.floor(Math.random() * 20) + 1,
-    }));
+      const books = data.docs.map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+        price: Math.floor(Math.random() * 100000) + 50000,
+        stock: Math.floor(Math.random() * 20) + 1,
+      }));
 
-    setGenreBooks(books);
-    setActiveCategory(category);
+      setGenreBooks(books);
+      setActiveCategory(category);
 
-  } catch (err) {
-    console.log("error genre:", err);
-  }
-};
+    } catch (err) {
+      console.log("error genre:", err);
+    }
+  };
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
@@ -202,75 +195,34 @@ export default function Belanja() {
   };
 
   const categories = [
-  {
-    name: "Art",
-    icon: <MdOutlinePalette />,
-  },
+    { name: "Art", icon: <FiFeather /> },
+    { name: "Science Fiction", icon: <FiUser /> },
+    { name: "Fantasy", icon: <FiBriefcase /> },
+    { name: "Biographies", icon: <FiBook /> },
+    { name: "Recipe", icon: <FiHeart /> },
+    { name: "Romance", icon: <FiTrendingUp /> },
+    { name: "Textbook", icon: <FiGlobe /> },
+    { name: "Children", icon: <FiTool /> },
+    { name: "Medicine", icon: <FiSmile /> },
+    { name: "Religion", icon: <FiFileText /> },
+  ];
 
-  {
-    name: "Science Fiction",
-    icon: <FiGlobe />,
-  },
-
-  {
-    name: "Fantasy",
-    icon: <GiSpellBook />,
-  },
-
-  {
-    name: "Biographies",
-    icon: <FiUser />,
-  },
-
-  {
-    name: "Recipe",
-    icon: <LuChefHat />,
-  },
-
-  {
-    name: "Romance",
-    icon: <FaRegHeart />,
-  },
-
-  {
-    name: "Textbox",
-    icon: <FiBook />,
-  },
-
-  {
-    name: "Children",
-    icon: <FiSmile />,
-  },
-
-  {
-    name: "Medicine",
-    icon: <FaUserDoctor />,
-  },
-
-  {
-    name: "Religion",
-    icon: <FiFileText />,
-  },
-];
-
-return (
+  return (
     <div className="font-sans">
       {/* ================= NAVBAR ================= */}
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex justify-between items-center px-6 md:px-10 py-4 ${
-          scrolled
-            ? "bg-white shadow-md border-b border-gray-100"
-            : "bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex justify-between items-center px-6 md:px-10 py-4 ${scrolled
+          ? "bg-white shadow-md border-b border-gray-100"
+          : "bg-transparent"
+          }`}
       >
         {/* LOGO */}
         <div className="flex items-center gap-2">
           <img src={logo} alt="logo" className="w-12 h-12" />
 
           <span
-            className={`font-bold ${
-              scrolled ? "text-blue-700" : "text-white"
-            }`}
+            className={`font-bold ${scrolled ? "text-blue-700" : "text-white"
+              }`}
           >
           </span>
         </div>
@@ -282,11 +234,10 @@ return (
               key={menu}
               href="#"
               onClick={() => setActiveMenu(menu)}
-              className={`px-3 py-2 rounded-md transition duration-200 ${
-                scrolled
-                  ? "text-gray-700 hover:text-blue-600 hover:bg-white/30"
-                  : "text-white hover:bg-white/10"
-              }`}
+              className={`px-3 py-2 rounded-md transition duration-200 ${scrolled
+                ? "text-gray-700 hover:text-blue-600 hover:bg-white/30"
+                : "text-white hover:bg-white/10"
+                }`}
             >
               {menu}
             </a>
@@ -326,8 +277,7 @@ return (
             )}
           </div>
 
-          {/* PROFILE */}
-{/* PROFILE */}
+ {/* PROFILE */}
 <div className="relative">
 
   <div
@@ -376,11 +326,10 @@ return (
           <div className="relative">
             <Link
               to="/keranjang"
-              className={`text-xl relative ${
-                scrolled
-                  ? "text-gray-700 hover:text-blue-600"
-                  : "text-white"
-              }`}
+              className={`text-xl relative ${scrolled
+                ? "text-gray-700 hover:text-blue-600"
+                : "text-white"
+                }`}
             >
               🛒
 
@@ -407,34 +356,30 @@ return (
       </header>
 
       {/* ================= BANNER ================= */}
-      {/* ================= BANNER ================= */}
-<section className="relative w-full overflow-hidden">
-
-  <div className="relative w-full aspect-[16/9] md:aspect-[16/6]">
-
-    {banners.map((img, index) => (
-      <img
-        key={index}
-        src={img}
-        alt=""
-        className={`absolute w-full h-full transition-opacity duration-700
-        ${
-          currentSlide === index
-            ? "opacity-100"
-            : "opacity-0"
-        }
-        object-contain md:object-cover`}
-      />
-    ))}
-
-  </div>
-
-</section>
+      <section className="relative h-[90vh] w-full overflow-hidden">
+        {banners.map((img, index) => (
+          <img
+            key={index}
+            src={img}
+            alt=""
+            className={`absolute w-full h-full object-cover transition-opacity duration-700 ${currentSlide === index ? "opacity-100" : "opacity-0"
+              }`}
+          />
+        ))}
+      </section>
 
       {/* ================= SEARCH ================= */}
-<section className="relative z-20 -mt-2 md:-mt-14 px-6 md:px-20">
+      <section className="relative z-20 -mt-20 px-6 md:px-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-xl p-4 flex items-center">
+            <input
+              type="text"
+              placeholder="Cari judul buku..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 px-5 py-3 text-sm focus:outline-none"
+            />
 
-<<<<<<< HEAD
             <button
               onClick={handleSearch}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg"
@@ -444,43 +389,17 @@ return (
           </div>
         </div>
       </section>
-=======
-  <div className="max-w-6xl mx-auto">
->>>>>>> 341ea93a5382f3676fd96c29c6f1dc79d695cc29
 
-    <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
-
-      <input
-        type="text"
-        placeholder="Search book titles..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="flex-1 px-4 py-3 text-sm rounded-xl focus:outline-none"
-      />
-
-      <button
-        onClick={cariBuku}
-        className="bg-blue-600 text-white px-5 md:px-8 py-3 rounded-xl hover:bg-blue-700 transition text-sm"
-      >
-        Search
-      </button>
-
-    </div>
-
-  </div>
-
-</section>
       {/* ================= KATEGORI ================= */}
       <section className="bg-blue-50 py-12 px-6 md:px-20">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
           {categories.map((item, i) => (
             <div
-            key={i}
+              key={i}
               onClick={() => fetchGenreBooks(item.name)}
-              className={`bg-white p-5 rounded-xl shadow cursor-pointer hover:scale-105 transition ${
-                activeCategory === item.name ? "ring-2 ring-blue-600" : ""
+              className={`bg-white p-5 rounded-xl shadow cursor-pointer hover:scale-105 transition ${activeCategory === item.name ? "ring-2 ring-blue-600" : ""
                 }`}
->
+            >
               <div className="text-3xl mb-3 text-blue-600 flex justify-center">
                 {item.icon}
               </div>
@@ -492,144 +411,81 @@ return (
       </section>
 
       {/* ================= GENRE RESULT ================= */}
-{activeCategory && (
-  <section className="px-6 md:px-20 pb-14 mt-10">
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Genre: {activeCategory}
-    </h2>
+      {activeCategory && (
+        <section className="px-6 md:px-20 pb-14 mt-10">
+          <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+            Genre: {activeCategory}
+          </h2>
 
-    <div className="flex gap-5 overflow-x-auto">
-      {genreBooks.map((book, index) => (
-        <div key={index} className="min-w-[250px]">
-          <BookCard
-            title={book.title}
-            author={book.author}
-            cover={book.cover}
-            price={book.price}
-            stock={book.stock}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-          />
-        </div>
-      ))}
-    </div>
+          <div className="flex gap-5 overflow-x-auto">
+            {genreBooks.map((book, index) => (
+              <div key={index} className="min-w-[250px]">
+                <BookCard
+                  title={book.title}
+                  author={book.author}
+                  cover={book.cover}
+                  price={book.price}
+                  stock={book.stock}
+                  cart={cart}
+                  setCart={setCart}
+                  setIsBuyOpen={setIsBuyOpen}
+                  setSelectedBook={setSelectedBook}
+                />
+              </div>
+            ))}
+          </div>
 
-    {/* RESET BUTTON */}
-    <div className="text-center mt-6">
-      <button
-        onClick={() => {
-          setActiveCategory(null);
-          setGenreBooks([]);
-        }}
-        className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-      >
-        Reset Genre
-      </button>
-    </div>
-  </section>
-)}
+          {/* RESET BUTTON */}
+          <div className="text-center mt-6">
+            <button
+              onClick={() => {
+                setActiveCategory(null);
+                setGenreBooks([]);
+              }}
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Reset Genre
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ================= BUKU TERLARIS ================= */}
       {!activeCategory && (
-  <BukuTerlaris
-  data={terlaris}
-  cart={cart}
-  setCart={setCart}
-  setIsBuyOpen={setIsBuyOpen}
-  setSelectedBook={setSelectedBook}
-/>
-)}
+        <BukuTerlaris
+          data={terlaris}
+          cart={cart}
+          setCart={setCart}
+          setIsBuyOpen={setIsBuyOpen}
+          setSelectedBook={setSelectedBook}
+        />
+      )}
 
-     {/* ================= LANDSCAPE ================= */}
-<section className="px-6 md:px-20 pb-14">
-
-  <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl aspect-[16/7]">
-
-    <img
-      src={banner5}
-      className="w-full h-full object-cover"
-    />
-
-  </div>
-
-</section>
+      {/* ================= LANDSCAPE ================= */}
+      <section className="px-6 md:px-20 pb-14">
+        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl">
+          <img
+            src={banner1}
+            className="w-full h-80 md:h-[28rem] object-cover"
+          />
+        </div>
+      </section>
 
       {/* ================= BUKU TERBARU ================= */}
-    {!activeCategory && (
-  <BukuTerbaru
-  data={terbaru}
-  cart={cart}
-  setCart={setCart}
-  setIsBuyOpen={setIsBuyOpen}
-  setSelectedBook={setSelectedBook}
-/>
-    )}
+      {!activeCategory && (
+        <BukuTerbaru
+          data={terbaru}
+          cart={cart}
+          setCart={setCart}
+          setIsBuyOpen={setIsBuyOpen}
+          setSelectedBook={setSelectedBook}
+        />
+      )}
 
       {/* FOOTER */}
-            {/* FOOTER */}
-<footer className="mt-20 bg-gray-900 text-white">
-
-  <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
-
-    {/* BRAND */}
-    <div>
-      <h2 className="text-2xl font-bold text-blue-400 mb-3">
-        BukuIn
-      </h2>
-
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Discover thousands of books, explore new worlds,
-        and enjoy a modern digital library experience.
-      </p>
-    </div>
-
-    {/* MENU */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        Navigation
-      </h3>
-
-      <div className="flex flex-col gap-2 text-gray-400 text-sm">
-        <Link to="/koleksi" className="hover:text-white">
-          Home
-        </Link>
-
-        <Link to="/belanja" className="hover:text-white">
-          Shop
-        </Link>
-
-        <Link to="/riwayat" className="hover:text-white">
-          History
-        </Link>
-      </div>
-    </div>
-
-    {/* CONTACT */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        About
-      </h3>
-
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Built for book lovers who want a simple,
-        elegant, and interactive reading platform.
-      </p>
-    </div>
-
-  </div>
-
-  {/* BOTTOM */}
-  <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-    © 2026 BukuIn. All rights reserved.
-  </div>
-
-</footer>
-
-{/* MASCOT (INI YANG KAMU TAMBAH) */}
-    <Floating />
-
+      <footer className="mt-16 bg-gray-900 text-white text-center py-6">
+        <p className="text-sm">© 2026 BukuIn. All rights reserved.</p>
+      </footer>
     </div>
   );
 }
@@ -772,10 +628,10 @@ function BookCard({
     <>
       {/* ================= NOTIF ================= */}
       {notif && (
-<div className="fixed inset-0 flex items-center justify-center z-[9999]">
-  <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium animate-bounce">
-    {notif}
-  </div>
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+          <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium animate-bounce">
+            {notif}
+          </div>
         </div>
       )}
 
@@ -825,14 +681,14 @@ function BookCard({
                 onClick={() => tambahKeKeranjang()}
                 className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
               >
-                Cart
+                Keranjang
               </button>
 
               <button
                 onClick={handleBuy}
                 className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
               >
-                Buy
+                Beli
               </button>
 
             </div>
@@ -868,7 +724,7 @@ function BukuTerlaris({
   return (
     <section className="px-6 md:px-20 pb-14">
       <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-       Best Selling Books
+        Buku Terlaris
       </h2>
 
       <div className="flex justify-end gap-2 mb-3">
@@ -933,7 +789,7 @@ function BukuTerbaru({
   return (
     <section className="px-6 md:px-20 pb-14">
       <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-       Newest Books
+        Buku Terbaru
       </h2>
 
       <div className="flex justify-end gap-2 mb-3">
@@ -957,20 +813,20 @@ function BukuTerbaru({
         className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
       >
         {data.map((book, index) => (
-        <div key={index} className="min-w-[250px] snap-start">
-          <BookCard
-            title={book.title}
-            author={book.author}
-            cover={book.cover}
-            price={book.price}
-            stock={book.stock}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-          />
-        </div>
-      ))}
+          <div key={index} className="min-w-[250px] snap-start">
+            <BookCard
+              title={book.title}
+              author={book.author}
+              cover={book.cover}
+              price={book.price}
+              stock={book.stock}
+              cart={cart}
+              setCart={setCart}
+              setIsBuyOpen={setIsBuyOpen}
+              setSelectedBook={setSelectedBook}
+            />
+          </div>
+        ))}
       </div>
     </section>
   );

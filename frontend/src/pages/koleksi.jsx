@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
-=======
-import { Link } from "react-router-dom";
 import { FaUserDoctor } from "react-icons/fa6";
 
->>>>>>> 341ea93a5382f3676fd96c29c6f1dc79d695cc29
 import {
   FiSearch,
   FiBell,
@@ -77,10 +73,7 @@ const fetchGenreBooks = async (category) => {
   }
 };
 
-<<<<<<< HEAD
-const handleSearch = (e) => {
 
-=======
 const [currentSlide, setCurrentSlide] = useState(0);
 
 const slides = [
@@ -112,7 +105,6 @@ useEffect(() => {
 }, []);
 
 const handleSearch = async (e) => {
->>>>>>> 341ea93a5382f3676fd96c29c6f1dc79d695cc29
   if (e.key === "Enter") {
 
     if (!search.trim()) return;
@@ -643,5 +635,4 @@ useEffect(() => {
 
     </div>
   );
-}
 }
