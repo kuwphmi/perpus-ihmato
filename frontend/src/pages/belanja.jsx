@@ -12,6 +12,17 @@ import logo from "../assets/logo.png";
 import Floating from "./floating";
 
 import {
+  FiBell,
+  FiShoppingCart,
+  FiShoppingBag,
+  FiHelpCircle,
+  FiBookOpen,
+  FiTruck,
+  FiShield,
+  FiChevronRight,
+  FiHome,
+  FiPackage,
+  FiCompass,
   FiBook,
   FiUser,
   FiBriefcase,
@@ -24,10 +35,7 @@ import {
   FiFileText,
   FiMenu,
   FiX,
-  FiBell,
   FiSearch,
-  FiHome,
-  FiShoppingCart,
   FiClock,
 } from "react-icons/fi";
 
@@ -254,79 +262,98 @@ export default function Belanja() {
   return (
     <div className="font-sans">
       {/* ================= NAVBAR ================= */}
-      <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 flex justify-between items-center px-6 md:px-10 py-4 ${scrolled
-          ? "bg-white shadow-md border-b border-gray-100"
-          : "bg-transparent"
-          }`}
+      
+<div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
+
+  <div className="flex gap-6">
+
+    {[
+      { name: "Shop", path: "/belanja" },
+      { name: "Orders", path: "/trackingbuku" },
+      { name: "Discover", path: "/helpcenter" },
+    ].map((item, i) => (
+      <Link
+        key={i}
+        to={item.path}
+        className="px-3 py-1 rounded-md hover:text-blue-200 transition"
       >
-        {/* LOGO */}
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="logo" className="w-12 h-12" />
+        {item.name}
+      </Link>
+    ))}
 
-          <span
-            className={`font-bold ${scrolled ? "text-blue-700" : "text-white"
-              }`}
-          >
+  </div>
+
+</div>
+
+{/* ================= NAVBAR ================= */}
+<header className="sticky top-0 z-50 bg-white shadow">
+
+ <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2">
+
+    {/* LOGO */}
+    <div className="flex items-center gap-2 mr-5">
+
+      <img
+        src={logo}
+        alt="logo"
+        className="w-12 h-12 mr-4"
+      />
+
+    </div>
+
+    {/* RIGHT */}
+    <div className="flex items-center gap-3 ml-4 relative z-50">
+
+      {/* CART */}
+      <Link to="/keranjang" className="relative">
+
+        <FiShoppingCart className="text-2xl text-gray-600 hover:text-blue-600 transition cursor-pointer" />
+
+        {cart.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+            {cart.length}
           </span>
-        </div>
+        )}
 
-        {/* MENU */}
-        <nav className="hidden md:flex space-x-4 text-sm">
-          {["Beranda", "Semua Produk", "Belanja"].map((menu) => (
-            <a
-              key={menu}
-              href="#"
-              onClick={() => setActiveMenu(menu)}
-              className={`px-3 py-2 rounded-md transition duration-200 ${scrolled
-                ? "text-gray-700 hover:text-blue-600 hover:bg-white/30"
-                : "text-white hover:bg-white/10"
-                }`}
-            >
-              {menu}
-            </a>
-          ))}
-        </nav>
+      </Link>
 
-        {/* RIGHT */}
-        <div className="flex items-center gap-4">
-          {/* NOTIF */}
-          <div className="relative">
-            <FiBell
-              className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsNotifOpen(!isNotifOpen);
-              }}
-            />
+      <div className="relative">
+                      <FiBell
+                        className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNotifOpen(!isNotifOpen);
+                        }}
+                      />
+          
+                      {isNotifOpen && (
+                        <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
+                          <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+          
+                          <div className="py-3 text-center">
+                            <h3 className="font-semibold text-gray-700 pb-2 border-b">
+                              Your Notification
+                            </h3>
+          
+                            <div className="py-6 text-sm text-gray-400 border-b">
+                              No new notifications yet.
+                            </div>
+          
+                            <button
+            onClick={() => navigate("/notip")}
+            className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+          >
+            View All
+          </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-            {isNotifOpen && (
-              <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-
-                <div className="py-3 text-center">
-                  <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                    Your Notification
-                  </h3>
-
-                  <div className="py-6 text-sm text-gray-400 border-b">
-                    No new notifications yet.
-                  </div>
-
-                  <button
-  onClick={() => navigate("/notip")}
-  className="pt-2 text-sm text-gray-600 hover:text-blue-600"
->
-  View All
-</button>
-                </div>
-              </div>
-            )}
-          </div>
-
- {/* PROFILE */}
+       {/*  PROFIL */}
 <div className="relative">
 
+  {/* ICON PROFILE */}
   <div
     onClick={(e) => {
       e.stopPropagation();
@@ -334,16 +361,17 @@ export default function Belanja() {
     }}
     className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
   >
-    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+    {user.name ? user.name.charAt(0) : "U"}
   </div>
 
+  {/* DROPDOWN PROFILE */}
   {isProfileOpen && (
     <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
 
+      {/* HEADER */}
       <div className="flex flex-col items-center py-6 bg-gray-50">
-
-        <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+          {user.name ? user.name.charAt(0) : "U"}
         </div>
 
         <h3 className="font-semibold text-gray-700 text-sm">
@@ -353,54 +381,26 @@ export default function Belanja() {
         <p className="text-xs text-gray-500">
           {user.email || "-"}
         </p>
-
       </div>
 
+      {/* BUTTON PROFIL */}
       <div className="px-4 py-4">
         <Link to="/profil">
           <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-            My profile
+              My Profile
           </button>
         </Link>
       </div>
 
     </div>
   )}
-
 </div>
 
-          {/* CART */}
-          <div className="relative">
-            <Link
-              to="/keranjang"
-              className={`text-xl relative ${scrolled
-                ? "text-gray-700 hover:text-blue-600"
-                : "text-white"
-                }`}
-            >
-              🛒
+    </div>
 
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                  {cart.length}
-                </span>
-              )}
-            </Link>
-          </div>
+  </div>
 
-          {/* HAMBURGER */}
-          <button
-            className="md:hidden text-2xl"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? (
-              <FiX className={scrolled ? "text-black" : "text-white"} />
-            ) : (
-              <FiMenu className={scrolled ? "text-black" : "text-white"} />
-            )}
-          </button>
-        </div>
-      </header>
+</header>
 
      {/* ================= BANNER ================= */}
 <section className="relative w-full overflow-hidden bg-[#0B5DFF]">
@@ -558,16 +558,15 @@ export default function Belanja() {
       </h3>
 
       <div className="flex flex-col gap-2 text-gray-400 text-sm">
-        <Link to="/koleksi" className="hover:text-white">
-          Home
-        </Link>
-
         <Link to="/belanja" className="hover:text-white">
           Shop
         </Link>
 
-        <Link to="/riwayat" className="hover:text-white">
-          History
+        <Link to="/trackingbuku" className="hover:text-white">
+          Orders
+        </Link>
+         <Link to="/helpcenter" className="hover:text-white">
+          Discover
         </Link>
       </div>
     </div>

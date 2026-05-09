@@ -20,6 +20,8 @@ import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
 import ResetPassword from "./pages/ResetPassword";
 import Notip from "./pages/notip";
+import Trackingbuku from "./pages/trackingbuku";
+import HelpCenter from "./pages/helpcenter";
 
 
 function AppWrapper() {
@@ -56,7 +58,23 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
 
         <Route path="/reset-password" element={<ResetPassword />} />
 
-
+        <Route
+  path="/trackingbuku"
+  element={
+    <ProtectedRoute>
+      <Trackingbuku />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/helpcenter"
+  element={
+    <ProtectedRoute>
+      <HelpCenter />
+    </ProtectedRoute>
+  }
+/>
+        
         <Route
           path="/koleksi"
           element={
@@ -136,7 +154,8 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
       </Routes>
 
       {location.pathname === "/koleksi" && (
-     <Floating onClick={() => navigate("/chatai")} />
+        <Floating onClick={() => navigate("/chatai")} />
+
       )}
     </>
   );
