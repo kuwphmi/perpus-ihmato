@@ -111,7 +111,7 @@ function LoginForm({ onSwitch, onForgot }) {
       if (!user?.nik || !user?.birth || !user?.gender) {
         navigate("/profil");
       } else {
-        navigate("/halamanutama");
+        navigate("/koleksi");
       }
 
     } catch (error) {

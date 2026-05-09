@@ -44,8 +44,8 @@ export default function Belanja() {
   const [terbaru, setTerbaru] = useState([]);
   const [terlaris, setTerlaris] = useState([]);
   const [search, setSearch] = useState("");
-  const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  
   const [user, setUser] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -82,13 +82,14 @@ export default function Belanja() {
 
       const data = await res.json();
 
-      const books = data.docs.map((item) => ({
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price: Math.floor(Math.random() * 100000) + 50000,
-        stock: Math.floor(Math.random() * 20) + 1,
-      }));
+    const books = data.docs.map((item) => ({
+        workKey: item.key,
+  title: item.title ?? "-",
+  author: item.author_name?.[0] ?? "-",
+  cover: item.cover_i ?? null,
+  price: Math.floor(Math.random() * 100000) + 50000,
+  stock: Math.floor(Math.random() * 20) + 1,
+}));
 
       setGenreBooks(books);
       setActiveCategory(category);
@@ -105,6 +106,7 @@ export default function Belanja() {
       .then((res) => res.json())
       .then((data) => {
         const books = data.docs.map((item) => ({
+            workKey: item.key,
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
@@ -120,6 +122,7 @@ export default function Belanja() {
       .then((res) => res.json())
       .then((data) => {
         const books = data.docs.map((item) => ({
+            workKey: item.key,
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
@@ -468,6 +471,7 @@ export default function Belanja() {
             {genreBooks.map((book, index) => (
               <div key={index} className="min-w-[250px]">
                 <BookCard
+                  workKey={book.workKey}
                   title={book.title}
                   author={book.author}
                   cover={book.cover}
@@ -593,10 +597,12 @@ export default function Belanja() {
 }
 
 /* ================= BOOK CARD ================= */
+
 function BookCard({
   title,
   author,
   cover,
+  workKey,
   price,
   stock,
   cart,
@@ -604,6 +610,36 @@ function BookCard({
   setIsBuyOpen,
   setSelectedBook,
 }) {
+
+  const [showDetail, setShowDetail] = useState(false);
+  const [description, setDescription] = useState("");
+  const fetchDescription = async () => {
+  try {
+
+    if (!workKey) {
+      setDescription("Description not available.");
+      return;
+    }
+
+    const res = await fetch(
+      `https://openlibrary.org${workKey}.json`
+    );
+
+    const data = await res.json();
+
+    if (typeof data.description === "string") {
+      setDescription(data.description);
+    } else if (data.description?.value) {
+      setDescription(data.description.value);
+    } else {
+      setDescription("Description not available.");
+    }
+
+  } catch (err) {
+    console.log(err);
+    setDescription("Failed to load description.");
+  }
+};
 
   // ================= NOTIF =================
   const [notif, setNotif] = useState("");
@@ -737,6 +773,94 @@ function BookCard({
         </div>
       )}
 
+
+      {/* ================= DETAIL POPUP ================= */}
+{showDetail && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4 overflow-y-auto">
+
+    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+
+      {/* COVER */}
+      <div className="h-72 bg-blue-100">
+
+        {cover ? (
+          <img
+            src={`https://covers.openlibrary.org/b/id/${cover}-L.jpg`}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            No Cover
+          </div>
+        )}
+
+      </div>
+
+      {/* CONTENT */}
+      <div className="p-5">
+
+        {/* TITLE */}
+        <h2 className="text-xl font-bold text-gray-800 mb-2">
+          {title}
+        </h2>
+
+        {/* AUTHOR */}
+        <p className="text-blue-600 text-sm mb-4">
+          by {author}
+        </p>
+
+        {/* DESCRIPTION */}
+        <div className="mb-4">
+          <h3 className="font-semibold text-gray-700 mb-1">
+            Description
+          </h3>
+
+          <p className="text-sm text-gray-600 leading-relaxed">
+  {description || "Loading description..."}
+</p>
+        </div>
+
+        {/* PRICE & STOCK */}
+        <div className="flex justify-between items-center mb-5">
+
+          <div>
+            <p className="text-xs text-gray-500">
+              Price
+            </p>
+
+            <p className="font-bold text-blue-700">
+              Rp {(price || 0).toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-xs text-gray-500">
+              Stock
+            </p>
+
+            <p className="font-semibold text-gray-700">
+              {stock}
+            </p>
+          </div>
+
+        </div>
+
+        {/* BUTTON */}
+        <button
+          onClick={() => setShowDetail(false)}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+
       {/* ================= CARD ================= */}
       <div className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden w-[250px] flex flex-col">
 
@@ -776,22 +900,37 @@ function BookCard({
 
             </div>
 
-            <div className="flex gap-2">
+           <div className="flex flex-col gap-2">
 
-              <button
-                type="button"
-                onClick={() => tambahKeKeranjang()}
-                className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
-              >
-                Cart
-              </button>
+          {/* SHOW DETAIL */}
+         <button
+            onClick={async () => {
+  setShowDetail(true);
+  await fetchDescription();
+}}
+            className="w-full bg-gray-100 text-gray-700 text-xs py-2 rounded-lg hover:bg-gray-200 transition"
+          >
+            Show Detail
+          </button>
 
-              <button
-                onClick={handleBuy}
-                className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                Buy
-              </button>
+          <div className="flex gap-2">
+
+            <button
+              type="button"
+              onClick={() => tambahKeKeranjang()}
+              className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
+            >
+              Cart
+            </button>
+
+            <button
+              onClick={handleBuy}
+              className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Buy
+            </button>
+
+          </div>
 
             </div>
 
@@ -852,6 +991,7 @@ function BukuTerlaris({
         {data.map((book, index) => (
           <div key={index} className="min-w-[250px] snap-start">
             <BookCard
+            workKey={book.workKey}
               title={book.title}
               author={book.author}
               cover={book.cover}
@@ -889,6 +1029,7 @@ function BukuTerbaru({
   };
 
   return (
+  <>
     <section className="px-6 md:px-20 pb-14">
       <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
         Newest Books
@@ -917,6 +1058,7 @@ function BukuTerbaru({
         {data.map((book, index) => (
           <div key={index} className="min-w-[250px] snap-start">
             <BookCard
+            workKey={book.workKey}
               title={book.title}
               author={book.author}
               cover={book.cover}
@@ -931,8 +1073,9 @@ function BukuTerbaru({
         ))}
       </div>
     </section>
-  
-  );
-  {/* MASCOT (INI YANG KAMU TAMBAH) */}
+
+    {/* MASCOT */}
     <Floating />
+  </>
+);
 }

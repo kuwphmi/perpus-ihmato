@@ -129,23 +129,14 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
   }
 />
 
-        <Route
-          path="/favorite"
-          element={
-            <ProtectedRoute>
-              <Favorit />
-            </ProtectedRoute>
-          }
-        />
-
         <Route path="/search" element={<SearchPage />} />
 
         <Route path="/admin" element={<AdminPerpustakaan />} />
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>
 
-      {location.pathname === "/halamanutama" && (
-        <Floating onClick={() => navigate("/chatai")} />
+      {location.pathname === "/koleksi" && (
+     <Floating onClick={() => navigate("/chatai")} />
       )}
     </>
   );

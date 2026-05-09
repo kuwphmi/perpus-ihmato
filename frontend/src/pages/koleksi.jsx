@@ -32,8 +32,12 @@ export default function HalamanUtama() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
   const [rekomendasi, setRekomendasi] = useState([]);
+
   const [selectedBook, setSelectedBook] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showBorrowPopup, setShowBorrowPopup] = useState(false);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+
+  const [bookDescription, setBookDescription] = useState("");
   const genreMap = {
   Art: "art",
   "Science Fiction": "science fiction",
@@ -48,6 +52,24 @@ export default function HalamanUtama() {
 };
 
 const navigate = useNavigate();
+const fetchDescription = async (workKey) => {
+    try {
+      const res = await fetch(`https://openlibrary.org${workKey}.json`);
+      const data = await res.json();
+
+      if (typeof data.description === "string") {
+        setBookDescription(data.description);
+      } else if (data.description?.value) {
+        setBookDescription(data.description.value);
+      } else {
+        setBookDescription("No description available.");
+      }
+    } catch (err) {
+      console.log(err);
+      setBookDescription("Failed to load description.");
+    }
+  };
+
 const fetchGenreBooks = async (category) => {
   try {
     const query = genreMap[category] || category.toLowerCase();
@@ -59,6 +81,7 @@ const fetchGenreBooks = async (category) => {
     const data = await res.json();
 
     const books = data.docs.map((item) => ({
+      workKey: item.key,
       title: item.title ?? "-",
       author: item.author_name?.[0] ?? "-",
       cover: item.cover_i ?? null,
@@ -116,6 +139,7 @@ const handleSearch = async (e) => {
       const data = await res.json();
 
       const books = data.docs.map((item) => ({
+        workKey: item.key,
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
@@ -141,6 +165,7 @@ useEffect(() => {
       const data = await res.json();
 
       const books = data.docs.map((item) => ({
+        workKey: item.key,
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
@@ -157,164 +182,150 @@ useEffect(() => {
 }, []);
 
 
-  const categories = [
-  {
-    name: "Art",
-    icon: <MdOutlinePalette />,
-  },
+ const categories = [
+    { name: "Art", icon: <MdOutlinePalette /> },
+    { name: "Science Fiction", icon: <FiGlobe /> },
+    { name: "Fantasy", icon: <GiSpellBook /> },
+    { name: "Biographies", icon: <FiUser /> },
+    { name: "Recipe", icon: <LuChefHat /> },
+    { name: "Romance", icon: <FaRegHeart /> },
+    { name: "Textbox", icon: <FiBook /> },
+    { name: "Children", icon: <FiSmile /> },
+    { name: "Medicine", icon: <FaUserDoctor /> },
+    { name: "Religion", icon: <FiFileText /> },
+  ];
 
-  {
-    name: "Science Fiction",
-    icon: <FiGlobe />,
-  },
+ useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
 
-  {
-    name: "Fantasy",
-    icon: <GiSpellBook />,
-  },
+  const handlePinjam = async (book) => {
+    setSelectedBook(book);
+    setShowBorrowPopup(true);
+    await fetchDescription(book.workKey);
+  };
 
-  {
-    name: "Biographies",
-    icon: <FiUser />,
-  },
-
-  {
-    name: "Recipe",
-    icon: <LuChefHat />,
-  },
-
-  {
-    name: "Romance",
-    icon: <FaRegHeart />,
-  },
-
-  {
-    name: "Textbox",
-    icon: <FiBook />,
-  },
-
-  {
-    name: "Children",
-    icon: <FiSmile />,
-  },
-
- {
-  name: "Medicine",
-  icon: <FaUserDoctor />,
-},
-
-  {
-    name: "Religion",
-    icon: <FiFileText />,
-  },
-
-];
-useEffect(() => {
-  const stored = localStorage.getItem("user");
-  if (stored) {
-    setUser(JSON.parse(stored));
-  }
-}, []);
-
-  const handlePinjam = (book) => {
-  setSelectedBook(book);
-  setShowPopup(true);
+const handleDetail = async (book) => {
+    setSelectedBook(book);
+    setShowDetailPopup(true);
+    await fetchDescription(book.workKey);
   };
 
   const submitLoanRequest = async () => {
-  try {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
-    const user = JSON.parse(localStorage.getItem("user"));
+      const res = await fetch("http://localhost:3000/api/loan-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          book_key: selectedBook.cover + "_" + selectedBook.title,
+          title: selectedBook.title,
+          author: selectedBook.author,
+          cover: selectedBook.cover,
+        }),
+      });
 
-    const res = await fetch("http://localhost:3000/api/loan-requests", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: user.id,
-        book_key: selectedBook.cover + "_" + selectedBook.title,
-        title: selectedBook.title,
-        author: selectedBook.author,
-        cover: selectedBook.cover,
-      }),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
+      if (!data.status) return alert(data.message);
 
-    if (!data.status) {
-      alert(data.message);
-      return;
+      alert("Pengajuan berhasil dikirim");
+
+      setShowBorrowPopup(false);
+      setSelectedBook(null);
+    } catch (err) {
+      console.log(err);
+      alert("Gagal mengajukan peminjaman");
     }
+  };
 
-    alert("Pengajuan berhasil dikirim");
-
-    setShowPopup(false);
-    setSelectedBook(null);
-
-  } catch (err) {
-    console.log(err);
-    alert("Gagal mengajukan peminjaman");
-  }
-};
-
-
-  return (
+ return (
     <div className="bg-white min-h-screen">
 
 
-      {showPopup && (
+      {/* BORROW POPUP */}
+      {showBorrowPopup && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-
-    <div className="w-full max-w-md rounded-2xl bg-white p-6">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md">
 
       <h2 className="text-xl font-bold text-blue-700">
-        Ajukan Peminjaman
+        Borrow Request
       </h2>
 
-      <div className="mt-4 space-y-2">
+      <p className="mt-4 text-gray-700">
+        Your borrowing request will be sent to the admin for approval.
+        Please wait for a notification regarding the status of your request.
+      </p>
 
-        <p>
-          <span className="font-semibold">Judul:</span>{" "}
-          {selectedBook?.title}
-        </p>
+      <div className="mt-4 text-sm text-gray-500 space-y-2">
 
-        <p>
-          <span className="font-semibold">Penulis:</span>{" "}
-          {selectedBook?.author}
-        </p>
+        <p><b>📌 Process:</b> The admin will review your request.</p>
+
+        <p><b>⏳ After approval:</b> You will receive a notification.</p>
+
+        <p><b>📚 Book Pickup Requirements:</b></p>
+        <ul className="list-disc ml-5">
+          <li>Bring your library membership card</li>
+          <li>Show your borrowing confirmation</li>
+          <li>Collect the book within 1×24 hours after approval</li>
+        </ul>
+
+        <p><b>⚠️ Penalties:</b></p>
+        <ul className="list-disc ml-5">
+          <li>Late return: daily fine will be applied</li>
+          <li>Damaged or lost book: replacement fee required</li>
+        </ul>
 
       </div>
 
-      <p className="mt-4 text-sm text-gray-500">
-        Pengajuan akan dikirim ke petugas perpustakaan untuk disetujui.
-      </p>
-
       <div className="mt-6 flex justify-end gap-3">
-
         <button
-          onClick={() => {
-            setShowPopup(false);
-            setSelectedBook(null);
-          }}
-          className="rounded-xl border px-4 py-2 hover:bg-gray-100"
+          onClick={() => setShowBorrowPopup(false)}
+          className="px-4 py-2 border rounded-lg"
         >
           Cancel
         </button>
 
         <button
           onClick={submitLoanRequest}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
         >
-          Ajukan
+          Submit Request
         </button>
-
       </div>
 
     </div>
-
   </div>
 )}
+
+      {/* DETAIL POPUP */}
+      {showDetailPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white p-6 rounded-xl w-full max-w-lg">
+            <h2 className="text-xl font-bold text-blue-700">Book Detail</h2>
+
+            <p className="font-semibold mt-2">{selectedBook?.title}</p>
+            <p className="text-gray-500">{selectedBook?.author}</p>
+
+            <p className="mt-4 text-sm text-gray-600">
+              {bookDescription}
+            </p>
+
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setShowDetailPopup(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* NAVBAR ATAS (TETAP) */}
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
@@ -570,22 +581,45 @@ useEffect(() => {
 
         <div className="p-4">
 
-          <h3 className="text-sm font-semibold line-clamp-2">
-            {book.title}
-          </h3>
+  {/* TITLE */}
+  <h3 className="text-sm font-semibold line-clamp-2">
+    {book.title}
+  </h3>
 
-          <p className="text-gray-500 text-xs mb-3">
-            {book.author}
-          </p>
+  {/* AUTHOR */}
+  <p className="text-gray-500 text-xs">
+    {book.author}
+  </p>
 
-          <button
-            onClick={() => handlePinjam(book)}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700"
-          >
-           Borrow
-          </button>
+  {/* DESKRIPSI SINGKAT */}
+  <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2">
+    {bookDescription
+    ? bookDescription.slice(0, 80) + "..."
+    : "No description available"}
+  </p>
 
-        </div>
+  {/* BUTTONS */}
+  <div className="flex gap-2">
+
+    {/* 🔵 TETAP (JANGAN DIUBAH) */}
+    <button
+      onClick={() => handlePinjam(book)}
+      className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700"
+    >
+      Borrow
+    </button>
+
+    {/* 🟡 BARU: SHOW DETAIL */}
+    <button
+      onClick={() => handleDetail(book)}
+      className="flex-1 bg-gray-200 py-2 rounded-lg text-sm hover:bg-gray-300"
+    >
+      Detail
+    </button>
+
+  </div>
+
+</div>
 
       </div>
     ))}
