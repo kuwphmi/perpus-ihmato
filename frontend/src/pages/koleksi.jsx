@@ -321,8 +321,8 @@ useEffect(() => {
         <div className="flex gap-6">
           {[
             { name: "Home", path: "/koleksi" },
-            { name: "Shop", path: "/belanja" },
             { name: "History", path: "/riwayat" },
+            { name: "Shop", path: "/belanja" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -599,8 +599,8 @@ useEffect(() => {
       {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
         <Link to="/koleksi"><FiHome size={24} /></Link>
-        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
         <Link to="/riwayat"><FiClock size={24} /></Link>
+        <Link to="/belanja"><FiShoppingCart size={24} /></Link>
       </div>
 
       {/* FOOTER */}

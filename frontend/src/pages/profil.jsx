@@ -101,8 +101,8 @@ export default function Profil() {
           {[
 
             { name: "Home", path: "/koleksi" },
-            { name: "Shop", path: "/belanja" },
             { name: "History", path: "/riwayat" },
+            { name: "Shop", path: "/belanja" },
           ].map((item, i) => (
             <Link key={i} to={item.path} className="px-3 py-1 rounded-md hover:text-blue-200 hover:bg-white/10 transition">
               {item.name}
@@ -147,11 +147,11 @@ export default function Profil() {
             <Link to="/koleksi">
               <FiBook size={24} />
             </Link>
-            <Link to="/belanja">
-              <FiShoppingCart size={24} />
-            </Link>
             <Link to="/riwayat">
               <FiClock size={24} />
+            </Link>
+             <Link to="/belanja">
+              <FiShoppingCart size={24} />
             </Link>
           </div>
 
