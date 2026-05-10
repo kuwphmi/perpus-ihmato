@@ -363,7 +363,36 @@ export default function AdminPerpustakaan() {
       { key: "member_name", label: "Member" },
       { key: "book_title", label: "Book" },
       { key: "request_date", label: "Request Date" },
-      { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
+      {
+        key: "status",
+        label: "Status",
+        render: (row) => <Badge status={row.status} />,
+      },
+      {
+        key: "action",
+        label: "Action",
+        render: (row) => (
+          <div className="flex items-center gap-2">
+            {/* APPROVE BUTTON */}
+            <button
+              type="button"
+              onClick={() => approveLoanRequest(getId(row))}
+              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+            >
+              Approve
+            </button>
+
+            {/* REJECT BUTTON */}
+            <button
+              type="button"
+              onClick={() => rejectLoanRequest(getId(row))}
+              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
+            >
+              Reject
+            </button>
+          </div>
+        ),
+      },
     ],
     perpanjangan: [
       { key: "member_code", label: "ID" },

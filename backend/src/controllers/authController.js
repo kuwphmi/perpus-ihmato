@@ -15,6 +15,19 @@ export const register = async (req, res) => {
 
   const hashed = await bcrypt.hash(password, 10);
 
+   const year = new Date().getFullYear().toString().slice(-2);
+
+  const { count } = await supabase
+    .from("users")
+    .select("*", {
+      count: "exact",
+      head: true,
+    });
+
+  const sequence = String((count || 0) + 1).padStart(4, "0");
+
+  const memberCode = `${year}${sequence}`;
+
   const { error } = await supabase.from("users").insert({
     // ← ganti ke "users"
     name,
