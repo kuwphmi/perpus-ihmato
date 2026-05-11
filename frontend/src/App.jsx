@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Notip from "./pages/notip";
 import Trackingbuku from "./pages/trackingbuku";
 import HelpCenter from "./pages/helpcenter";
+import Checkout from "./pages/checkout";
 
 
 function AppWrapper() {
@@ -59,22 +60,22 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
-  path="/trackingbuku"
-  element={
-    <ProtectedRoute>
-      <Trackingbuku />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/helpcenter"
-  element={
-    <ProtectedRoute>
-      <HelpCenter />
-    </ProtectedRoute>
-  }
-/>
-        
+          path="/trackingbuku"
+          element={
+            <ProtectedRoute>
+              <Trackingbuku />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/helpcenter"
+          element={
+            <ProtectedRoute>
+              <HelpCenter />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/koleksi"
           element={
@@ -101,6 +102,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+        <Route path="/checkout" element={<Checkout />} />
 
         <Route
           path="/riwayat"
@@ -122,30 +124,31 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-        
+
         <Route
-  path="/notifications"
-  element={<Notifications />}
-/>
 
-<Route
-  path="/favorite"
-    element={
-    <ProtectedRoute>
-      <Favorit />
-    </ProtectedRoute>
-  }
-  />
+          path="/notifications"
+          element={<Notifications />}
+        />
 
-<Route
-  path="/notip"
+        <Route
+          path="/favorite"
+          element={
+            <ProtectedRoute>
+              <Favorit />
+            </ProtectedRoute>
+          }
+        />
 
-  element={
-    <ProtectedRoute>
-      <Notip />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/notip"
+
+          element={
+            <ProtectedRoute>
+              <Notip />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/search" element={<SearchPage />} />
 

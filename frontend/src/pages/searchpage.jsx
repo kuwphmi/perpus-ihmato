@@ -14,6 +14,18 @@ export default function SearchPage() {
   const [search, setSearch] = useState(initialQuery || "");
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [notif, setNotif] = useState("");
+
+  // ================= NOTIF =================
+  const showNotif = (message) => {
+
+    setNotif(message);
+
+    setTimeout(() => {
+      setNotif("");
+    }, 2000);
+
+  };
 
   // ================= FETCH BOOK =================
   const fetchBooks = async (keyword) => {
@@ -30,8 +42,8 @@ export default function SearchPage() {
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
-        price: Math.floor(Math.random() * 100000) + 50000,
-        stock: Math.floor(Math.random() * 20) + 1,
+        price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+        stock: ((item.cover_i || 1) % 15) + 5,
       }));
 
       setBooks(results);
@@ -67,82 +79,54 @@ export default function SearchPage() {
   };
 
   // ================= CART =================
-const tambahKeKeranjang = async (book) => {
-
-  try {
-
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (!user) {
-      alert("Login dulu");
-      return;
-    }
-
-    await axios.post(
-      "http://localhost:3000/api/cart",
-      {
-        user_id: user.id,
-        book_key: book.cover + "_" + book.title,
-        title: book.title,
-        author: book.author,
-        cover: book.cover,
-        price: book.price,
-        stock: book.stock,
-      }
-    );
-
-    alert("Masuk keranjang");
-
-  } catch (err) {
-
-    console.log(err);
-    alert("Gagal tambah keranjang");
-
-  }
-
-};
-
-
-  // ================= BUY =================
-  const handleBuy = async (book) => {
+  const tambahKeKeranjang = async (book) => {
 
     try {
 
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user) {
-        alert("Login dulu");
+        showNotif("Please login first");
         return;
       }
 
-      const res = await fetch(
-        "http://localhost:3000/api/payment/create",
+      await axios.post(
+        "http://localhost:3000/api/cart",
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: user.id,
-            items: [
-              {
-                book_key: book.title,
-                title: book.title,
-                price: book.price,
-                qty: 1,
-              },
-            ],
-          }),
+          user_id: user.id,
+          book_key: `${book.title}_${book.author}`,
+          title: book.title,
+          author: book.author,
+          cover: book.cover,
+          price: book.price,
+          stock: book.stock,
         }
       );
 
-      const data = await res.json();
-
-      window.snap.pay(data.token);
+      showNotif("Book added to cart");
 
     } catch (err) {
+
       console.log(err);
+      showNotif("Failed to add book");
+
     }
+
+  };
+
+  // ================= BUY =================
+  const handleBuy = async (book) => {
+
+    navigate("/checkout", {
+      state: {
+        items: [
+          {
+            ...book,
+            qty: 1,
+          },
+        ],
+      },
+    });
 
   };
 
@@ -154,7 +138,7 @@ const tambahKeKeranjang = async (book) => {
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user) {
-        alert("Login dulu");
+        showNotif("Please login first");
         return;
       }
 
@@ -174,173 +158,257 @@ const tambahKeKeranjang = async (book) => {
         }
       );
 
-      alert("Masuk wishlist");
+      showNotif("Book added to wishlist");
 
     } catch (err) {
+
       console.log(err);
+      showNotif("Failed to add wishlist");
+
     }
 
   };
 
   // ================= BORROW =================
-  const handleBorrow = async (book) => {
+const handleBorrow = async (book) => {
 
-    try {
+  try {
 
-      const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
 
-      if (!user) {
-        alert("Login dulu");
-        return;
-      }
-
-      await fetch(
-        "http://localhost:3000/api/loan-requests",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: user.id,
-            title: book.title,
-            author: book.author,
-            cover: book.cover,
-            book_key: book.title,
-          }),
-        }
-      );
-
-      alert("Pengajuan pinjam berhasil");
-
-    } catch (err) {
-      console.log(err);
+    if (!user) {
+      showNotif("Please login first");
+      return;
     }
 
-  };
+    const res = await fetch(
+      "http://localhost:3000/api/loan-requests",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          title: book.title,
+          author: book.author,
+          cover: book.cover,
+          book_key: `${book.title}_${book.author}`,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    // kalau ditolak
+    if (!data.status) {
+
+      showNotif(data.message);
+      return;
+
+    }
+
+    // sukses
+    showNotif("Borrow request submitted");
+
+  } catch (err) {
+
+    console.log(err);
+    showNotif("Failed to borrow book");
+
+  }
+
+};
 
   return (
-    <div className="min-h-screen bg-gray-100 px-6 py-10">
+    <>
 
-      <div className="max-w-3xl mx-auto mb-10">
+      {/* NOTIF */}
+      {notif && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
 
-        <input
-          type="text"
-          placeholder="Search books..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={handleSearch}
-          className="w-full px-6 py-4 rounded-2xl border shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium">
+            {notif}
+          </div>
 
-      </div>
+        </div>
+      )}
 
-      <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">
-        Search Result: "{search}"
-      </h2>
+      {/* PAGE */}
+      <div className="min-h-screen bg-gray-100 px-6 py-10">
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {/* SEARCH */}
+        <div className="max-w-3xl mx-auto mb-10">
 
-        {books.map((book, index) => (
+          <input
+            type="text"
+            placeholder="Search books..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleSearch}
+            className="w-full px-6 py-4 rounded-2xl border shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-          <div
-            key={index}
-            className="w-full bg-white border rounded-2xl shadow hover:shadow-xl transition overflow-hidden"
-          >
+        </div>
 
-            <div className="h-52 bg-gray-100">
+        {/* TITLE */}
+        <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">
+          Search Result: "{search}"
+        </h2>
 
-              {book.cover ? (
-                <img
-                  src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
-                  alt={book.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  No Cover
-                </div>
-              )}
+        {/* BOOK GRID */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-            </div>
+          {books.map((book, index) => (
 
-            <div className="p-4 flex flex-col">
+            <div
+              key={index}
+              onClick={() => setSelectedBook(book)}
+              className="w-full bg-white border rounded-2xl shadow hover:shadow-xl transition overflow-hidden cursor-pointer"
+            >
 
-              <h3 className="font-bold text-gray-800 line-clamp-2 text-sm">
-                {book.title}
-              </h3>
+              {/* COVER */}
+              <div className="h-52 bg-gray-100">
 
-              <p className="text-blue-600 text-xs mb-3">
-                {book.author}
-              </p>
-
-              {source === "belanja" && (
-                <div className="flex justify-between items-center mb-3">
-
-                  <p className="text-blue-700 font-bold text-sm">
-                    Rp {book.price.toLocaleString("id-ID")}
-                  </p>
-
-                  <p className="text-xs text-gray-500">
-                    Stock: {book.stock}
-                  </p>
-
-                </div>
-              )}
-
-              <div className="flex gap-2 mt-auto">
-
-                {source === "koleksi" ? (
-                  <>
-                    <button
-                      onClick={() => handleWishlist(book)}
-                      className="flex-1 border border-pink-500 text-pink-500 py-2 rounded-xl text-sm hover:bg-pink-50"
-                    >
-                      Wishlist
-                    </button>
-
-                    <button
-                      onClick={() => handleBorrow(book)}
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700"
-                    >
-                      Borrow
-                    </button>
-                  </>
+                {book.cover ? (
+                  <img
+                    src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <>
-                    <button
-                      onClick={() => tambahKeKeranjang(book)}
-                      className="flex-1 border border-blue-600 text-blue-600 py-2 rounded-xl text-sm hover:bg-blue-50"
-                    >
-                      Cart
-                    </button>
-
-                    <button
-                      onClick={() => handleBuy(book)}
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm hover:bg-blue-700"
-                    >
-                      Buy
-                    </button>
-                  </>
+                  <div className="w-full h-full flex items-center justify-center">
+                    No Cover
+                  </div>
                 )}
 
               </div>
 
-              <button
-                onClick={() => setSelectedBook(book)}
-                className="mt-3 bg-gray-100 py-2 rounded-xl hover:bg-gray-200 text-sm"
-              >
-                Show Detail
-              </button>
+              {/* CONTENT */}
+              <div className="p-4 flex flex-col">
+
+                <h3 className="font-bold text-gray-800 line-clamp-2 text-sm">
+                  {book.title}
+                </h3>
+
+                <p className="text-blue-600 text-xs mb-3">
+                  {book.author}
+                </p>
+
+                {source === "belanja" && (
+                  <div className="flex justify-between items-center mb-3">
+
+                    <p className="text-blue-700 font-bold text-sm">
+                      Rp {book.price.toLocaleString("id-ID")}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      Stock: {book.stock}
+                    </p>
+
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* POPUP DETAIL */}
+      {selectedBook && (
+
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+
+          <div className="bg-white rounded-3xl p-6 w-[90%] max-w-md relative">
+
+            {/* CLOSE */}
+            <button
+              onClick={() => setSelectedBook(null)}
+              className="absolute top-3 right-4 text-2xl"
+            >
+              ×
+            </button>
+
+            {/* IMAGE */}
+            <img
+              src={`https://covers.openlibrary.org/b/id/${selectedBook.cover}-L.jpg`}
+              className="w-40 h-56 object-cover rounded-xl mx-auto"
+            />
+
+            {/* TITLE */}
+            <h2 className="text-xl font-bold mt-5 text-center">
+              {selectedBook.title}
+            </h2>
+
+            <p className="text-gray-500 text-center mt-1">
+              {selectedBook.author}
+            </p>
+
+            {/* PRICE */}
+            {source === "belanja" && (
+              <div className="mt-5 flex justify-between">
+
+                <p className="font-bold text-blue-600">
+                  Rp {selectedBook.price?.toLocaleString("id-ID")}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Stock: {selectedBook.stock}
+                </p>
+
+              </div>
+            )}
+
+            {/* BUTTON */}
+            <div className="flex gap-3 mt-6">
+
+              {source === "koleksi" ? (
+                <>
+                  <button
+                    onClick={() => handleWishlist(selectedBook)}
+                    className="flex-1 border border-pink-500 text-pink-500 py-3 rounded-xl"
+                  >
+                    Wishlist
+                  </button>
+
+                  <button
+                    onClick={() => handleBorrow(selectedBook)}
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl"
+                  >
+                    Borrow
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => tambahKeKeranjang(selectedBook)}
+                    className="flex-1 border border-blue-600 text-blue-600 py-3 rounded-xl"
+                  >
+                    Add to Cart
+                  </button>
+
+                  <button
+                    onClick={() => handleBuy(selectedBook)}
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl"
+                  >
+                    Buy Now
+                  </button>
+                </>
+              )}
 
             </div>
 
           </div>
 
-        ))}
+        </div>
 
-      </div>
+      )}
 
-    </div>
+    </>
   );
 }

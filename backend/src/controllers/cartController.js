@@ -84,7 +84,9 @@ export const addToCart = async (req, res) => {
    GET CART USER
 ====================== */
 export const getCart = async (req, res) => {
+
   try {
+
     const { user_id } = req.params;
 
     const { data, error } = await supabase
@@ -94,15 +96,44 @@ export const getCart = async (req, res) => {
 
     if (error) throw error;
 
-    res.json(data);
+    // merge item duplicate
+    const merged = [];
+
+    data.forEach((item) => {
+
+      const existing = merged.find(
+        (x) => x.book_key === item.book_key
+      );
+
+      if (existing) {
+
+        existing.qty += item.qty;
+
+      } else {
+
+        merged.push({
+          ...item,
+        });
+
+      }
+
+    });
+
+    res.json({
+      status: true,
+      data: merged,
+    });
+
   } catch (error) {
+
     res.status(500).json({
       message: "Gagal ambil cart",
       error: error.message,
     });
-  }
-};
 
+  }
+
+};
 /* ======================
    DELETE ITEM CART
 ====================== */
@@ -126,4 +157,34 @@ export const removeCart = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+export const updateQty = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+    const { qty } = req.body;
+
+    const { data, error } = await supabase
+      .from("cart")
+      .update({ qty })
+      .eq("id", id)
+      .select();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      data,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
+  }
+
 };

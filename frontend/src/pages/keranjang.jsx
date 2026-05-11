@@ -2,9 +2,10 @@ import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Keranjang() {
+  const navigate = useNavigate();
   const [cart, setCart] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
 
@@ -33,71 +34,25 @@ export default function Keranjang() {
     }
   };
 
-  const handleCheckout = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
+  const handleCheckout = () => {
 
-      if (!user) {
-        alert("Login dulu ya");
-        return;
-      }
+    const selectedCart = cart.filter((item) =>
+      selectedItems.includes(item.id)
+    );
 
-      // ambil item yang dicentang
-      const selectedCart = cart.filter((item) =>
-        selectedItems.includes(item.id)
-      );
-
-      if (selectedCart.length === 0) {
-        alert("Pilih barang dulu");
-        return;
-      }
-
-      const items = selectedCart.map((item) => ({
-        book_key: item.id,
-        title: item.title,
-        price: item.price,
-        qty: item.qty || 1,
-      }));
-
-      const res = await axios.post(
-        "http://localhost:3000/api/payment/create",
-        {
-          user_id: user.id,
-          items,
-        }
-      );
-
-      const token = res.data.token;
-
-      // MIDTRANS POPUP
-      window.snap.pay(token, {
-        onSuccess: async function () {
-
-          alert("Pembayaran berhasil 🎉");
-
-          // hapus item yang dicheckout
-          for (const item of selectedCart) {
-
-            await axios.delete(
-              `http://localhost:3000/api/cart/${item.id}`
-            );
-
-          }
-
-          // refresh cart
-          fetchCart();
-
-          // reset checkbox
-          setSelectedItems([]);
-
-        },
-      });
-
-    } catch (err) {
-      console.log(err);
-      alert("Checkout gagal");
+    if (selectedCart.length === 0) {
+      alert("Pilih barang dulu");
+      return;
     }
+
+    navigate("/checkout", {
+      state: {
+        items: selectedCart,
+      },
+    });
+
   };
+
   /* =========================
      CHECKBOX
   ========================= */
@@ -124,8 +79,29 @@ export default function Keranjang() {
   ========================= */
   const total = cart
     .filter((item) => selectedItems.includes(item.id))
-    .reduce((acc, item) => acc + (item.price * item.qty), 0);
+    .reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
 
+
+const updateQty = async (id, qty) => {
+
+  if (qty < 1) return;
+
+  try {
+
+    await axios.put(
+      `http://localhost:3000/api/cart/${id}`,
+      { qty }
+    );
+
+    fetchCart();
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
   /* =========================
      HAPUS ITEM
   ========================= */
@@ -274,9 +250,34 @@ export default function Keranjang() {
                 </p>
               </div>
 
-              <p className="text-xs text-gray-400">
-                Qty: {item.qty}
-              </p>
+              <div className="text-xs text-gray-400">
+
+                <p>
+                  Qty
+                </p>
+
+                <div className="flex items-center gap-2 mt-1">
+
+                  <button
+                    onClick={() => updateQty(item.id, item.qty - 1)}
+                    className="w-6 h-6 rounded bg-gray-200"
+                  >
+                    -
+                  </button>
+
+                  <span className="text-sm">
+                    {item.qty}
+                  </span>
+
+                  <button
+                    onClick={() => updateQty(item.id, item.qty + 1)}
+                    className="w-6 h-6 rounded bg-gray-200"
+                  >
+                    +
+                  </button>
+
+                </div>
+              </div>
 
               <p className="text-blue-600 font-bold text-sm">
                 Rp {item.price?.toLocaleString("id-ID")}

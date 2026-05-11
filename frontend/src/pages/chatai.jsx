@@ -12,51 +12,51 @@ export default function ChatAI() {
   // =========================
   // KIRIM PESAN
   // =========================
-const handleSend = async () => {
-  if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim()) return;
 
-  const userMessage = input;
+    const userMessage = input;
 
-  // tampilkan user
-  setMessages((prev) => [
-    ...prev,
-    { role: "user", text: userMessage },
-    { role: "bot", text: "..." },  ]);
+    // tampilkan user
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: userMessage },
+      { role: "bot", text: "..." },]);
 
-  setInput("");
+    setInput("");
 
-  try {
-    const res = await fetch("http://localhost:3000/api/ai/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ prompt: userMessage }),
-});
+    try {
+      const res = await fetch("http://localhost:3000/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: userMessage }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    // replace loading jadi jawaban asli
-    setMessages((prev) => {
-      const updated = [...prev];
-      updated[updated.length - 1] = {
-        role: "bot",
-        text: data.message,
-      };
-      return updated;
-    });
+      // replace loading jadi jawaban asli
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "bot",
+          text: data.message,
+        };
+        return updated;
+      });
 
-  } catch (error) {
-    setMessages((prev) => {
-      const updated = [...prev];
-      updated[updated.length - 1] = {
-        role: "bot",
-        text: "Server error 😭",
-      };
-      return updated;
-    });
-  }
-};
+    } catch (error) {
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "bot",
+          text: "Server error 😭",
+        };
+        return updated;
+      });
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100">
@@ -97,10 +97,9 @@ const handleSend = async () => {
               className={`
                 max-w-[75%] px-4 py-3 text-sm shadow-sm
                 rounded-2xl
-                ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-sm"
-                    : "bg-white text-gray-700 border rounded-bl-sm"
+                ${msg.role === "user"
+                  ? "bg-blue-600 text-white rounded-br-sm"
+                  : "bg-white text-gray-700 border rounded-bl-sm"
                 }
               `}
             >

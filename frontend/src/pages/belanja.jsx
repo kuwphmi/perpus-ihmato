@@ -64,6 +64,7 @@ export default function Belanja() {
   const [isOpen, setIsOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [notif, setNotif] = useState("");
 
   useEffect(() => {
 
@@ -74,10 +75,29 @@ export default function Belanja() {
     }
 
   }, []);
+  const showNotif = (message) => {
 
- 
+    setNotif(message);
 
-  const banners = [banner5, banner4, banner6, banner9,banner5];
+    setTimeout(() => {
+      setNotif("");
+    }, 2000);
+
+  };
+  const genreMap = {
+    Art: "art",
+    "Science Fiction": "science fiction",
+    Fantasy: "fantasy",
+    Biographies: "biography",
+    Recipe: "cooking",
+    Romance: "romance",
+    Textbox: "textbook",
+    Children: "children",
+    Medicine: "medicine",
+    Religion: "religion",
+  };
+
+  const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
   const fetchGenreBooks = async (category) => {
@@ -90,14 +110,13 @@ export default function Belanja() {
 
       const data = await res.json();
 
-    const books = data.docs.map((item) => ({
-        workKey: item.key,
-  title: item.title ?? "-",
-  author: item.author_name?.[0] ?? "-",
-  cover: item.cover_i ?? null,
-  price: Math.floor(Math.random() * 100000) + 50000,
-  stock: Math.floor(Math.random() * 20) + 1,
-}));
+      const books = data.docs.map((item) => ({
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+        price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+        stock: ((item.cover_i || 1) % 15) + 5,
+      }));
 
       setGenreBooks(books);
       setActiveCategory(category);
@@ -118,8 +137,8 @@ export default function Belanja() {
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
-          price: Math.floor(Math.random() * 100000) + 50000,
-          stock: Math.floor(Math.random() * 20) + 1,
+          price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+          stock: ((item.cover_i || 1) % 15) + 5,
         }));
 
         setTerbaru(books);
@@ -134,8 +153,8 @@ export default function Belanja() {
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
-          price: Math.floor(Math.random() * 100000) + 50000,
-          stock: Math.floor(Math.random() * 20) + 1,
+          price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+          stock: ((item.cover_i || 1) % 15) + 5,
         }));
 
         setTerlaris(books);
@@ -154,7 +173,7 @@ export default function Belanja() {
           `http://localhost:3000/api/cart/${user.id}`
         );
 
-        setCart(res.data);
+        setCart(res.data.data);
       } catch (err) {
         console.log("Gagal fetch cart", err);
       }
@@ -208,237 +227,243 @@ export default function Belanja() {
   };
 
   const categories = [
-      {
-        name: "Art",
-        icon: <MdOutlinePalette />,
-      },
-    
-      {
-        name: "Science Fiction",
-        icon: <FiGlobe />,
-      },
-    
-      {
-        name: "Fantasy",
-        icon: <GiSpellBook />,
-      },
-    
-      {
-        name: "Biographies",
-        icon: <FiUser />,
-      },
-    
-      {
-        name: "Recipe",
-        icon: <LuChefHat />,
-      },
-    
-      {
-        name: "Romance",
-        icon: <FaRegHeart />,
-      },
-    
-      {
-        name: "Textbox",
-        icon: <FiBook />,
-      },
-    
-      {
-        name: "Children",
-        icon: <FiSmile />,
-      },
-    
-     {
+    {
+      name: "Art",
+      icon: <MdOutlinePalette />,
+    },
+
+    {
+      name: "Science Fiction",
+      icon: <FiGlobe />,
+    },
+
+    {
+      name: "Fantasy",
+      icon: <GiSpellBook />,
+    },
+
+    {
+      name: "Biographies",
+      icon: <FiUser />,
+    },
+
+    {
+      name: "Recipe",
+      icon: <LuChefHat />,
+    },
+
+    {
+      name: "Romance",
+      icon: <FaRegHeart />,
+    },
+
+    {
+      name: "Textbox",
+      icon: <FiBook />,
+    },
+
+    {
+      name: "Children",
+      icon: <FiSmile />,
+    },
+
+    {
       name: "Medicine",
       icon: <FaUserDoctor />,
     },
-    
-      {
-        name: "Religion",
-        icon: <FiFileText />,
-      },
+
+    {
+      name: "Religion",
+      icon: <FiFileText />,
+    },
   ];
 
   return (
     <div className="font-sans">
+      {notif && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+          <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium">
+            {notif}
+          </div>
+        </div>
+      )}
       {/* ================= NAVBAR ================= */}
-      
-<div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
 
-  <div className="flex gap-6">
+      <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
 
-    {[
-      { name: "Shop", path: "/belanja" },
-      { name: "Orders", path: "/trackingbuku" },
-      { name: "Discover", path: "/helpcenter" },
-    ].map((item, i) => (
-      <Link
-        key={i}
-        to={item.path}
-        className="px-3 py-1 rounded-md hover:text-blue-200 transition"
-      >
-        {item.name}
-      </Link>
-    ))}
+        <div className="flex gap-6">
 
-  </div>
+          {[
+            { name: "Shop", path: "/belanja" },
+            { name: "Orders", path: "/trackingbuku" },
+            { name: "Discover", path: "/helpcenter" },
+          ].map((item, i) => (
+            <Link
+              key={i}
+              to={item.path}
+              className="px-3 py-1 rounded-md hover:text-blue-200 transition"
+            >
+              {item.name}
+            </Link>
+          ))}
 
-</div>
-
-{/* ================= NAVBAR ================= */}
-<header className="sticky top-0 z-50 bg-white shadow">
-
- <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2">
-
-    {/* LOGO */}
-    <div className="flex items-center gap-2 mr-5">
-
-      <img
-        src={logo}
-        alt="logo"
-        className="w-12 h-12 mr-4"
-      />
-
-    </div>
-
-    {/* RIGHT */}
-    <div className="flex items-center gap-3 ml-4 relative z-50">
-
-      {/* CART */}
-      <Link to="/keranjang" className="relative">
-
-        <FiShoppingCart className="text-2xl text-gray-600 hover:text-blue-600 transition cursor-pointer" />
-
-        {cart.length > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-            {cart.length}
-          </span>
-        )}
-
-      </Link>
-
-      <div className="relative">
-                      <FiBell
-                        className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsNotifOpen(!isNotifOpen);
-                        }}
-                      />
-          
-                      {isNotifOpen && (
-                        <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                          <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-          
-                          <div className="py-3 text-center">
-                            <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                              Your Notification
-                            </h3>
-          
-                            <div className="py-6 text-sm text-gray-400 border-b">
-                              No new notifications yet.
-                            </div>
-          
-                            <button
-            onClick={() => navigate("/notip")}
-            className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-          >
-            View All
-          </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-       {/*  PROFIL */}
-<div className="relative">
-
-  {/* ICON PROFILE */}
-  <div
-    onClick={(e) => {
-      e.stopPropagation();
-      setIsProfileOpen(!isProfileOpen);
-    }}
-    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-  >
-    {user.name ? user.name.charAt(0) : "U"}
-  </div>
-
-  {/* DROPDOWN PROFILE */}
-  {isProfileOpen && (
-    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
-
-      {/* HEADER */}
-      <div className="flex flex-col items-center py-6 bg-gray-50">
-        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-          {user.name ? user.name.charAt(0) : "U"}
         </div>
 
-        <h3 className="font-semibold text-gray-700 text-sm">
-          {user.name || "-"}
-        </h3>
-
-        <p className="text-xs text-gray-500">
-          {user.email || "-"}
-        </p>
       </div>
 
-      {/* BUTTON PROFIL */}
-      <div className="px-4 py-4">
-        <Link to="/profil">
-          <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-              My Profile
-          </button>
-        </Link>
-      </div>
+      {/* ================= NAVBAR ================= */}
+      <header className="sticky top-0 z-50 bg-white shadow">
 
-    </div>
-  )}
-</div>
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2">
 
-    </div>
+          {/* LOGO */}
+          <div className="flex items-center gap-2 mr-5">
 
-  </div>
+            <img
+              src={logo}
+              alt="logo"
+              className="w-12 h-12 mr-4"
+            />
 
-</header>
+          </div>
 
-     {/* ================= BANNER ================= */}
-<section className="relative w-full overflow-hidden bg-[#0B5DFF]">
-  <div className="relative w-full aspect-[16/9] md:h-[90vh]">
-    {banners.map((img, index) => (
-      <img
-        key={index}
-        src={img}
-        alt=""
-        className={`absolute inset-0 w-full h-full object-fill transition-opacity duration-700 ${
-          currentSlide === index ? "opacity-100" : "opacity-0"
-        }`}
-      />
-    ))}
-  </div>
-</section>
+          {/* RIGHT */}
+          <div className="flex items-center gap-3 ml-4 relative z-50">
+
+            {/* CART */}
+            <Link to="/keranjang" className="relative">
+
+              <FiShoppingCart className="text-2xl text-gray-600 hover:text-blue-600 transition cursor-pointer" />
+
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                  {cart.length}
+                </span>
+              )}
+
+            </Link>
+
+            <div className="relative">
+              <FiBell
+                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsNotifOpen(!isNotifOpen);
+                }}
+              />
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
+                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+
+                  <div className="py-3 text-center">
+                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
+                      Your Notification
+                    </h3>
+
+                    <div className="py-6 text-sm text-gray-400 border-b">
+                      No new notifications yet.
+                    </div>
+
+                    <button
+                      onClick={() => navigate("/notip")}
+                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/*  PROFIL */}
+            <div className="relative">
+
+              {/* ICON PROFILE */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsProfileOpen(!isProfileOpen);
+                }}
+                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+              >
+                {user.name ? user.name.charAt(0) : "U"}
+              </div>
+
+              {/* DROPDOWN PROFILE */}
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+
+                  {/* HEADER */}
+                  <div className="flex flex-col items-center py-6 bg-gray-50">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+                      {user.name ? user.name.charAt(0) : "U"}
+                    </div>
+
+                    <h3 className="font-semibold text-gray-700 text-sm">
+                      {user.name || "-"}
+                    </h3>
+
+                    <p className="text-xs text-gray-500">
+                      {user.email || "-"}
+                    </p>
+                  </div>
+
+                  {/* BUTTON PROFIL */}
+                  <div className="px-4 py-4">
+                    <Link to="/profil">
+                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+                        My Profile
+                      </button>
+                    </Link>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+      </header>
+
+      {/* ================= BANNER ================= */}
+      <section className="relative w-full overflow-hidden bg-[#0B5DFF]">
+        <div className="relative w-full aspect-[16/9] md:h-[90vh]">
+          {banners.map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-fill transition-opacity duration-700 ${currentSlide === index ? "opacity-100" : "opacity-0"
+                }`}
+            />
+          ))}
+        </div>
+      </section>
 
       {/* ================= SEARCH ================= */}
-<section className="relative z-20 -mt-10 md:-mt-20 px-4 md:px-20">
-  <div className="max-w-6xl mx-auto">
-    <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
-      <input
-        type="text"
-        placeholder="Search book titles..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="flex-1 px-4 md:px-5 py-3 text-sm rounded-lg focus:outline-none"
-      />
+      <section className="relative z-20 -mt-10 md:-mt-20 px-4 md:px-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search book titles..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 px-4 md:px-5 py-3 text-sm rounded-lg focus:outline-none"
+            />
 
-      <button
-        onClick={handleSearch}
-        className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 md:px-6 py-3 rounded-xl text-sm font-medium whitespace-nowrap"
-      >
-        Search
-      </button>
-    </div>
-  </div>
-</section>
+            <button
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 md:px-6 py-3 rounded-xl text-sm font-medium whitespace-nowrap"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* ================= KATEGORI ================= */}
       <section className="bg-blue-50 py-12 px-6 md:px-20">
@@ -509,19 +534,20 @@ export default function Belanja() {
           setCart={setCart}
           setIsBuyOpen={setIsBuyOpen}
           setSelectedBook={setSelectedBook}
+          showNotif={showNotif}
         />
       )}
 
       {/* ================= LANDSCAPE ================= */}
-<section className="px-4 md:px-20 pb-14">
-  <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-    <img
-      src={banner5}
-      className="w-full h-auto object-contain"
-      alt="Banner"
-    />
-  </div>
-</section>
+      <section className="px-4 md:px-20 pb-14">
+        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
+          <img
+            src={banner5}
+            className="w-full h-auto object-contain"
+            alt="Banner"
+          />
+        </div>
+      </section>
 
       {/* ================= BUKU TERBARU ================= */}
       {!activeCategory && (
@@ -531,66 +557,67 @@ export default function Belanja() {
           setCart={setCart}
           setIsBuyOpen={setIsBuyOpen}
           setSelectedBook={setSelectedBook}
+          showNotif={showNotif}
         />
       )}
 
       {/* FOOTER */}
-<footer className="mt-20 bg-gray-900 text-white">
+      <footer className="mt-20 bg-gray-900 text-white">
 
-  <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
 
-    {/* BRAND */}
-    <div>
-      <h2 className="text-2xl font-bold text-blue-400 mb-3">
-        BukuIn
-      </h2>
+          {/* BRAND */}
+          <div>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">
+              BukuIn
+            </h2>
 
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Discover thousands of books, explore new worlds,
-        and enjoy a modern digital library experience.
-      </p>
-    </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Discover thousands of books, explore new worlds,
+              and enjoy a modern digital library experience.
+            </p>
+          </div>
 
-    {/* MENU */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        Navigation
-      </h3>
+          {/* MENU */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              Navigation
+            </h3>
 
-      <div className="flex flex-col gap-2 text-gray-400 text-sm">
-        <Link to="/belanja" className="hover:text-white">
-          Shop
-        </Link>
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
 
-        <Link to="/trackingbuku" className="hover:text-white">
-          Orders
-        </Link>
-         <Link to="/helpcenter" className="hover:text-white">
-          Discover
-        </Link>
-      </div>
-    </div>
+              <Link to="/trackingbuku" className="hover:text-white">
+                Orders
+              </Link>
+              <Link to="/helpcenter" className="hover:text-white">
+                Discover
+              </Link>
+            </div>
+          </div>
 
-    {/* CONTACT */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        About
-      </h3>
+          {/* CONTACT */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              About
+            </h3>
 
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Built for book lovers who want a simple,
-        elegant, and interactive reading platform.
-      </p>
-    </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Built for book lovers who want a simple,
+              elegant, and interactive reading platform.
+            </p>
+          </div>
 
-  </div>
+        </div>
 
-  {/* BOTTOM */}
-  <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-    © 2026 BukuIn. All rights reserved.
-  </div>
+        {/* BOTTOM */}
+        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+          © 2026 BukuIn. All rights reserved.
+        </div>
 
-</footer>
+      </footer>
     </div>
   );
 }
@@ -598,6 +625,7 @@ export default function Belanja() {
 /* ================= BOOK CARD ================= */
 
 function BookCard({
+  showNotif,
   title,
   author,
   cover,
@@ -640,87 +668,40 @@ function BookCard({
   }
 };
 
-  // ================= NOTIF =================
-  const [notif, setNotif] = useState("");
-
-  const showNotif = (message) => {
-    setNotif(message);
-
-    setTimeout(() => {
-      setNotif("");
-    }, 2000);
-  };
-
   // ================= HANDLE BUY =================
-  const handleBuy = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
+  const handleBuy = () => {
 
-      if (!user) {
-        showNotif("Login dulu ya");
-        return;
-      }
+    navigate("/checkout", {
+      state: {
+        items: [
+          {
+            title,
+            author,
+            cover,
+            price,
+            qty: 1,
+          },
+        ],
+      },
+    });
 
-      const res = await axios.post(
-        "http://localhost:3000/api/payment/create",
-        {
-          user_id: user.id,
-          items: [
-            {
-              book_key: title,
-              title,
-              price,
-              qty: 1,
-            },
-          ],
-        }
-      );
-
-      const token = res.data.token;
-
-      // 🔥 MIDTRANS POPUP
-      window.snap.pay(token, {
-        onSuccess: function () {
-          showNotif("Pembayaran berhasil 🎉");
-        },
-
-        onPending: function () {
-          showNotif("Menunggu pembayaran ⏳");
-        },
-
-        onError: function () {
-          showNotif("Pembayaran gagal ❌");
-        },
-
-        onClose: function () {
-          console.log("User tutup popup");
-        },
-      });
-
-    } catch (err) {
-      console.log(err);
-      showNotif("Gagal connect ke payment");
-    }
   };
 
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
 
-    console.log("TOMBOL DIKLIK");
-
     try {
 
       const user = JSON.parse(localStorage.getItem("user"));
 
-      console.log("USER:", user);
-
       if (!user) {
-        showNotif("Silakan login dulu");
+        showNotif("Please login first");
         return;
       }
 
       const payload = {
         user_id: user.id,
+        book_key: `${title}_${author}`,
         title,
         author,
         cover,
@@ -728,49 +709,58 @@ function BookCard({
         stock,
       };
 
-      console.log("PAYLOAD:", payload);
-
       const res = await axios.post(
         "http://localhost:3000/api/cart",
         payload
       );
 
-      console.log("RESPONSE:", res.data);
+      showNotif(res.data.message);
 
-      if (res.data.status) {
+      setCart((prev) => {
 
-        setCart((prev) => {
-          if (!Array.isArray(prev)) prev = [];
-          return [...prev, res.data.data];
-        });
+        const old = Array.isArray(prev) ? prev : [];
 
-        showNotif("Buku masuk keranjang");
+        const existingIndex = old.findIndex(
+          (item) => item.book_key === payload.book_key
+        );
 
-      } else {
+        // kalau buku sudah ada
+        if (existingIndex !== -1) {
 
-        showNotif(res.data.message);
+          const updated = [...old];
 
-      }
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            qty: updated[existingIndex].qty + 1,
+          };
+
+          return updated;
+        }
+
+        // kalau buku belum ada
+        return [
+          ...old,
+          {
+            ...payload,
+            qty: 1,
+          },
+        ];
+
+      });
 
     } catch (err) {
 
-      console.log("ERROR:", err);
+      console.log(err);
 
-      showNotif("Terjadi error");
+      showNotif("Failed to add to cart");
 
     }
+
   };
 
   return (
     <>
-      {/* ================= NOTIF ================= */}
-      {notif && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium animate-bounce">
-            {notif}
-          </div>
-        </div>
-      )}
+
 
 
       {/* ================= DETAIL POPUP ================= */}
@@ -949,6 +939,7 @@ function BukuTerlaris({
   setCart,
   setIsBuyOpen,
   setSelectedBook,
+  showNotif,
 }) {
   const scrollRef = useRef(null);
 
@@ -1000,6 +991,7 @@ function BukuTerlaris({
               setCart={setCart}
               setIsBuyOpen={setIsBuyOpen}
               setSelectedBook={setSelectedBook}
+              showNotif={showNotif}
             />
           </div>
         ))}
@@ -1015,6 +1007,7 @@ function BukuTerbaru({
   setCart,
   setIsBuyOpen,
   setSelectedBook,
+  showNotif,
 }) {
   const scrollRef = useRef(null);
 
@@ -1067,6 +1060,7 @@ function BukuTerbaru({
               setCart={setCart}
               setIsBuyOpen={setIsBuyOpen}
               setSelectedBook={setSelectedBook}
+              showNotif={showNotif}
             />
           </div>
         ))}

@@ -24,7 +24,7 @@ export default function Trackingbuku() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const popupRef = useRef();
-
+  const [orders, setOrders] = useState([]);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -40,35 +40,57 @@ export default function Trackingbuku() {
     };
   }, []);
 
-  const orders = [
-    {
-      id: "#BK1021",
-      title: "Atomic Habits",
-      status: "Unpaid",
-      price: "$12.99",
-      image:
-        "https://covers.openlibrary.org/b/id/12687884-L.jpg",
-    },
+  useEffect(() => {
 
-    {
-      id: "#BK1022",
-      title: "Rich Dad Poor Dad",
-      status: "Shipping",
-      price: "$15.50",
-      image:
-        "https://covers.openlibrary.org/b/id/240726-L.jpg",
-    },
+    fetchOrders();
 
-    {
-      id: "#BK1023",
-      title: "The Psychology of Money",
-      status: "Completed",
-      price: "$18.00",
-      image:
-        "https://covers.openlibrary.org/b/id/10521270-L.jpg",
-    },
-  ];
+  }, []);
 
+  const fetchOrders = async () => {
+
+    try {
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const res = await fetch(
+        `http://localhost:3000/api/payment/${user.id}`
+      );
+
+      const data = await res.json();
+
+      setOrders(data);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  const getStatus = (status) => {
+
+    if (status === "pending") return "Unpaid";
+
+    if (status === "success") return "Completed";
+
+    if (status === "shipping") return "Shipping";
+
+    return status;
+
+  };
+
+  const unpaidCount = orders.filter(
+    (o) => getStatus(o.status) === "Unpaid"
+  ).length;
+
+  const shippingCount = orders.filter(
+    (o) => getStatus(o.status) === "Shipping"
+  ).length;
+
+  const completedCount = orders.filter(
+    (o) => getStatus(o.status) === "Completed"
+  ).length;
   return (
     <div className="min-h-screen bg-[#f7faff]">
 
@@ -110,7 +132,7 @@ export default function Trackingbuku() {
             />
 
             <h1 className="text-xl font-bold text-blue-700">
-            
+
             </h1>
 
           </div>
@@ -126,83 +148,83 @@ export default function Trackingbuku() {
 
             {/* NOTIFICATION */}
             <div className="relative">
-                      <FiBell
-                        className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsNotifOpen(!isNotifOpen);
-                        }}
-                      />
-          
-                      {isNotifOpen && (
-                        <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                          <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-          
-                          <div className="py-3 text-center">
-                            <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                              Your Notification
-                            </h3>
-          
-                            <div className="py-6 text-sm text-gray-400 border-b">
-                              No new notifications yet.
-                            </div>
-          
-                            <button
-            onClick={() => navigate("/notip")}
-            className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-          >
-            View All
-          </button>
-                          </div>
-                        </div>
-                      )}
+              <FiBell
+                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsNotifOpen(!isNotifOpen);
+                }}
+              />
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
+                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+
+                  <div className="py-3 text-center">
+                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
+                      Your Notification
+                    </h3>
+
+                    <div className="py-6 text-sm text-gray-400 border-b">
+                      No new notifications yet.
                     </div>
 
+                    <button
+                      onClick={() => navigate("/notip")}
+                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/*  PROFIL */}
-<div className="relative">
+            <div className="relative">
 
-  {/* ICON PROFILE */}
-  <div
-    onClick={(e) => {
-      e.stopPropagation();
-      setIsProfileOpen(!isProfileOpen);
-    }}
-    className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-  >
-    {user.name ? user.name.charAt(0) : "U"}
-  </div>
+              {/* ICON PROFILE */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsProfileOpen(!isProfileOpen);
+                }}
+                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+              >
+                {user.name ? user.name.charAt(0) : "U"}
+              </div>
 
-  {/* DROPDOWN PROFILE */}
-  {isProfileOpen && (
-    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+              {/* DROPDOWN PROFILE */}
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
 
-      {/* HEADER */}
-      <div className="flex flex-col items-center py-6 bg-gray-50">
-        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-          {user.name ? user.name.charAt(0) : "U"}
-        </div>
+                  {/* HEADER */}
+                  <div className="flex flex-col items-center py-6 bg-gray-50">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
+                      {user.name ? user.name.charAt(0) : "U"}
+                    </div>
 
-        <h3 className="font-semibold text-gray-700 text-sm">
-          {user.name || "-"}
-        </h3>
+                    <h3 className="font-semibold text-gray-700 text-sm">
+                      {user.name || "-"}
+                    </h3>
 
-        <p className="text-xs text-gray-500">
-          {user.email || "-"}
-        </p>
-      </div>
+                    <p className="text-xs text-gray-500">
+                      {user.email || "-"}
+                    </p>
+                  </div>
 
-      {/* BUTTON PROFIL */}
-      <div className="px-4 py-4">
-        <Link to="/profil">
-          <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-              My Profile
-          </button>
-        </Link>
-      </div>
+                  {/* BUTTON PROFIL */}
+                  <div className="px-4 py-4">
+                    <Link to="/profil">
+                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
+                        My Profile
+                      </button>
+                    </Link>
+                  </div>
 
-    </div>
-  )}
-</div>
+                </div>
+              )}
+            </div>
 
           </div>
 
@@ -248,7 +270,7 @@ export default function Trackingbuku() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800">
-              02
+              {unpaidCount}
             </h2>
 
             <p className="text-gray-500 mt-1">
@@ -265,7 +287,7 @@ export default function Trackingbuku() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800">
-              01
+              {shippingCount}
             </h2>
 
             <p className="text-gray-500 mt-1">
@@ -282,7 +304,7 @@ export default function Trackingbuku() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800">
-              08
+              {completedCount}
             </h2>
 
             <p className="text-gray-500 mt-1">
@@ -330,7 +352,7 @@ export default function Trackingbuku() {
                 <div className="flex items-center gap-5">
 
                   <img
-                    src={order.image}
+                    src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`}
                     alt={order.title}
                     className="w-24 h-32 rounded-2xl object-cover"
                   />
@@ -346,7 +368,7 @@ export default function Trackingbuku() {
                     </p>
 
                     <p className="text-blue-600 font-bold mt-3">
-                      {order.price}
+                      Rp {order.amount?.toLocaleString("id-ID")}
                     </p>
 
                   </div>
@@ -356,19 +378,51 @@ export default function Trackingbuku() {
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
 
-                  {order.status === "Unpaid" && (
-                    <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">
-                      Unpaid
-                    </span>
+                  {getStatus(order.status) === "Unpaid" && (
+                    <>
+                      <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">
+                        Unpaid
+                      </span>
+
+                      <button
+                        onClick={() => {
+window.snap.pay(order.snap_token, {
+
+  onSuccess: function () {
+    fetchOrders();
+  },
+
+  onPending: function () {
+    fetchOrders();
+  },
+
+  onClose: function () {
+
+    console.log("Popup closed");
+
+  },
+
+  onError: function (err) {
+
+    console.log(err);
+
+  },
+
+});                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition"
+                      >
+                        View Payment Code
+                      </button>
+                    </>
                   )}
 
-                  {order.status === "Shipping" && (
+                  {getStatus(order.status) === "Shipping" && (
                     <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
                       Shipping
                     </span>
                   )}
 
-                  {order.status === "Completed" && (
+                  {getStatus(order.status) === "Completed" && (
                     <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
                       Completed
                     </span>
@@ -386,62 +440,62 @@ export default function Trackingbuku() {
       </section>
 
       {/* FOOTER */}
-<footer className="mt-20 bg-gray-900 text-white">
+      <footer className="mt-20 bg-gray-900 text-white">
 
-  <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
 
-    {/* BRAND */}
-    <div>
-      <h2 className="text-2xl font-bold text-blue-400 mb-3">
-        BukuIn
-      </h2>
+          {/* BRAND */}
+          <div>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">
+              BukuIn
+            </h2>
 
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Discover thousands of books, explore new worlds,
-        and enjoy a modern digital library experience.
-      </p>
-    </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Discover thousands of books, explore new worlds,
+              and enjoy a modern digital library experience.
+            </p>
+          </div>
 
-    {/* MENU */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        Navigation
-      </h3>
+          {/* MENU */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              Navigation
+            </h3>
 
-      <div className="flex flex-col gap-2 text-gray-400 text-sm">
-        <Link to="/belanja" className="hover:text-white">
-          Shop
-        </Link>
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
 
-        <Link to="/trackingbuku" className="hover:text-white">
-          Orders
-        </Link>
-         <Link to="/helpcenter" className="hover:text-white">
-          Discover
-        </Link>
-      </div>
-    </div>
+              <Link to="/trackingbuku" className="hover:text-white">
+                Orders
+              </Link>
+              <Link to="/helpcenter" className="hover:text-white">
+                Discover
+              </Link>
+            </div>
+          </div>
 
-    {/* CONTACT */}
-    <div>
-      <h3 className="font-semibold text-lg mb-4">
-        About
-      </h3>
+          {/* CONTACT */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              About
+            </h3>
 
-      <p className="text-gray-400 text-sm leading-relaxed">
-        Built for book lovers who want a simple,
-        elegant, and interactive reading platform.
-      </p>
-    </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Built for book lovers who want a simple,
+              elegant, and interactive reading platform.
+            </p>
+          </div>
 
-  </div>
+        </div>
 
-  {/* BOTTOM */}
-  <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-    © 2026 BukuIn. All rights reserved.
-  </div>
+        {/* BOTTOM */}
+        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+          © 2026 BukuIn. All rights reserved.
+        </div>
 
-</footer>
+      </footer>
 
       {/* FLOATING */}
       <Floating />

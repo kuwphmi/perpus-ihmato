@@ -513,9 +513,8 @@ export default function AdminPerpustakaan() {
                       return (
                         <div key={step.key} className="relative flex items-start gap-3 pl-10">
                           <div
-                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
-                              done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
-                            } ${active ? "ring-4 ring-blue-100" : ""}`}
+                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
+                              } ${active ? "ring-4 ring-blue-100" : ""}`}
                           >
                             {done ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                           </div>

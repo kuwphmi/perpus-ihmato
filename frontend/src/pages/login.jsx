@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 // ─── Password Strength Helper ──────────────────────────────────────────────
 function getStrength(password) {
@@ -126,9 +128,9 @@ function LoginForm({ onSwitch, onForgot }) {
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Masuk ke akun</h1>
         <p className="text-sm text-gray-500">
-          Belum punya akun?{" "}
+          Don't have an account?{" "}
           <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-            Daftar sekarang
+            Sign Up
           </button>
         </p>
       </div>
@@ -140,12 +142,12 @@ function LoginForm({ onSwitch, onForgot }) {
           <div className="text-right">
             {/* ← Tombol lupa kata sandi dihubungkan ke onForgot */}
             <button type="button" onClick={onForgot} className="text-xs text-blue-700 hover:underline">
-              Lupa kata sandi?
+              Forgot Password?
             </button>
           </div>
         </div>
         <button type="submit" className="mt-1 h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-          Masuk
+          Sign In
         </button>
       </form>
 
@@ -168,211 +170,231 @@ function LoginForm({ onSwitch, onForgot }) {
   );
 }
 
-  // ─── REGISTER FORM ────────────────────────────────────────────────────────
-  function RegisterForm({ onSwitch }) {
-    const navigate = useNavigate();
-    const [form, setForm] = useState({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-      agree: false,
-    });
-    const strength = getStrength(form.password);
-    const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+// ─── REGISTER FORM ────────────────────────────────────────────────────────
+function RegisterForm({ onSwitch }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    agree: false,
+  });
+  const strength = getStrength(form.password);
+  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!form.agree) return alert("Setujui syarat dulu");
-      try {
-        const res = await axios.post("http://localhost:3000/api/register", {
-          name: form.firstName + " " + form.lastName,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-        });
-        if (res.data.status) {
-          alert("Register berhasil, silakan lengkapi profil");
-          localStorage.setItem("user", JSON.stringify(res.data.data));
-          navigate("/profil");
-        } else {
-          alert(res.data.message);
-        }
-      } catch (error) {
-        console.log(error);
-        alert("Register gagal");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.agree) return alert("Setujui syarat dulu");
+    try {
+      const res = await axios.post("http://localhost:3000/api/register", {
+        name: form.firstName + " " + form.lastName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone,
+      });
+      if (res.data.status) {
+        alert("Register berhasil, silakan lengkapi profil");
+        localStorage.setItem("user", JSON.stringify(res.data.data));
+        navigate("/profil");
+      } else {
+        alert(res.data.message);
       }
-    };
+    } catch (error) {
+      console.log(error);
+      alert("Register gagal");
+    }
+  };
 
-    return (
-      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Buat akun baru</h1>
-          <p className="text-sm text-gray-500">
-            Sudah punya akun?{" "}
-            <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-              Masuk di sini
-            </button>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Nama Depan" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
-            <Field label="Nama Belakang" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
-          </div>
-          <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
-          <Field label="Nomor Telepon" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-600">Kata Sandi</label>
-            <input
-              type="password"
-              placeholder="Min. 8 karakter"
-              value={form.password}
-              onChange={set("password")}
-              className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-            />
-            {form.password && (
-              <div className="flex flex-col gap-1">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength ? strengthColors[strength - 1] : "bg-gray-100"}`} />
-                  ))}
-                </div>
-                <p className="text-xs text-gray-400">{strengthLabels[strength - 1]}</p>
-              </div>
-            )}
-          </div>
-          <label className="flex items-start gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={form.agree} onChange={set("agree")} className="mt-0.5 accent-blue-700" />
-            <span className="text-sm text-gray-500 leading-relaxed">
-              Saya menyetujui{" "}
-              <a href="#" className="text-blue-700 hover:underline">
-                Syarat & Ketentuan
-              </a>{" "}
-              dan{" "}
-              <a href="#" className="text-blue-700 hover:underline">
-                Kebijakan Privasi
-              </a>
-            </span>
-          </label>
-          <button type="submit" className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-            Buat Akun
+  return (
+    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Buat akun baru</h1>
+        <p className="text-sm text-gray-500">
+          Sudah punya akun?{" "}
+          <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
+            Masuk di sini
           </button>
-        </form>
+        </p>
       </div>
-    );
-  }
 
-  // ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
-  function ForgotPasswordForm({ onBack }) {
-    const [email, setEmail] = useState("");
-    const [sent, setSent] = useState(false);
-    const [loading, setLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setLoading(true);
-      try {
-        const res = await axios.post("http://localhost:3000/api/forgot-password", { email });
-        console.log(res.data); // ← tambah ini
-        // Kirim request ke API lupa password
-        await axios.post("http://localhost:3000/api/forgot-password", { email });
-        setSent(true);
-      } catch (error) {
-        console.log(error);
-        // Tetap tampilkan sukses agar tidak mengekspos email mana yang terdaftar
-        setSent(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return (
-      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-        {/* Tombol kembali */}
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition mb-8 w-fit">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali ke login
-        </button>
-
-        {!sent ? (
-          <>
-            {/* Ikon amplop */}
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
-              <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-
-            <div className="mb-7">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Lupa kata sandi?</h1>
-              <p className="text-sm text-gray-500 leading-relaxed">Masukkan email yang terdaftar. Kami akan mengirimkan tautan untuk mereset kata sandi kamu.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <button type="submit" disabled={loading} className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? "Mengirim..." : "Kirim Tautan Reset"}
-              </button>
-            </form>
-          </>
-        ) : (
-          /* Tampilan setelah email terkirim */
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Email terkirim!</h2>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              Kami telah mengirimkan tautan reset kata sandi ke <span className="font-medium text-gray-700">{email}</span>. Periksa kotak masuk atau folder spam kamu.
-            </p>
-            <button onClick={onBack} className="h-11 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg text-sm transition-all">
-              Kembali ke Login
-            </button>
-            <button
-              onClick={() => {
-                setEmail("");
-                setSent(false);
-              }}
-              className="mt-3 text-xs text-gray-400 hover:text-blue-600 transition"
-            >
-              Kirim ulang email
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ─── MAIN ────────────────────────────────────────────────────────────────
-  export default function AuthPage() {
-    const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
-    const isLogin = mode === "login";
-    const isForgot = mode === "forgot";
-
-    return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex min-h-130">
-          {/* Side Panel */}
-          {isForgot ? (
-            <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset kata sandi" description="Jangan khawatir, kami akan membantu kamu mendapatkan kembali akses ke akunmu." />
-          ) : isLogin ? (
-            <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Selamat datang kembali!" description="Masuk ke akun Anda untuk melanjutkan dan mengakses semua fitur yang tersedia." />
-          ) : (
-            <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Bergabung bersama kami hari ini" description="Buat akun gratis dan nikmati semua fitur platform kami tanpa batas waktu." />
-          )}
-
-          {/* Form Area */}
-          {isForgot ? <ForgotPasswordForm onBack={() => setMode("login")} /> : isLogin ? <LoginForm onSwitch={() => setMode("register")} onForgot={() => setMode("forgot")} /> : <RegisterForm onSwitch={() => setMode("login")} />}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Nama Depan" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
+          <Field label="Nama Belakang" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
         </div>
+        <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
+        <Field label="Nomor Telepon" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-600">Kata Sandi</label>
+          <input
+            type="password"
+            placeholder="Min. 8 karakter"
+            value={form.password}
+            onChange={set("password")}
+            className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+          />
+          {form.password && (
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength ? strengthColors[strength - 1] : "bg-gray-100"}`} />
+                ))}
+              </div>
+              <p className="text-xs text-gray-400">{strengthLabels[strength - 1]}</p>
+            </div>
+          )}
+        </div>
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={form.agree} onChange={set("agree")} className="mt-0.5 accent-blue-700" />
+          <span className="text-sm text-gray-500 leading-relaxed">
+            Saya menyetujui{" "}
+            <a href="#" className="text-blue-700 hover:underline">
+              Syarat & Ketentuan
+            </a>{" "}
+            dan{" "}
+            <a href="#" className="text-blue-700 hover:underline">
+              Kebijakan Privasi
+            </a>
+          </span>
+        </label>
+        <button type="submit" className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
+          Buat Akun
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
+function ForgotPasswordForm({ onBack }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post("http://localhost:3000/api/forgot-password", { email });
+      console.log(res.data); // ← tambah ini
+      // Kirim request ke API lupa password
+      await axios.post("http://localhost:3000/api/forgot-password", { email });
+      setSent(true);
+    } catch (error) {
+      console.log(error);
+      // Tetap tampilkan sukses agar tidak mengekspos email mana yang terdaftar
+      setSent(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+      {/* Tombol kembali */}
+      <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition mb-8 w-fit">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Kembali ke login
+      </button>
+
+      {!sent ? (
+        <>
+          {/* Ikon amplop */}
+          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+            <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+
+          <div className="mb-7">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Lupa kata sandi?</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">Masukkan email yang terdaftar. Kami akan mengirimkan tautan untuk mereset kata sandi kamu.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <button type="submit" disabled={loading} className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? "Mengirim..." : "Kirim Tautan Reset"}
+            </button>
+          </form>
+        </>
+      ) : (
+        /* Tampilan setelah email terkirim */
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Email terkirim!</h2>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
+            Kami telah mengirimkan tautan reset kata sandi ke <span className="font-medium text-gray-700">{email}</span>. Periksa kotak masuk atau folder spam kamu.
+          </p>
+          <button onClick={onBack} className="h-11 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg text-sm transition-all">
+            Kembali ke Login
+          </button>
+          <button
+            onClick={() => {
+              setEmail("");
+              setSent(false);
+            }}
+            className="mt-3 text-xs text-gray-400 hover:text-blue-600 transition"
+          >
+            Kirim ulang email
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────────────
+export default function AuthPage() {
+  const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
+  const isLogin = mode === "login";
+  const isForgot = mode === "forgot";
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+
+    const error = searchParams.get("error");
+
+    if (error === "not_registered") {
+
+      alert("This Google account is not registered");
+
+    }
+
+    if (error === "google_failed") {
+
+      alert("Google login failed");
+
+    }
+
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex min-h-130">
+        {/* Side Panel */}
+        {isForgot ? (
+          <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset kata sandi" description="Jangan khawatir, kami akan membantu kamu mendapatkan kembali akses ke akunmu." />
+        ) : isLogin ? (
+          <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Selamat datang kembali!" description="Masuk ke akun Anda untuk melanjutkan dan mengakses semua fitur yang tersedia." />
+        ) : (
+          <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Bergabung bersama kami hari ini" description="Buat akun gratis dan nikmati semua fitur platform kami tanpa batas waktu." />
+        )}
+
+        {/* Form Area */}
+        {isForgot ? <ForgotPasswordForm onBack={() => setMode("login")} /> : isLogin ? <LoginForm onSwitch={() => setMode("register")} onForgot={() => setMode("forgot")} /> : <RegisterForm onSwitch={() => setMode("login")} />}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 
