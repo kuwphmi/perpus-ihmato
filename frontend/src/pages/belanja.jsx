@@ -65,6 +65,7 @@ export default function Belanja() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notif, setNotif] = useState("");
+  const genreSectionRef = useRef(null);
 
   useEffect(() => {
 
@@ -119,7 +120,13 @@ export default function Belanja() {
       }));
 
       setGenreBooks(books);
-      setActiveCategory(category);
+setActiveCategory(category);
+
+setTimeout(() => {
+  genreSectionRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, 100);
 
     } catch (err) {
       console.log("error genre:", err);
@@ -294,9 +301,9 @@ export default function Belanja() {
         <div className="flex gap-6">
 
           {[
+            { name: "Home", path: "/koleksi" },
             { name: "Shop", path: "/belanja" },
             { name: "Orders", path: "/trackingbuku" },
-            { name: "Discover", path: "/helpcenter" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -487,7 +494,10 @@ export default function Belanja() {
 
       {/* ================= GENRE RESULT ================= */}
       {activeCategory && (
-        <section className="px-6 md:px-20 pb-14 mt-10">
+        <section
+  ref={genreSectionRef}
+  className="px-6 md:px-20 pb-14 mt-10"
+>
           <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
             Genre: {activeCategory}
           </h2>
@@ -585,15 +595,15 @@ export default function Belanja() {
             </h3>
 
             <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/koleksi" className="hover:text-white">
+                Home
+              </Link>
+
               <Link to="/belanja" className="hover:text-white">
                 Shop
               </Link>
-
               <Link to="/trackingbuku" className="hover:text-white">
                 Orders
-              </Link>
-              <Link to="/helpcenter" className="hover:text-white">
-                Discover
               </Link>
             </div>
           </div>
@@ -849,6 +859,20 @@ function BookCard({
 
   </div>
 )}
+
+{/* MOBILE NAV */}
+          <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+    
+            <Link to="/koleksi">
+              <FiHome size={24} />
+            </Link>
+            <Link to="/belanja">
+              <FiShoppingCart size={24} />
+            </Link>
+             <Link to="/trackingbuku">
+              <FiPackage size={24} />
+            </Link>
+          </div>
 
       {/* ================= CARD ================= */}
       <div className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden w-[250px] flex flex-col">

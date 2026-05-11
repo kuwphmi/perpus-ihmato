@@ -10,6 +10,7 @@ import {
   FiTruck,
   FiCheckCircle,
   FiClock,
+  FiHome,
 } from "react-icons/fi";
 
 import logo from "../assets/logo.png";
@@ -100,9 +101,9 @@ export default function Trackingbuku() {
         <div className="flex items-center gap-4 text-gray-100 text-sm">
 
           {[
+            { name: "Home", path: "/koleksi" },
             { name: "Shop", path: "/belanja" },
-            { name: "Orders", path: "/trakingbuku" },
-            { name: "Discover", path: "/helpcenter" },
+            { name: "Orders", path: "/trackingbuku" },
           ].map((item, i) => (
             <Link
               key={i}
@@ -462,18 +463,20 @@ window.snap.pay(order.snap_token, {
               Navigation
             </h3>
 
-            <div className="flex flex-col gap-2 text-gray-400 text-sm">
-              <Link to="/belanja" className="hover:text-white">
-                Shop
-              </Link>
-
-              <Link to="/trackingbuku" className="hover:text-white">
-                Orders
-              </Link>
-              <Link to="/helpcenter" className="hover:text-white">
-                Discover
-              </Link>
-            </div>
+{/* MOBILE NAV */}
+            <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+                
+                        <Link to="/koleksi">
+                          <FiHome size={24} />
+                        </Link>
+                        <Link to="/belanja">
+                          <FiShoppingCart size={24} />
+                        </Link>
+                         <Link to="/trackingbuku">
+                          <FiPackage size={24} />
+                        </Link>
+                      </div>
+            
           </div>
 
           {/* CONTACT */}

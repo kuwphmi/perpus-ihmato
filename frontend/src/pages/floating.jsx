@@ -1,33 +1,98 @@
 import mascot from "../assets/mascot.png";
 import { useNavigate } from "react-router-dom";
+import Draggable from "react-draggable";
+import { useRef, useState, useEffect } from "react";
 
 export default function Floating() {
+
   const navigate = useNavigate();
+  const nodeRef = useRef(null);
+
+  const [dragging, setDragging] = useState(false);
+
+  // posisi default
+  const [position, setPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  // ambil posisi tersimpan
+  useEffect(() => {
+
+    const saved = localStorage.getItem("floating-position");
+
+    if (saved) {
+      setPosition(JSON.parse(saved));
+    }
+
+  }, []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <Draggable
+      nodeRef={nodeRef}
+      position={position}
 
-      {/* Glow effect */}
-      <div className="absolute w-32 h-32 rounded-full bg-blue-500 blur-2xl opacity-30 animate-pulse"></div>
+      onStart={() => setDragging(false)}
 
-      <button
-        onClick={() => navigate("/chatai")}
-        className="group relative"
+      onDrag={(e, data) => {
+        setDragging(true);
+
+        setPosition({
+          x: data.x,
+          y: data.y,
+        });
+      }}
+
+      onStop={(e, data) => {
+
+        const newPos = {
+          x: data.x,
+          y: data.y,
+        };
+
+        setPosition(newPos);
+
+        // simpan posisi
+        localStorage.setItem(
+          "floating-position",
+          JSON.stringify(newPos)
+        );
+      }}
+    >
+
+      <div
+        ref={nodeRef}
+        className="fixed bottom-6 right-6 z-50 cursor-grab active:cursor-grabbing"
       >
 
-        {/* Mascot */}
-        <img
-          src={mascot}
-          alt="Mascot"
-          className="w-28 h-28 object-contain drop-shadow-2xl transition-all duration-300 group-hover:scale-110 group-active:scale-95"
-        />
+        {/* Glow */}
+        <div className="absolute w-32 h-32 rounded-full bg-blue-500 blur-2xl opacity-30 animate-pulse"></div>
 
-        {/* Tooltip */}
-        <div className="absolute right-28 bottom-10 bg-blue-600 text-white text-xs px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-          Hi! Liby can help you ?
+        {/* Wrapper */}
+        <div className="group relative select-none">
+
+          {/* Mascot */}
+          <img
+            src={mascot}
+            alt="Mascot"
+            draggable={false}
+            onClick={() => {
+              if (!dragging) {
+                navigate("/chatai");
+              }
+            }}
+            className="w-28 h-28 object-contain drop-shadow-2xl transition-all duration-300 group-hover:scale-110 active:scale-95"
+          />
+
+          {/* Tooltip */}
+          <div className="absolute right-28 bottom-10 bg-blue-600 text-white text-xs px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition whitespace-nowrap shadow-lg">
+            Hi! Liby can help you ?
+          </div>
+
         </div>
 
-      </button>
-    </div>
+      </div>
+
+    </Draggable>
   );
 }

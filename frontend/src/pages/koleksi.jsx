@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaUserDoctor } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -36,6 +36,7 @@ export default function HalamanUtama() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBorrowPopup, setShowBorrowPopup] = useState(false);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const bookSectionRef = useRef(null);
 
   const [bookDescription, setBookDescription] = useState("");
   const genreMap = {
@@ -71,7 +72,13 @@ export default function HalamanUtama() {
       }));
 
       setGenreBooks(books);
-      setActiveCategory(category);
+setActiveCategory(category);
+
+setTimeout(() => {
+  bookSectionRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, 100);
 
     } catch (err) {
       console.log("error genre:", err);
@@ -129,8 +136,15 @@ export default function HalamanUtama() {
 
         setGenreBooks(books);
 
-        // supaya judul berubah
-        setActiveCategory(`Hasil pencarian: ${search}`);
+// supaya judul berubah
+setActiveCategory(`Hasil pencarian: ${search}`);
+
+setTimeout(() => {
+  bookSectionRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, 100);
+        
 
       } catch (err) {
         console.log(err);
@@ -583,8 +597,10 @@ export default function HalamanUtama() {
       </section>
 
       {/* ================= LIST BUKU ================= */}
-      <section className="px-6 md:px-20 py-12">
-
+      <section
+  ref={bookSectionRef}
+  className="px-6 md:px-20 py-12"
+>
         <div className="relative flex items-center justify-center mb-6">
 
           <h2 className="text-2xl font-bold text-blue-700 text-center">
