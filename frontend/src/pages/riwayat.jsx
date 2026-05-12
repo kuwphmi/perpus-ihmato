@@ -22,6 +22,9 @@ export default function Riwayat() {
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 const [historyBooks, setHistoryBooks] = useState([]);
+const [filteredBooks, setFilteredBooks] = useState([]);
+const [search, setSearch] = useState("");
+
 
 const storedUser = localStorage.getItem("user");
 
@@ -30,6 +33,25 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 useEffect(() => {
   fetchHistory();
 }, []);
+
+useEffect(() => {
+
+  if (!search.trim()) {
+
+    setFilteredBooks(historyBooks);
+    return;
+
+  }
+
+  const filtered = historyBooks.filter((book) =>
+    book.title
+      ?.toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  setFilteredBooks(filtered);
+
+}, [search, historyBooks]);
 
 const fetchHistory = async () => {
   try {
@@ -40,6 +62,7 @@ const fetchHistory = async () => {
     const data = await res.json();
 
     setHistoryBooks(data || []);
+    setFilteredBooks(data || []);
 
   } catch (err) {
     console.error(err);
@@ -66,6 +89,22 @@ const requestExtension = async (loanId) => {
     if (res.ok) {
       alert("Pengajuan perpanjangan berhasil");
       fetchHistory();
+      useEffect(() => {
+
+  if (!search.trim()) {
+
+    setFilteredBooks(historyBooks);
+    return;
+
+  }
+
+  const filtered = historyBooks.filter((book) =>
+    book.title?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  setFilteredBooks(filtered);
+
+}, [search, historyBooks]);
     } else {
       alert(data.message || "Gagal mengajukan");
     }
@@ -144,11 +183,13 @@ const handleExtension = async (book) => {
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-lg">
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search Books..."
-                className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-blue-500"
-              />
+             <input
+  type="text"
+  placeholder="Search Books..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-blue-500"
+/>
             </div>
           </div>
 
@@ -264,19 +305,50 @@ const handleExtension = async (book) => {
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
           <div className="bg-white rounded-xl shadow p-6 space-y-4 max-h-80 overflow-y-auto"></div>
 
-          {historyBooks.map((book) => (
+         {filteredBooks.map((book) => (
             <div
-              key={book.id}
-              className="flex justify-between items-center border-b pb-3"
-            >
-              <div>
-                <h3 className="font-semibold">{book.title}</h3>
-                <p className="text-sm text-gray-500">
-                {book.loan_date
-                  ? new Date(book.loan_date).toLocaleDateString("id-ID")
-                  : "-"}
-              </p>
-              </div>
+  key={book.id}
+  className="flex items-center justify-between border-b pb-4 gap-4"
+>
+              <div className="flex items-center gap-4">
+
+  {/* COVER */}
+  <div className="w-16 h-20 bg-blue-100 rounded-lg overflow-hidden flex-shrink-0 shadow">
+
+    {book.cover ? (
+
+      <img
+        src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+        alt={book.title}
+        className="w-full h-full object-cover"
+      />
+
+    ) : (
+
+      <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
+        No Cover
+      </div>
+
+    )}
+
+  </div>
+
+  {/* INFO */}
+  <div>
+
+    <h3 className="font-semibold text-gray-800">
+      {book.title}
+    </h3>
+
+    <p className="text-sm text-gray-500">
+      {book.loan_date
+        ? new Date(book.loan_date).toLocaleDateString("id-ID")
+        : "-"}
+    </p>
+
+  </div>
+
+</div>
 
               <div className="flex gap-3">
 
