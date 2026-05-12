@@ -38,6 +38,16 @@ export default function HalamanUtama() {
   const bookSectionRef = useRef(null);
 
   const [bookDescription, setBookDescription] = useState("");
+  const [notif, setNotif] = useState("");
+  const showNotif = (message) => {
+
+  setNotif(message);
+
+  setTimeout(() => {
+    setNotif("");
+  }, 2000);
+
+};
   const genreMap = {
 
     Art: "art",
@@ -63,12 +73,12 @@ export default function HalamanUtama() {
 
       const data = await res.json();
 
-      const books = data.docs.map((item) => ({
-        workKey: item.key,
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-      }));
+     const books = data.docs.map((item) => ({
+  workKey: item.key,
+  title: item.title ?? "-",
+  author: item.author_name?.[0] ?? "-",
+  cover: item.cover_i ?? null,
+}));
 
       setGenreBooks(books);
 setActiveCategory(category);
@@ -160,10 +170,11 @@ setTimeout(() => {
         const data = await res.json();
 
         const books = data.docs.map((item) => ({
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-        }));
+  workKey: item.key,
+  title: item.title ?? "-",
+  author: item.author_name?.[0] ?? "-",
+  cover: item.cover_i ?? null,
+}));
 
         setRekomendasi(books);
 
@@ -264,21 +275,20 @@ setTimeout(() => {
       // kalau limit tercapai
       if (!data.status) {
 
-        alert(data.message);
+        showNotif(data.message);
         return;
 
       }
 
       // sukses
-      alert("Borrow request submitted");
-
+      showNotif("Borrow request submitted");
       setShowBorrowPopup(false);
       setSelectedBook(null);
 
     } catch (err) {
 
       console.log(err);
-      alert("Failed to borrow book");
+      showNotif("Failed to borrow book");
     }
   };
   const fetchDescription = async (workKey) => {
@@ -291,19 +301,28 @@ setTimeout(() => {
       const data = await res.json();
 
       if (typeof data.description === "string") {
-        setBookDescription(data.description);
 
-      } else if (data.description?.value) {
-        setBookDescription(data.description.value);
+  setBookDescription(data.description);
 
-      } else {
-        setBookDescription("No description available.");
-      }
+} else if (data.description?.value) {
+
+  setBookDescription(data.description.value);
+
+} else {
+
+  // fallback otomatis
+  setBookDescription(
+    `${selectedBook?.title} is a book written by ${selectedBook?.author}. This book is available in the BukuIn digital library collection and can be explored through the detail and borrowing features.`
+  );
+
+}
 
     } catch (err) {
 
       console.log(err);
-      setBookDescription("Failed to load description.");
+     setBookDescription(
+  `${selectedBook?.title} is a book written by ${selectedBook?.author}. This book is available in the BukuIn digital library collection and can be explored through the detail and borrowing features.`
+);
 
     }
   };
@@ -323,6 +342,15 @@ setTimeout(() => {
 
   return (
     <div className="bg-white min-h-screen">
+      {notif && (
+  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] animate-bounce">
+
+    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">
+      {notif}
+    </div>
+
+  </div>
+)}
 
 
       {/* BORROW POPUP */}
@@ -333,8 +361,8 @@ setTimeout(() => {
   >
 
     <div
-      className="bg-white p-6 rounded-xl w-full max-w-md"
-      onClick={(e) => e.stopPropagation()}
+ className="bg-white p-5 rounded-2xl w-full max-w-md"
+  onClick={(e) => e.stopPropagation()}
     >
 
             <h2 className="text-xl font-bold text-blue-700">
@@ -364,6 +392,23 @@ setTimeout(() => {
                 <li>Late return: daily fine will be applied</li>
                 <li>Damaged or lost book: replacement fee required</li>
               </ul>
+              <div className="flex justify-end gap-3 mt-6">
+
+  <button
+    onClick={() => setShowBorrowPopup(false)}
+    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+  >
+    Cancel
+  </button>
+
+  <button
+    onClick={submitLoanRequest}
+    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+  >
+    Borrow
+  </button>
+
+</div>
             </div>
 
           </div>
@@ -378,7 +423,7 @@ setTimeout(() => {
   >
 
     <div
-      className="bg-white p-6 rounded-xl w-full max-w-lg"
+      className="bg-white p-6 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
       onClick={(e) => e.stopPropagation()}
     >
             <div className="flex items-center justify-between">
@@ -388,19 +433,57 @@ setTimeout(() => {
   </h2>
 
   <button
-    className="w-10 h-10 rounded-full bg-pink-100 hover:bg-pink-200 transition flex items-center justify-center"
+   className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 transition flex items-center justify-center"
   >
     <FiHeart className="text-pink-600 text-lg" />
   </button>
 
 </div>
 
-            <p className="font-semibold mt-2">{selectedBook?.title}</p>
-            <p className="text-gray-500">{selectedBook?.author}</p>
+            {/* COVER */}
+<div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
 
-            <p className="mt-4 text-sm text-gray-600">
-              {bookDescription}
-            </p>
+  {selectedBook?.cover ? (
+
+    <img
+      src={`https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
+      alt={selectedBook?.title}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        e.target.style.display = "none";
+      }}
+    />
+
+  ) : (
+
+    <p className="text-gray-400">
+      No Cover Available
+    </p>
+
+  )}
+
+</div>
+
+{/* TITLE */}
+<h2 className="text-xl font-bold text-gray-800">
+  {selectedBook?.title}
+</h2>
+
+<div className="max-h-40 overflow-y-auto pr-2 mt-2">
+
+  {/* AUTHOR */}
+  <p className="text-gray-500">
+    {selectedBook?.author}
+  </p>
+
+  {/* DESCRIPTION */}
+  <p className="mt-4 text-sm text-gray-600 leading-relaxed">
+    {bookDescription}
+  </p>
+
+</div>
+
+</div>
 
             <div className="mt-6 text-right">
               <button
@@ -411,7 +494,7 @@ setTimeout(() => {
               </button>
             </div>
           </div>
-        </div>
+      
       )}
 
 
@@ -662,14 +745,14 @@ setTimeout(() => {
 
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
 
           {(activeCategory ? genreBooks : rekomendasi).map((book, i) => (<div
             key={i}
             className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden"
           >
 
-            <div className="h-56 bg-blue-100 flex items-center justify-center">
+            <div className="h-40 md:h-56 bg-blue-100 flex items-center justify-center">
               {book.cover ? (
                 <img
                   src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
@@ -681,32 +764,36 @@ setTimeout(() => {
               )}
             </div>
 
-            <div className="p-4">
+           <div className="p-3 md:p-4 flex flex-col h-[150px] md:h-[170px]">
 
-              <h3 className="text-sm font-semibold line-clamp-2">
-                {book.title}
-              </h3>
+  <div>
 
-              <p className="text-gray-500 text-xs">
-                {book.author}
-              </p>
+    <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
+      {book.title}
+    </h3>
 
-              <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2">
-                Click detail to see description
-              </p>
+    <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
+      {book.author}
+    </p>
 
-              <div className="flex gap-2 mt-4">
+    <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
+      Click detail to see description
+    </p>
+
+  </div>
+
+  <div className="flex gap-2 mt-auto">
 
                 <button
                   onClick={() => handlePinjam(book)}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-[11px] md:text-sm hover:bg-blue-700"
                 >
                   Borrow
                 </button>
 
                 <button
                   onClick={() => handleDetail(book)}
-                  className="flex-1 bg-gray-200 py-2 rounded-lg text-sm hover:bg-gray-300"
+                  className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300"
                 >
                   Detail
                 </button>
