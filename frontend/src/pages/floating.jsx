@@ -22,7 +22,17 @@ export default function Floating() {
     const saved = localStorage.getItem("floating-position");
 
     if (saved) {
+
       setPosition(JSON.parse(saved));
+
+    } else {
+
+      // posisi awal mobile biar gak ketiban navbar
+      setPosition({
+        x: 0,
+        y: -80,
+      });
+
     }
 
   }, []);
@@ -30,17 +40,20 @@ export default function Floating() {
   return (
     <Draggable
       nodeRef={nodeRef}
+      bounds="body"
       position={position}
 
       onStart={() => setDragging(false)}
 
       onDrag={(e, data) => {
+
         setDragging(true);
 
         setPosition({
           x: data.x,
           y: data.y,
         });
+
       }}
 
       onStop={(e, data) => {
@@ -57,12 +70,22 @@ export default function Floating() {
           "floating-position",
           JSON.stringify(newPos)
         );
+
       }}
     >
 
       <div
         ref={nodeRef}
-        className="fixed bottom-6 right-6 z-50 cursor-grab active:cursor-grabbing"
+        className="
+          fixed
+          bottom-24
+          md:bottom-6
+          right-4
+          md:right-6
+          z-40
+          cursor-grab
+          active:cursor-grabbing
+        "
       >
 
         {/* Glow */}
@@ -77,15 +100,46 @@ export default function Floating() {
             alt="Mascot"
             draggable={false}
             onClick={() => {
+
+              // kalau bukan drag baru buka AI
               if (!dragging) {
+
                 navigate("/chatai");
+
               }
+
             }}
-            className="w-28 h-28 object-contain drop-shadow-2xl transition-all duration-300 group-hover:scale-110 active:scale-95"
+            className="
+              w-20 h-20
+              md:w-28 md:h-28
+              object-contain
+              drop-shadow-2xl
+              transition-all
+              duration-300
+              group-hover:scale-110
+              active:scale-95
+            "
           />
 
           {/* Tooltip */}
-          <div className="absolute right-28 bottom-10 bg-blue-600 text-white text-xs px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition whitespace-nowrap shadow-lg">
+          <div className="
+            absolute
+            right-20
+            md:right-28
+            bottom-8
+            md:bottom-10
+            bg-blue-600
+            text-white
+            text-xs
+            px-3
+            py-2
+            rounded-xl
+            opacity-0
+            group-hover:opacity-100
+            transition
+            whitespace-nowrap
+            shadow-lg
+          ">
             Hi! Liby can help you ?
           </div>
 

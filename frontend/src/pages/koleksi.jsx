@@ -39,6 +39,7 @@ export default function HalamanUtama() {
 
   const [bookDescription, setBookDescription] = useState("");
   const [notif, setNotif] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
   const showNotif = (message) => {
 
   setNotif(message);
@@ -64,6 +65,13 @@ export default function HalamanUtama() {
 
   const navigate = useNavigate();
   const fetchGenreBooks = async (category) => {
+    if (activeCategory === category) {
+
+  setActiveCategory(null);
+  setGenreBooks([]);
+
+  return;
+}
     try {
       const query = genreMap[category] || category.toLowerCase();
 
@@ -78,6 +86,13 @@ export default function HalamanUtama() {
   title: item.title ?? "-",
   author: item.author_name?.[0] ?? "-",
   cover: item.cover_i ?? null,
+
+  firstSentence:
+    item.first_sentence?.[0] ||
+    item.first_sentence ||
+    "",
+
+  subjects: item.subject?.slice(0, 5) || [],
 }));
 
       setGenreBooks(books);
@@ -138,15 +153,23 @@ setTimeout(() => {
         const data = await res.json();
 
         const books = data.docs.map((item) => ({
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-        }));
+  workKey: item.key,
+  title: item.title ?? "-",
+  author: item.author_name?.[0] ?? "-",
+  cover: item.cover_i ?? null,
+
+  firstSentence:
+    item.first_sentence?.[0] ||
+    item.first_sentence ||
+    "",
+
+  subjects: item.subject?.slice(0, 5) || [],
+}));
 
         setGenreBooks(books);
 
 // supaya judul berubah
-setActiveCategory(`Hasil pencarian: ${search}`);
+setActiveCategory(`Search Results: ${search}`);
 
 setTimeout(() => {
   bookSectionRef.current?.scrollIntoView({
@@ -169,11 +192,18 @@ setTimeout(() => {
 
         const data = await res.json();
 
-        const books = data.docs.map((item) => ({
+const books = data.docs.map((item) => ({
   workKey: item.key,
   title: item.title ?? "-",
   author: item.author_name?.[0] ?? "-",
   cover: item.cover_i ?? null,
+
+  firstSentence:
+    item.first_sentence?.[0] ||
+    item.first_sentence ||
+    "",
+
+  subjects: item.subject?.slice(0, 5) || [],
 }));
 
         setRekomendasi(books);
@@ -320,9 +350,23 @@ setTimeout(() => {
     } catch (err) {
 
       console.log(err);
-     setBookDescription(
-  `${selectedBook?.title} is a book written by ${selectedBook?.author}. This book is available in the BukuIn digital library collection and can be explored through the detail and borrowing features.`
-);
+    if (selectedBook?.firstSentence) {
+
+  setBookDescription(selectedBook.firstSentence);
+
+} else if (selectedBook?.subjects?.length > 0) {
+
+  setBookDescription(
+    `This book discusses ${selectedBook.subjects.join(", ")}.`
+  );
+
+} else {
+
+  setBookDescription(
+    `No detailed description is available for this book yet.`
+  );
+
+}
 
     }
   };
@@ -423,20 +467,22 @@ setTimeout(() => {
   >
 
     <div
-      className="bg-white p-6 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      className="
+  bg-white
+  p-4 md:p-6
+  rounded-2xl
+  w-[88%] md:w-full
+  max-w-sm md:max-w-lg
+  max-h-[75vh] md:max-h-[90vh]
+  overflow-y-auto
+"
       onClick={(e) => e.stopPropagation()}
     >
             <div className="flex items-center justify-between">
 
-  <h2 className="text-xl font-bold text-blue-700">
+  <h2 className="text-lg md:text-xl font-bold text-blue-700">
     Book Detail
   </h2>
-
-  <button
-   className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 transition flex items-center justify-center"
-  >
-    <FiHeart className="text-pink-600 text-lg" />
-  </button>
 
 </div>
 
@@ -465,9 +511,30 @@ setTimeout(() => {
 </div>
 
 {/* TITLE */}
-<h2 className="text-xl font-bold text-gray-800">
-  {selectedBook?.title}
-</h2>
+<div className="flex items-start justify-between gap-3">
+
+  <h2 className="text-xl font-bold text-gray-800">
+    {selectedBook?.title}
+  </h2>
+
+ <button
+  onClick={() => setIsFavorite(!isFavorite)}
+  className="transition flex items-center justify-center flex-shrink-0"
+>
+
+  {isFavorite ? (
+
+    <FiHeart className="text-red-500 text-2xl fill-red-500" />
+
+  ) : (
+
+    <FiHeart className="text-gray-600 text-2xl" />
+
+  )}
+
+</button>
+
+</div>
 
 <div className="max-h-40 overflow-y-auto pr-2 mt-2">
 
@@ -485,14 +552,6 @@ setTimeout(() => {
 
 </div>
 
-            <div className="mt-6 text-right">
-              <button
-                onClick={() => setShowDetailPopup(false)}
-                className="px-4 py-2 bg-gray-200 rounded-lg"
-              >
-                Close
-              </button>
-            </div>
           </div>
       
       )}
@@ -725,23 +784,15 @@ setTimeout(() => {
 >
         <div className="relative flex items-center justify-center mb-6">
 
-          <h2 className="text-2xl font-bold text-blue-700 text-center">
-            {activeCategory
-              ? `Genre: ${activeCategory}`
-              : "Recommended Books"}
-          </h2>
+         <h2 className="text-2xl font-bold text-blue-700 text-center">
 
-          {activeCategory && (
-            <button
-              onClick={() => {
-                setActiveCategory(null);
-                setGenreBooks([]);
-              }}
-              className="absolute right-0 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-            >
-              Reset
-            </button>
-          )}
+  {activeCategory?.includes("Search Results:")
+    ? activeCategory
+    : activeCategory
+    ? `Genre: ${activeCategory}`
+    : "Recommended Books"}
+
+</h2>
 
         </div>
 
@@ -749,22 +800,24 @@ setTimeout(() => {
 
           {(activeCategory ? genreBooks : rekomendasi).map((book, i) => (<div
             key={i}
-            className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden"
+            className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
           >
 
-            <div className="h-40 md:h-56 bg-blue-100 flex items-center justify-center">
+            <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
               {book.cover ? (
                 <img
                   src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
                   alt={book.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
                 />
               ) : (
                 "No Cover"
               )}
             </div>
+           
 
-           <div className="p-3 md:p-4 flex flex-col h-[150px] md:h-[170px]">
+           <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
 
   <div>
 
@@ -786,7 +839,7 @@ setTimeout(() => {
 
                 <button
                   onClick={() => handlePinjam(book)}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-[11px] md:text-sm hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition"
                 >
                   Borrow
                 </button>

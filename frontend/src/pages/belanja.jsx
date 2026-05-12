@@ -82,7 +82,7 @@ export default function Belanja() {
 
     setTimeout(() => {
       setNotif("");
-    }, 2000);
+    }, 5000);
 
   };
   const genreMap = {
@@ -102,6 +102,13 @@ export default function Belanja() {
 
   /* ================= GENRE MAP ================= */
   const fetchGenreBooks = async (category) => {
+    if (activeCategory === category) {
+
+  setActiveCategory(null);
+  setGenreBooks([]);
+
+  return;
+}
     try {
       const query = genreMap[category] || category.toLowerCase();
 
@@ -287,13 +294,27 @@ setTimeout(() => {
 
   return (
     <div className="font-sans">
-      {notif && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-black/80 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-medium">
-            {notif}
-          </div>
-        </div>
-      )}
+     {notif && (
+  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999]">
+
+    <div
+      className="
+        bg-blue-600
+        text-white
+        px-6
+        py-3
+        rounded-full
+        shadow-2xl
+        text-sm
+        font-medium
+        animate-[fadeIn_0.3s_ease]
+      "
+    >
+      {notif}
+    </div>
+
+  </div>
+)}
       {/* ================= NAVBAR ================= */}
 
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
@@ -451,7 +472,7 @@ setTimeout(() => {
       </section>
 
       {/* ================= SEARCH ================= */}
-      <section className="relative z-20 -mt-10 md:-mt-20 px-4 md:px-20">
+      <section className="relative z-20 mt-2 md:-mt-6 px-4 md:px-20">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
             <input
@@ -521,18 +542,7 @@ setTimeout(() => {
             ))}
           </div>
 
-          {/* RESET BUTTON */}
-          <div className="text-center mt-6">
-            <button
-              onClick={() => {
-                setActiveCategory(null);
-                setGenreBooks([]);
-              }}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Reset Genre
-            </button>
-          </div>
+          
         </section>
       )}
 
@@ -699,6 +709,7 @@ function BookCard({
 
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
+   showNotif("Book successfully added to cart");
 
     try {
 
@@ -775,12 +786,18 @@ function BookCard({
 
       {/* ================= DETAIL POPUP ================= */}
 {showDetail && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4 overflow-y-auto">
+ <div
+  className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] px-4"
+  onClick={() => setShowDetail(false)}
+>
 
-    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+    <div
+  className="bg-white w-[88%] max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-fadeIn"
+  onClick={(e) => e.stopPropagation()}
+>
 
       {/* COVER */}
-      <div className="h-72 bg-blue-100">
+      <div className="h-52 md:h-64 bg-blue-100">
 
         {cover ? (
           <img
@@ -815,9 +832,13 @@ function BookCard({
             Description
           </h3>
 
-          <p className="text-sm text-gray-600 leading-relaxed">
-  {description || "Loading description..."}
-</p>
+         <div className="max-h-32 overflow-y-auto pr-2">
+
+  <p className="text-sm text-gray-600 leading-relaxed">
+    {description || "Loading description..."}
+  </p>
+
+</div>
         </div>
 
         {/* PRICE & STOCK */}
@@ -846,12 +867,6 @@ function BookCard({
         </div>
 
         {/* BUTTON */}
-        <button
-          onClick={() => setShowDetail(false)}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition"
-        >
-          Close
-        </button>
 
       </div>
 
@@ -875,21 +890,24 @@ function BookCard({
           </div>
 
       {/* ================= CARD ================= */}
-      <div className="bg-white border rounded-xl shadow hover:shadow-lg transition overflow-hidden w-[250px] flex flex-col">
+      <div className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 w-[250px] flex flex-col">
 
-        <div className="h-48 bg-blue-100 flex items-center justify-center">
+        <div className="relative h-52 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+          <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-semibold text-blue-700 shadow">
+  Bestseller
+</div>
           {cover ? (
             <img
               src={`https://covers.openlibrary.org/b/id/${cover}-M.jpg`}
               alt={title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
           ) : (
             "No Cover"
           )}
         </div>
 
-        <div className="p-4 flex flex-col h-full">
+        <div className="p-4 flex flex-col h-[210px]">
 
           <h3 className="text-sm font-bold text-gray-800 line-clamp-2">
             {title}
@@ -903,11 +921,11 @@ function BookCard({
 
             <div className="flex justify-between items-center mb-3">
 
-              <p className="text-blue-700 font-bold text-sm">
+              <p className="text-blue-700 font-bold text-lg">
                 Rp {(price || 0).toLocaleString("id-ID")}
               </p>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-[11px] bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
                 Stok: {stock}
               </p>
 
@@ -921,7 +939,7 @@ function BookCard({
   setShowDetail(true);
   await fetchDescription();
 }}
-            className="w-full bg-gray-100 text-gray-700 text-xs py-2 rounded-lg hover:bg-gray-200 transition"
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs py-2.5 rounded-xl font-medium transition"
           >
             Show Detail
           </button>
@@ -931,14 +949,15 @@ function BookCard({
             <button
               type="button"
               onClick={() => tambahKeKeranjang()}
-              className="flex-1 border border-blue-600 text-blue-600 text-xs py-2 rounded-lg hover:bg-blue-50 transition"
+              
+              className="flex-1 border border-blue-600 text-blue-600 text-xs py-2.5 rounded-xl hover:bg-blue-50 font-medium transition"
             >
               Cart
             </button>
 
             <button
               onClick={handleBuy}
-              className="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-xl font-semibold transition"
             >
               Buy
             </button>
