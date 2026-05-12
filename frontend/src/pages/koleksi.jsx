@@ -21,7 +21,6 @@ import { MdOutlinePalette } from "react-icons/md";
 import { GiSpellBook } from "react-icons/gi";
 import { LuChefHat } from "react-icons/lu";
 import { FaRegHeart } from "react-icons/fa";
-import Floating from "./floating";
 
 import logo from "../assets/logo.png";
 
@@ -328,8 +327,15 @@ setTimeout(() => {
 
       {/* BORROW POPUP */}
       {showBorrowPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    onClick={() => setShowBorrowPopup(false)}
+  >
+
+    <div
+      className="bg-white p-6 rounded-xl w-full max-w-md"
+      onClick={(e) => e.stopPropagation()}
+    >
 
             <h2 className="text-xl font-bold text-blue-700">
               Borrow Request
@@ -366,9 +372,28 @@ setTimeout(() => {
 
       {/* DETAIL POPUP */}
       {showDetailPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-xl w-full max-w-lg">
-            <h2 className="text-xl font-bold text-blue-700">Book Detail</h2>
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    onClick={() => setShowDetailPopup(false)}
+  >
+
+    <div
+      className="bg-white p-6 rounded-xl w-full max-w-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
+            <div className="flex items-center justify-between">
+
+  <h2 className="text-xl font-bold text-blue-700">
+    Book Detail
+  </h2>
+
+  <button
+    className="w-10 h-10 rounded-full bg-pink-100 hover:bg-pink-200 transition flex items-center justify-center"
+  >
+    <FiHeart className="text-pink-600 text-lg" />
+  </button>
+
+</div>
 
             <p className="font-semibold mt-2">{selectedBook?.title}</p>
             <p className="text-gray-500">{selectedBook?.author}</p>
@@ -423,7 +448,21 @@ setTimeout(() => {
                 type="text"
                 placeholder="Find your favorite books..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+
+  const value = e.target.value;
+
+  setSearch(value);
+
+  // kalau search dikosongkan
+  if (!value.trim()) {
+
+    setActiveCategory(null);
+    setGenreBooks([]);
+
+  }
+
+}}
                 onKeyDown={handleSearch}
                 className="w-full pl-10 pr-4 py-2 border rounded-full"
               />
@@ -746,8 +785,7 @@ setTimeout(() => {
         </div>
 
       </footer>
-      {/* MASCOT (INI YANG KAMU TAMBAH) */}
-      <Floating />
+      
 
 
     </div>
