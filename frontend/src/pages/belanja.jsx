@@ -82,7 +82,7 @@ export default function Belanja() {
 
     setTimeout(() => {
       setNotif("");
-    }, 5000);
+    }, 20000);
 
   };
   const genreMap = {
