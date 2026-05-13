@@ -53,7 +53,7 @@ export default function Belanja() {
   const [terlaris, setTerlaris] = useState([]);
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
-  
+
   const [user, setUser] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -104,11 +104,11 @@ export default function Belanja() {
   const fetchGenreBooks = async (category) => {
     if (activeCategory === category) {
 
-  setActiveCategory(null);
-  setGenreBooks([]);
+      setActiveCategory(null);
+      setGenreBooks([]);
 
-  return;
-}
+      return;
+    }
     try {
       const query = genreMap[category] || category.toLowerCase();
 
@@ -127,13 +127,13 @@ export default function Belanja() {
       }));
 
       setGenreBooks(books);
-setActiveCategory(category);
+      setActiveCategory(category);
 
-setTimeout(() => {
-  genreSectionRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}, 100);
+      setTimeout(() => {
+        genreSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
 
     } catch (err) {
       console.log("error genre:", err);
@@ -147,7 +147,7 @@ setTimeout(() => {
       .then((res) => res.json())
       .then((data) => {
         const books = data.docs.map((item) => ({
-            workKey: item.key,
+          workKey: item.key,
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
@@ -163,7 +163,7 @@ setTimeout(() => {
       .then((res) => res.json())
       .then((data) => {
         const books = data.docs.map((item) => ({
-            workKey: item.key,
+          workKey: item.key,
           title: item.title ?? "-",
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
@@ -294,11 +294,11 @@ setTimeout(() => {
 
   return (
     <div className="font-sans">
-     {notif && (
-  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999]">
+      {notif && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999]">
 
-    <div
-      className="
+          <div
+            className="
         bg-blue-600
         text-white
         px-6
@@ -309,12 +309,12 @@ setTimeout(() => {
         font-medium
         animate-[fadeIn_0.3s_ease]
       "
-    >
-      {notif}
-    </div>
+          >
+            {notif}
+          </div>
 
-  </div>
-)}
+        </div>
+      )}
       {/* ================= NAVBAR ================= */}
 
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
@@ -516,9 +516,9 @@ setTimeout(() => {
       {/* ================= GENRE RESULT ================= */}
       {activeCategory && (
         <section
-  ref={genreSectionRef}
-  className="px-6 md:px-20 pb-14 mt-10"
->
+          ref={genreSectionRef}
+          className="px-6 md:px-20 pb-14 mt-10"
+        >
           <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
             Genre: {activeCategory}
           </h2>
@@ -542,7 +542,7 @@ setTimeout(() => {
             ))}
           </div>
 
-          
+
         </section>
       )}
 
@@ -661,32 +661,32 @@ function BookCard({
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const fetchDescription = async () => {
-  try {
+    try {
 
-    if (!workKey) {
-      setDescription("Description not available.");
-      return;
+      if (!workKey) {
+        setDescription("Description not available.");
+        return;
+      }
+
+      const res = await fetch(
+        `https://openlibrary.org${workKey}.json`
+      );
+
+      const data = await res.json();
+
+      if (typeof data.description === "string") {
+        setDescription(data.description);
+      } else if (data.description?.value) {
+        setDescription(data.description.value);
+      } else {
+        setDescription("Description not available.");
+      }
+
+    } catch (err) {
+      console.log(err);
+      setDescription("Failed to load description.");
     }
-
-    const res = await fetch(
-      `https://openlibrary.org${workKey}.json`
-    );
-
-    const data = await res.json();
-
-    if (typeof data.description === "string") {
-      setDescription(data.description);
-    } else if (data.description?.value) {
-      setDescription(data.description.value);
-    } else {
-      setDescription("Description not available.");
-    }
-
-  } catch (err) {
-    console.log(err);
-    setDescription("Failed to load description.");
-  }
-};
+  };
 
   // ================= HANDLE BUY =================
   const handleBuy = () => {
@@ -695,11 +695,10 @@ function BookCard({
       state: {
         items: [
           {
-            title,
-            author,
-            cover,
-            price,
+            title: book.title,
+            price: book.price,
             qty: 1,
+            cover: book.cover,
           },
         ],
       },
@@ -709,7 +708,7 @@ function BookCard({
 
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
-   showNotif("Book successfully added to cart");
+    showNotif("Book successfully added to cart");
 
     try {
 
@@ -785,117 +784,117 @@ function BookCard({
 
 
       {/* ================= DETAIL POPUP ================= */}
-{showDetail && (
- <div
-  className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] px-4"
-  onClick={() => setShowDetail(false)}
->
+      {showDetail && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] px-4"
+          onClick={() => setShowDetail(false)}
+        >
 
-    <div
-  className="bg-white w-[88%] max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-fadeIn"
-  onClick={(e) => e.stopPropagation()}
->
+          <div
+            className="bg-white w-[88%] max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
 
-      {/* COVER */}
-      <div className="h-52 md:h-64 bg-blue-100">
+            {/* COVER */}
+            <div className="h-52 md:h-64 bg-blue-100">
 
-        {cover ? (
-          <img
-            src={`https://covers.openlibrary.org/b/id/${cover}-L.jpg`}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            No Cover
+              {cover ? (
+                <img
+                  src={`https://covers.openlibrary.org/b/id/${cover}-L.jpg`}
+                  alt={title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  No Cover
+                </div>
+              )}
+
+            </div>
+
+            {/* CONTENT */}
+            <div className="p-5">
+
+              {/* TITLE */}
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                {title}
+              </h2>
+
+              {/* AUTHOR */}
+              <p className="text-blue-600 text-sm mb-4">
+                by {author}
+              </p>
+
+              {/* DESCRIPTION */}
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-700 mb-1">
+                  Description
+                </h3>
+
+                <div className="max-h-32 overflow-y-auto pr-2">
+
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {description || "Loading description..."}
+                  </p>
+
+                </div>
+              </div>
+
+              {/* PRICE & STOCK */}
+              <div className="flex justify-between items-center mb-5">
+
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Price
+                  </p>
+
+                  <p className="font-bold text-blue-700">
+                    Rp {(price || 0).toLocaleString("id-ID")}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">
+                    Stock
+                  </p>
+
+                  <p className="font-semibold text-gray-700">
+                    {stock}
+                  </p>
+                </div>
+
+              </div>
+
+              {/* BUTTON */}
+
+            </div>
+
           </div>
-        )}
 
-      </div>
-
-      {/* CONTENT */}
-      <div className="p-5">
-
-        {/* TITLE */}
-        <h2 className="text-xl font-bold text-gray-800 mb-2">
-          {title}
-        </h2>
-
-        {/* AUTHOR */}
-        <p className="text-blue-600 text-sm mb-4">
-          by {author}
-        </p>
-
-        {/* DESCRIPTION */}
-        <div className="mb-4">
-          <h3 className="font-semibold text-gray-700 mb-1">
-            Description
-          </h3>
-
-         <div className="max-h-32 overflow-y-auto pr-2">
-
-  <p className="text-sm text-gray-600 leading-relaxed">
-    {description || "Loading description..."}
-  </p>
-
-</div>
         </div>
+      )}
 
-        {/* PRICE & STOCK */}
-        <div className="flex justify-between items-center mb-5">
+      {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
 
-          <div>
-            <p className="text-xs text-gray-500">
-              Price
-            </p>
-
-            <p className="font-bold text-blue-700">
-              Rp {(price || 0).toLocaleString("id-ID")}
-            </p>
-          </div>
-
-          <div className="text-right">
-            <p className="text-xs text-gray-500">
-              Stock
-            </p>
-
-            <p className="font-semibold text-gray-700">
-              {stock}
-            </p>
-          </div>
-
-        </div>
-
-        {/* BUTTON */}
-
+        <Link to="/koleksi">
+          <FiHome size={24} />
+        </Link>
+        <Link to="/belanja">
+          <FiShoppingCart size={24} />
+        </Link>
+        <Link to="/trackingbuku">
+          <FiPackage size={24} />
+        </Link>
       </div>
-
-    </div>
-
-  </div>
-)}
-
-{/* MOBILE NAV */}
-          <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-    
-            <Link to="/koleksi">
-              <FiHome size={24} />
-            </Link>
-            <Link to="/belanja">
-              <FiShoppingCart size={24} />
-            </Link>
-             <Link to="/trackingbuku">
-              <FiPackage size={24} />
-            </Link>
-          </div>
 
       {/* ================= CARD ================= */}
       <div className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 w-[250px] flex flex-col">
 
         <div className="relative h-52 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
           <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-semibold text-blue-700 shadow">
-  Bestseller
-</div>
+            Bestseller
+          </div>
           {cover ? (
             <img
               src={`https://covers.openlibrary.org/b/id/${cover}-M.jpg`}
@@ -931,38 +930,37 @@ function BookCard({
 
             </div>
 
-           <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
 
-          {/* SHOW DETAIL */}
-         <button
-            onClick={async () => {
-  setShowDetail(true);
-  await fetchDescription();
-}}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs py-2.5 rounded-xl font-medium transition"
-          >
-            Show Detail
-          </button>
+              {/* SHOW DETAIL */}
+              <button
+                onClick={async () => {
+                  setShowDetail(true);
+                  await fetchDescription();
+                }}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs py-2.5 rounded-xl font-medium transition"
+              >
+                Show Detail
+              </button>
 
-          <div className="flex gap-2">
+              <div className="flex gap-2">
 
-            <button
-              type="button"
-              onClick={() => tambahKeKeranjang()}
-              
-              className="flex-1 border border-blue-600 text-blue-600 text-xs py-2.5 rounded-xl hover:bg-blue-50 font-medium transition"
-            >
-              Cart
-            </button>
+                <button
+                  type="button"
+                  onClick={() => tambahKeKeranjang()}
 
-            <button
-              onClick={handleBuy}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-xl font-semibold transition"
-            >
-              Buy
-            </button>
+                  className="flex-1 border border-blue-600 text-blue-600 text-xs py-2.5 rounded-xl hover:bg-blue-50 font-medium transition"
+                >
+                  Cart
+                </button>
 
-          </div>
+                <button
+                  onClick={() => handleBuy(book)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-xl font-semibold transition"
+                >
+                  Buy
+                </button>
+              </div>
 
             </div>
 
@@ -1024,7 +1022,7 @@ function BukuTerlaris({
         {data.map((book, index) => (
           <div key={index} className="min-w-[250px] snap-start">
             <BookCard
-            workKey={book.workKey}
+              workKey={book.workKey}
               title={book.title}
               author={book.author}
               cover={book.cover}
@@ -1064,54 +1062,54 @@ function BukuTerbaru({
   };
 
   return (
-  <>
-    <section className="px-6 md:px-20 pb-14">
-      <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-        Newest Books
-      </h2>
+    <>
+      <section className="px-6 md:px-20 pb-14">
+        <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+          Newest Books
+        </h2>
 
-      <div className="flex justify-end gap-2 mb-3">
-        <button
-          onClick={() => scroll("left")}
-          className="px-3 py-1 bg-gray-200 rounded"
+        <div className="flex justify-end gap-2 mb-3">
+          <button
+            onClick={() => scroll("left")}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            ←
+          </button>
+
+          <button
+            onClick={() => scroll("right")}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            →
+          </button>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
         >
-          ←
-        </button>
+          {data.map((book, index) => (
+            <div key={index} className="min-w-[250px] snap-start">
+              <BookCard
+                workKey={book.workKey}
+                title={book.title}
+                author={book.author}
+                cover={book.cover}
+                price={book.price}
+                stock={book.stock}
+                cart={cart}
+                setCart={setCart}
+                setIsBuyOpen={setIsBuyOpen}
+                setSelectedBook={setSelectedBook}
+                showNotif={showNotif}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <button
-          onClick={() => scroll("right")}
-          className="px-3 py-1 bg-gray-200 rounded"
-        >
-          →
-        </button>
-      </div>
-
-      <div
-        ref={scrollRef}
-        className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
-      >
-        {data.map((book, index) => (
-          <div key={index} className="min-w-[250px] snap-start">
-            <BookCard
-            workKey={book.workKey}
-              title={book.title}
-              author={book.author}
-              cover={book.cover}
-              price={book.price}
-              stock={book.stock}
-              cart={cart}
-              setCart={setCart}
-              setIsBuyOpen={setIsBuyOpen}
-              setSelectedBook={setSelectedBook}
-              showNotif={showNotif}
-            />
-          </div>
-        ))}
-      </div>
-    </section>
-
-    {/* MASCOT */}
-    <Floating />
-  </>
-);
+      {/* MASCOT */}
+      <Floating />
+    </>
+  );
 }
