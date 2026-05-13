@@ -96,6 +96,19 @@ export default function HalamanUtama() {
 }));
 
       setGenreBooks(books);
+      if (books.length === 0) {
+
+  setActiveCategory(
+    `No books found for "${search}"`
+  );
+
+} else {
+
+  setActiveCategory(
+    `Search Results: ${search}`
+  );
+
+}
 setActiveCategory(category);
 
 setTimeout(() => {

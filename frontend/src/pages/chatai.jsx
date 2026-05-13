@@ -3,9 +3,12 @@ import mascot from "../assets/mascot.png";
 import { FiSend } from "react-icons/fi";
 
 export default function ChatAI() {
-  const [messages, setMessages] = useState([
-    { role: "bot", text: "Halo 👋 Aku BukuBot, siap bantu kamu cari buku!" },
-  ]);
+const [messages, setMessages] = useState([
+  { 
+    role: "bot", 
+    text: "Hi there! I'm Liby ✨ Your digital librarian. Looking for a specific book or need help with your order? I'm here to help!" 
+  },
+]);
 
   const [input, setInput] = useState("");
 

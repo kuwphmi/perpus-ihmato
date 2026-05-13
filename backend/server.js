@@ -16,7 +16,6 @@ import reportRoutes from "./src/routes/reportRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
 import addressRoutes from "./src/routes/addressRoutes.js";
-
 const app = express();
 
 app.use(
@@ -364,6 +363,73 @@ app.delete("/api/cart/:id", async (req, res) => {
       message: err.message,
     });
   }
+});
+
+/* =======================
+   HAPUS CART
+======================= */
+app.delete("/api/cart/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase.from("cart").delete().eq("id", id);
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      status: true,
+      message: "Item dihapus",
+    });
+  } catch (err) {
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+  }
+});
+
+
+
+/* =======================
+   DELETE ADDRESS
+======================= */
+app.delete("/api/address/:id", async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("addresses")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return res.json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      status: true,
+      message: "Address deleted",
+    });
+
+  } catch (err) {
+
+    return res.json({
+      status: false,
+      message: err.message,
+    });
+
+  }
+
 });
 
 app.use("/api/buku", bukuRoutes);
