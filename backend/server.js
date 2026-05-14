@@ -719,16 +719,22 @@ app.post("/api/extensions/request", async (req, res) => {
     }
 
     // tambah extension request
-    const { error } = await supabase.from("extensions").insert([
-      {
-        loan_id: loan.id,
-        user_id: loan.user_id,
-        book_title: loan.title,
-        old_due_date: loan.due_date,
-        new_due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "pending",
-      },
-    ]);
+      const { data, error } = await supabase
+      .from("extensions")
+      .insert([
+        {
+          user_id,
+          loan_id,
+          book_title,
+          old_due_date,
+          new_due_date,
+          status,
+        },
+      ])
+      .select();
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
     if (error) {
       return res.json({
@@ -979,16 +985,58 @@ app.get("/api/history/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
 
-    const { data, error } = await supabase.from("loans").select("*").eq("user_id", user_id).order("loan_date", { ascending: false });
+    // ambil loans
+    const { data: loans, error: loansError } = await supabase
+      .from("loans")
+      .select("*")
+      .eq("user_id", user_id);
 
-    if (error) {
+    // ambil loan requests
+    const { data: requests, error: requestsError } = await supabase
+      .from("loan_requests")
+      .select("*")
+      .eq("user_id", user_id);
+
+    if (loansError || requestsError) {
       return res.json({
         status: false,
-        message: error.message,
+        message:
+          loansError?.message || requestsError?.message,
       });
     }
 
-    return res.json(data);
+    // format loans
+    const formattedLoans = (loans || []).map((item) => ({
+      ...item,
+      history_type: "loan",
+    }));
+
+    // format requests
+    const formattedRequests = (requests || []).map((item) => ({
+      id: `request-${item.id}`,
+      title: item.book_title,
+      author: item.author,
+      cover: item.cover,
+      loan_date: item.request_date,
+      due_date: null,
+      status: item.status,
+      history_type: "request",
+    }));
+
+    // gabung
+    const combined = [
+      ...formattedLoans,
+      ...formattedRequests,
+    ];
+
+    // urut terbaru
+    combined.sort(
+      (a, b) =>
+        new Date(b.loan_date) - new Date(a.loan_date)
+    );
+
+    return res.json(combined);
+
   } catch (err) {
     return res.json({
       status: false,
@@ -1139,6 +1187,38 @@ app.post("/api/forgot-password", async (req, res) => {
     return res.json({ status: true, message: "Email terkirim" });
   } catch (err) {
     return res.json({ status: false, message: err.message });
+  }
+});
+
+/* =======================
+   DETAIL HISTORY
+======================= */
+
+app.get("/api/history/detail/:id", async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from("loans")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    return res.json(data);
+
+  } catch (err) {
+    return res.status(500).json({
+      status: false,
+      message: err.message,
+    });
   }
 });
 

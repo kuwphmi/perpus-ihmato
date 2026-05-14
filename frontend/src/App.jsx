@@ -23,6 +23,7 @@ import Notip from "./pages/notip";
 import Trackingbuku from "./pages/trackingbuku";
 import HelpCenter from "./pages/helpcenter";
 import Checkout from "./pages/checkout";
+import DetailRiwayat from "./pages/detailriwayat";
 
 
 function AppWrapper() {
@@ -112,6 +113,10 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+
+
+        <Route path="/detail-riwayat/:id" element={<DetailRiwayat />} />
+      
 
         <Route path="/profil" element={<Profil />} />
 

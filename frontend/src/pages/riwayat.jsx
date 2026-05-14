@@ -69,54 +69,10 @@ const fetchHistory = async () => {
   }
 };
 
-const requestExtension = async (loanId) => {
-  try {
-    const res = await fetch(
-      `${API_BASE}/extensions/request`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          loan_id: loanId,
-        }),
-      }
-    );
 
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("Pengajuan perpanjangan berhasil");
-      fetchHistory();
-      useEffect(() => {
-
-  if (!search.trim()) {
-
-    setFilteredBooks(historyBooks);
-    return;
-
-  }
-
-  const filtered = historyBooks.filter((book) =>
-    book.title?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  setFilteredBooks(filtered);
-
-}, [search, historyBooks]);
-    } else {
-      alert(data.message || "Gagal mengajukan");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Terjadi kesalahan");
-  }
-};
 
 const handleExtension = async (book) => {
   try {
-
     const res = await fetch(
       `${API_BASE}/extensions`,
       {
@@ -137,14 +93,16 @@ const handleExtension = async (book) => {
 
     const data = await res.json();
 
-    if (data.status) {
-      alert("Pengajuan perpanjangan berhasil");
+    if (res.ok) {
+      alert("Extension request submitted");
+      fetchHistory();
     } else {
-      alert(data.message);
+      alert(data.message || "Failed to submit request");
     }
 
   } catch (err) {
     console.error(err);
+    alert("An error occurred");
   }
 };
 
@@ -303,7 +261,6 @@ const handleExtension = async (book) => {
         </h1>
 
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
-          <div className="bg-white rounded-xl shadow p-6 space-y-4 max-h-80 overflow-y-auto"></div>
 
          {filteredBooks.map((book) => (
             <div
@@ -350,27 +307,30 @@ const handleExtension = async (book) => {
 
 </div>
 
-              <div className="flex gap-3">
+                        <div className="flex gap-3">
 
+            <Link to={`/detail-riwayat/${book.id}`}>
               <button className="text-blue-600 text-sm hover:underline">
                 Detail
               </button>
+            </Link>
 
-              {book.status !== "returned" && (
-                <button
-                  onClick={() => handleExtension(book)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
-                >
-                  Borrow Request
-                </button>
-              )}
-            </div>
-            </div>
-          ))}
-
-        </div>
+            {book.status !== "returned" && (
+              <button
+                onClick={() => handleExtension(book)}
+                className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
+              >
+                Extend Book
+              </button>
+            )}
+           </div>
+           </div>
+        ))}
 
       </div>
+
+    </div>
+
 
       {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
