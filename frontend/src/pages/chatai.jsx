@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import mascot from "../assets/mascot.png";
-import { FiSend } from "react-icons/fi";
-
+import {
+  FiSend,
+  FiArrowLeft,
+} from "react-icons/fi";
 export default function ChatAI() {
+  const navigate = useNavigate();
 const [messages, setMessages] = useState([
   { 
     role: "bot", 
@@ -65,27 +69,78 @@ const [messages, setMessages] = useState([
     <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100">
 
       {/* HEADER */}
-      <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-3 shadow-md">
+<div className="
+bg-blue-600
+text-white
+px-4
+py-3
+flex
+items-center
+justify-between
+shadow-md
+">
 
-        {/* AVATAR */}
-        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white/30 bg-white shadow">
+  {/* LEFT */}
+  <div className="flex items-center gap-3">
 
-          <img
-            src={mascot}
-            alt="bot"
-            className="w-full h-full object-cover scale-110"
-          />
+    {/* BACK */}
+    <button
+      onClick={() => navigate(-1)}
+      className="
+        w-10
+        h-10
+        rounded-full
+        bg-white/10
+        hover:bg-white/20
+        flex
+        items-center
+        justify-center
+        transition
+      "
+    >
+      <FiArrowLeft className="text-lg" />
+    </button>
 
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full animate-pulse"></span>
+    {/* AVATAR */}
+    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white/30 bg-white shadow">
 
-        </div>
+      <img
+        src={mascot}
+        alt="bot"
+        className="w-full h-full object-cover scale-110"
+      />
 
-        <div>
-          <h1 className="font-semibold text-sm">liby</h1>
-          <p className="text-xs text-blue-100">online • Liby is ready to help you</p>
-        </div>
+      <span className="
+        absolute
+        bottom-0
+        right-0
+        w-3
+        h-3
+        bg-green-400
+        border-2
+        border-white
+        rounded-full
+        animate-pulse
+      "></span>
 
-      </div>
+    </div>
+
+    {/* TEXT */}
+    <div>
+
+      <h1 className="font-semibold text-[18px]">
+        Liby
+      </h1>
+
+      <p className="text-xs text-blue-100">
+        Online • Ready to help you
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
 
       {/* CHAT AREA */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">

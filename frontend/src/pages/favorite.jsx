@@ -1,5 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { Heart, Search } from "lucide-react";
+import {
+  Heart,
+  Search,
+  ArrowLeft,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; // ✅ ditambahin
 import Floating from "./floating";
 import { FiBell } from "react-icons/fi";
@@ -46,13 +50,35 @@ export default function Favorit() {
 <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b px-6 py-3 flex items-center justify-between">
   
   {/* LEFT */}
-  <div className="flex items-center gap-2">
-    <Heart className="w-5 h-5 text-blue-600 fill-blue-600" />
+<div className="flex items-center gap-3">
 
-    <h1 className="text-lg font-semibold text-blue-600 tracking-tight">
-      My Favorite
+  {/* BACK */}
+  <button
+    onClick={() => navigate(-1)}
+    className="
+      w-10
+      h-10
+      rounded-full
+      bg-blue-50
+      hover:bg-blue-100
+      flex
+      items-center
+      justify-center
+      transition
+    "
+  >
+    <ArrowLeft className="w-5 h-5 text-blue-600" />
+  </button>
+
+  <div>
+
+    <h1 className="text-[20px] font-semibold text-blue-600">
+      My Favorites
     </h1>
+
   </div>
+
+</div>
 
   {/* RIGHT */}
   <div className="flex items-center gap-4">

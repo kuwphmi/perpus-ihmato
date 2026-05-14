@@ -254,23 +254,62 @@ const handleExtension = async (book) => {
       )}
 
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
 
-        <h1 className="text-3xl font-bold text-blue-700 mb-6">
+        <h1 className="
+text-2xl
+md:text-4xl
+font-bold
+text-blue-700
+mb-8
+text-center
+md:text-left
+">
           Borrowing History
         </h1>
 
-        <div className="bg-white rounded-xl shadow p-6 space-y-4">
+        <div className="grid gap-5">
 
          {filteredBooks.map((book) => (
             <div
   key={book.id}
-  className="flex items-center justify-between border-b pb-4 gap-4"
+  className="
+group
+bg-white
+rounded-3xl
+p-4 md:p-5
+shadow-sm
+border
+border-gray-100
+hover:shadow-2xl
+hover:-translate-y-1
+transition-all
+duration-300
+flex
+items-start
+justify-between
+gap-3 md:gap-4
+"
 >
               <div className="flex items-center gap-4">
 
   {/* COVER */}
-  <div className="w-16 h-20 bg-blue-100 rounded-lg overflow-hidden flex-shrink-0 shadow">
+  <div className="
+w-16
+h-24
+md:w-20
+md:h-28
+bg-gradient-to-br
+from-blue-50
+to-blue-100
+rounded-2xl
+overflow-hidden
+flex-shrink-0
+shadow-lg
+group-hover:scale-105
+transition
+duration-300
+">
 
     {book.cover ? (
 
@@ -293,11 +332,39 @@ const handleExtension = async (book) => {
   {/* INFO */}
   <div>
 
-    <h3 className="font-semibold text-gray-800">
+    <h3 className="
+font-bold
+text-sm md:text-lg
+text-gray-800
+line-clamp-1
+">
       {book.title}
     </h3>
 
-    <p className="text-sm text-gray-500">
+    <p className="text-[12px] md:text-sm text-gray-500">
+      <div className="mt-2">
+
+  <span
+    className={`
+      text-[11px]
+      px-3
+      py-1
+      rounded-full
+      font-medium
+
+      ${
+        book.status === "returned"
+          ? "bg-green-100 text-green-700"
+          : "bg-yellow-100 text-yellow-700"
+      }
+    `}
+  >
+    {book.status === "returned"
+      ? "Returned"
+      : "Borrowed"}
+  </span>
+
+</div>
       {book.loan_date
         ? new Date(book.loan_date).toLocaleDateString("id-ID")
         : "-"}
@@ -307,10 +374,21 @@ const handleExtension = async (book) => {
 
 </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-col gap-2 w-[110px]">
 
             <Link to={`/detail-riwayat/${book.id}`}>
-              <button className="text-blue-600 text-sm hover:underline">
+              <button className="
+w-full
+h-10
+rounded-xl
+bg-blue-50
+text-blue-700
+text-[12px]
+md:text-sm
+font-medium
+hover:bg-blue-100
+transition
+">
                 Detail
               </button>
             </Link>
@@ -318,7 +396,19 @@ const handleExtension = async (book) => {
             {book.status !== "returned" && (
               <button
                 onClick={() => handleExtension(book)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
+                className="
+w-full
+h-10
+bg-yellow-500
+hover:bg-yellow-600
+text-white
+rounded-xl
+text-[12px]
+md:text-sm
+font-medium
+shadow-md
+transition
+"
               >
                 Extend Book
               </button>
