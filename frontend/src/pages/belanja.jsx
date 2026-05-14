@@ -449,7 +449,7 @@ const handleSearch = async () => {
                     </div>
 
                     <button
-                      onClick={() => navigate("/notip")}
+                      onClick={() => navigate("/notifikasi")}
                       className="pt-2 text-sm text-gray-600 hover:text-blue-600"
                     >
                       View All

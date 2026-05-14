@@ -141,8 +141,8 @@ setTimeout(() => {
     },
     {
       img: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da",
-      title: "Read Anywhere",
-      subtitle: "Enjoy a modern and comfortable reading experience.",
+      title: "Borrow Books Instantly",
+  subtitle: "Request your favorite books online with a fast and simple process.",
     },
     {
       img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353",

@@ -5,6 +5,7 @@ import {
   FiBell,
   FiHeart,
   FiSearch,
+FiArrowLeft,
 } from "react-icons/fi";
 
 import Floating from "./floating";
@@ -66,15 +67,35 @@ export default function Notifikasi() {
         <div className="px-5 py-3 flex items-center justify-between">
 
           {/* LEFT */}
-          <div className="flex items-center gap-2">
+<div className="flex items-center gap-3">
 
-            <FiHeart className="text-blue-600 fill-blue-600 text-lg" />
+  {/* BACK */}
+  <button
+    onClick={() => navigate(-1)}
+    className="
+      w-10
+      h-10
+      rounded-full
+      bg-blue-50
+      hover:bg-blue-100
+      flex
+      items-center
+      justify-center
+      transition
+    "
+  >
+    <FiArrowLeft className="text-blue-600 text-lg" />
+  </button>
 
-            <h1 className="text-lg font-semibold text-blue-600">
-              Notifications
-            </h1>
+  <div>
 
-          </div>
+   <h1 className="text-[20px] font-semibold text-blue-600">
+      Notifications
+    </h1>
+
+  </div>
+
+</div>
 
           {/* RIGHT */}
           <div className="flex items-center gap-4 relative">

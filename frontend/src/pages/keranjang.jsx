@@ -1,4 +1,7 @@
-import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
+import {
+  FiTrash2,
+  FiArrowLeft,
+} from "react-icons/fi";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRef } from "react";
@@ -142,9 +145,35 @@ const updateQty = async (id, qty) => {
 
       {/* HEADER */}
       <div className="bg-white p-4 shadow-sm flex justify-between items-center relative">
-        <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
-          <FiShoppingCart /> Cart
-        </h1>
+        <div className="flex items-center gap-3">
+
+  {/* BACK */}
+  <button
+    onClick={() => navigate(-1)}
+    className="
+      w-10
+      h-10
+      rounded-full
+      bg-blue-50
+      hover:bg-blue-100
+      flex
+      items-center
+      justify-center
+      transition
+    "
+  >
+    <FiArrowLeft className="text-blue-600 text-lg" />
+  </button>
+
+  <div>
+
+    <h1 className="text-[20px] font-semibold text-blue-600">
+      Cart
+    </h1>
+
+  </div>
+
+</div>
 
         <div className="flex items-center gap-3">
 

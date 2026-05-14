@@ -39,100 +39,212 @@ export default function DetailRiwayat() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-6">
+  <div className="min-h-screen bg-gray-100">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+    {/* HEADER */}
+    {/* HEADER */}
+<div className="bg-blue-600 text-white px-5 py-2.5 shadow-md">
 
-        {/* BACK */}
-        <Link
-          to="/riwayat"
-          className="text-blue-600 hover:underline text-sm"
-        >
-          ← Back to History
-        </Link>
+  <div className="w-full flex items-center gap-3 relative">
 
-        <div className="mt-8 grid md:grid-cols-2 gap-10">
+    {/* BACK BUTTON */}
+    <Link
+      to="/riwayat"
+      className="
+        w-9
+        h-9
+        rounded-full
+        bg-white/10
+        hover:bg-white/20
+        flex
+        items-center
+        justify-center
+        transition
+      "
+    >
+      ←
+    </Link>
 
-          {/* COVER */}
-          <div className="flex justify-center">
+    {/* TITLE */}
+    <div>
+
+      <h1 className="text-[20px] font-semibold leading-tight">
+        Book Details
+      </h1>
+      
+
+    </div>
+
+  </div>
+
+</div>
+
+    {/* CONTENT */}
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+
+      <div
+        className="
+          bg-white
+          rounded-[32px]
+          shadow-xl
+          border
+          border-gray-100
+          overflow-hidden
+        "
+      >
+
+        <div className="grid md:grid-cols-2 gap-0">
+
+          {/* LEFT */}
+          <div
+            className="
+              bg-gradient-to-br
+              from-blue-50
+              to-blue-100
+              flex
+              items-center
+              justify-center
+              p-8
+            "
+          >
 
             {book.cover ? (
+
               <img
                 src={`https://covers.openlibrary.org/b/id/${book.cover}-L.jpg`}
                 alt={book.title}
-                className="w-64 rounded-xl shadow-lg"
+                className="
+                  w-56
+                  md:w-72
+                  rounded-3xl
+                  shadow-2xl
+                  hover:scale-105
+                  transition
+                  duration-300
+                "
               />
+
             ) : (
-              <div className="w-64 h-80 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400">
+
+              <div
+                className="
+                  w-56
+                  h-80
+                  bg-white
+                  rounded-3xl
+                  flex
+                  items-center
+                  justify-center
+                  text-gray-400
+                  shadow-lg
+                "
+              >
                 No Cover
               </div>
+
             )}
 
           </div>
 
-          {/* DETAIL */}
-          <div className="space-y-5">
+          {/* RIGHT */}
+          <div className="p-6 md:p-10 space-y-6">
 
+            {/* TITLE */}
             <div>
-              <p className="text-sm text-gray-500">
-                Title
+
+              <p className="text-sm text-gray-400 uppercase tracking-wide">
+                Book Title
               </p>
 
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1
+                className="
+                  text-2xl
+                  md:text-4xl
+                  font-bold
+                  text-gray-800
+                  leading-tight
+                  mt-2
+                "
+              >
                 {book.title}
               </h1>
+
             </div>
 
+            {/* STATUS */}
             <div>
-              <p className="text-sm text-gray-500">
-                Activity
-              </p>
 
-              <p className="font-semibold text-blue-600">
-                Borrowed
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Borrow Date
-              </p>
-
-              <p className="text-gray-700">
-                {book.loan_date
-                  ? new Date(book.loan_date).toLocaleDateString("id-ID")
-                  : "-"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Return Date
-              </p>
-
-              <p className="text-gray-700">
-                {book.due_date
-                  ? new Date(book.due_date).toLocaleDateString("id-ID")
-                  : "-"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-400 mb-2">
                 Status
               </p>
 
               <span
-                className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                  book.status === "returned"
-                    ? "bg-green-100 text-green-700"
-                    : book.status === "pending"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-blue-100 text-blue-700"
-                }`}
+                className={`
+                  inline-flex
+                  items-center
+                  px-4
+                  py-2
+                  rounded-full
+                  text-sm
+                  font-semibold
+
+                  ${
+                    book.status === "returned"
+                      ? "bg-green-100 text-green-700"
+                      : book.status === "pending"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-blue-100 text-blue-700"
+                  }
+                `}
               >
                 {book.status}
               </span>
+
+            </div>
+
+            {/* INFO CARD */}
+            <div className="grid gap-4">
+
+              <div className="bg-gray-50 rounded-2xl p-4">
+
+                <p className="text-sm text-gray-400">
+                  Borrow Date
+                </p>
+
+                <p className="font-semibold text-gray-700 mt-1">
+                  {book.loan_date
+                    ? new Date(book.loan_date).toLocaleDateString("id-ID")
+                    : "-"}
+                </p>
+
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl p-4">
+
+                <p className="text-sm text-gray-400">
+                  Return Date
+                </p>
+
+                <p className="font-semibold text-gray-700 mt-1">
+                  {book.due_date
+                    ? new Date(book.due_date).toLocaleDateString("id-ID")
+                    : "-"}
+                </p>
+
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl p-4">
+
+                <p className="text-sm text-gray-400">
+                  Activity
+                </p>
+
+                <p className="font-semibold text-blue-600 mt-1">
+                  Borrowed Book
+                </p>
+
+              </div>
+
             </div>
 
           </div>
@@ -142,5 +254,6 @@ export default function DetailRiwayat() {
       </div>
 
     </div>
-  );
-}
+
+  </div>
+); }
