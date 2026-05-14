@@ -24,6 +24,7 @@ import Trackingbuku from "./pages/trackingbuku";
 import HelpCenter from "./pages/helpcenter";
 import Checkout from "./pages/checkout";
 import DetailRiwayat from "./pages/detailriwayat";
+import Address from "./pages/address";
 
 
 function AppWrapper() {
@@ -104,7 +105,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
         <Route path="/checkout" element={<Checkout />} />
-
+        <Route path="/address" element={<Address />} />
         <Route
           path="/riwayat"
           element={

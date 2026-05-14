@@ -39,7 +39,7 @@ export default function HalamanUtama() {
 
   const [bookDescription, setBookDescription] = useState("");
   const [notif, setNotif] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   const showNotif = (message) => {
 
   setNotif(message);
@@ -96,6 +96,19 @@ export default function HalamanUtama() {
 }));
 
       setGenreBooks(books);
+      if (books.length === 0) {
+
+  setActiveCategory(
+    `No books found for "${search}"`
+  );
+
+} else {
+
+  setActiveCategory(
+    `Search Results: ${search}`
+  );
+
+}
 setActiveCategory(category);
 
 setTimeout(() => {
@@ -518,11 +531,30 @@ const books = data.docs.map((item) => ({
   </h2>
 
  <button
-  onClick={() => setIsFavorite(!isFavorite)}
+  onClick={() => {
+
+  if (favorites.includes(selectedBook?.workKey)) {
+
+    setFavorites(
+      favorites.filter(
+        (item) => item !== selectedBook?.workKey
+      )
+    );
+
+  } else {
+
+    setFavorites([
+      ...favorites,
+      selectedBook?.workKey,
+    ]);
+
+  }
+
+}}
   className="transition flex items-center justify-center flex-shrink-0"
 >
 
-  {isFavorite ? (
+  {favorites.includes(selectedBook?.workKey) ? (
 
     <FiHeart className="text-red-500 text-2xl fill-red-500" />
 

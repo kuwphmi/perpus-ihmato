@@ -1,15 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 import {
-  FiArrowLeft,
   FiMapPin,
   FiShoppingBag,
   FiCreditCard,
-  FiLogOut,
-  FiUser,
 } from "react-icons/fi";
+
 import Floating from "./floating";
 
 export default function Checkout() {
@@ -21,73 +19,123 @@ export default function Checkout() {
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
-  const [name, setName] = useState(user.name || "");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState(null);
+
   const [notif, setNotif] = useState("");
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const showNotif = (message) => {
 
     setNotif(message);
 
     setTimeout(() => {
+
       setNotif("");
-    }, 2000);
+
+    }, 2500);
 
   };
 
   const subtotal = items.reduce(
+
     (acc, item) => acc + item.price * (item.qty || 1),
     0
+
   );
 
   const shipping = 5000;
+
   const serviceFee = 2000;
 
   const total = subtotal + shipping + serviceFee;
 
+  useEffect(() => {
+
+    fetchAddress();
+
+  }, []);
+
+  const fetchAddress = async () => {
+
+    try {
+
+      const userData = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+      const res = await axios.get(
+        `http://localhost:3000/api/address/${userData.id}`
+      );
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : [];
+
+      const primary = data.find(
+        (item) => item.is_primary === true
+      );
+
+      setSelectedAddress(primary || null);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
   const handlePayment = async () => {
 
-    if (!name || !phone || !address) {
+    if (!selectedAddress) {
 
-      showNotif("Please complete the form first");
+      showNotif("Please add address first");
+
       return;
 
     }
 
     try {
 
-      const user = JSON.parse(localStorage.getItem("user"));
+      setIsLoading(true);
 
-      // SAVE ADDRESS
-      await axios.post(
-        "http://localhost:3000/api/address",
-        {
-          user_id: user.id,
-          receiver_name: name,
-          phone,
-          province: "-",
-          city: "-",
-          district: "-",
-          postal_code: "-",
-          full_address: address,
-        }
+      const userData = JSON.parse(
+        localStorage.getItem("user")
       );
 
-      // CREATE PAYMENT
       const res = await axios.post(
         "http://localhost:3000/api/payment/create",
         {
-          user_id: user.id,
+          user_id: userData.id,
           items,
-          customer_name: name,
-          phone,
-          address,
+          address_id: selectedAddress.id,
         }
       );
 
+      console.log("PAYMENT RESPONSE:", res.data);
+
       const token = res.data.token;
+
+      if (!token) {
+
+        showNotif("Midtrans token failed");
+
+        setIsLoading(false);
+
+        return;
+
+      }
+
+      if (!window.snap) {
+
+        showNotif("Midtrans not loaded");
+
+        setIsLoading(false);
+
+        return;
+
+      }
 
       window.snap.pay(token, {
 
@@ -96,7 +144,9 @@ export default function Checkout() {
           showNotif("Payment successful");
 
           setTimeout(() => {
+
             navigate("/trackingbuku");
+
           }, 1500);
 
         },
@@ -106,8 +156,18 @@ export default function Checkout() {
           showNotif("Waiting for payment");
 
           setTimeout(() => {
+
             navigate("/trackingbuku");
+
           }, 1500);
+
+        },
+
+        onError: function (result) {
+
+          console.log(result);
+
+          showNotif("Payment failed");
 
         },
 
@@ -125,92 +185,91 @@ export default function Checkout() {
 
       showNotif("Checkout failed");
 
+    } finally {
+
+      setIsLoading(false);
+
     }
 
   };
 
+  if (!items || items.length === 0) {
+
+    return (
+
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+
+        <div className="bg-white p-10 rounded-2xl shadow text-center">
+
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            No Checkout Item
+          </h2>
+
+          <p className="text-gray-500 mb-6">
+            Please add product first
+          </p>
+
+          <button
+            onClick={() => navigate("/belanja")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
+          >
+            Go Shopping
+          </button>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
   return (
+
     <div className="min-h-screen bg-[#f5f7fb]">
 
       {/* NOTIF */}
       {notif && (
+
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999]">
 
-          <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">
+          <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl text-sm font-medium">
             {notif}
           </div>
 
         </div>
+
       )}
 
       {/* HEADER */}
-<div className="bg-white p-4 shadow-sm flex justify-between items-center relative">
+      <div className="bg-white shadow-sm border-b">
 
-  {/* LEFT */}
- <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
 
-  <FiCreditCard className="text-xl" />
+          <h1 className="text-2xl font-bold text-blue-700 flex items-center gap-2">
 
-  Checkout
+            <FiCreditCard />
 
-</h1>
+            Checkout
 
-  {/* RIGHT */}
-  <div className="flex items-center gap-3">
+          </h1>
 
-    {/* PROFILE */}
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        setIsProfileOpen(!isProfileOpen);
-      }}
-      className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-    >
-      {user.name ? user.name.charAt(0) : "U"}
-    </div>
-
-  </div>
-
-  {/* POPUP */}
-  {isProfileOpen && (
-    <div className="absolute right-4 top-16 z-50">
-
-      <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-
-        <div className="flex flex-col items-center py-6">
-
-          <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
-            {user.name ? user.name.charAt(0) : "U"}
-          </div>
-
-          <h2 className="font-semibold text-gray-800">
-            {user.name || "-"}
-          </h2>
-
-          <p className="text-sm text-gray-500 mb-5">
-            {user.email || "-"}
-          </p>
-
-          <Link to="/profil">
-            <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-              My Profile
-            </button>
+          <Link
+            to="/belanja"
+            className="text-sm text-blue-600 font-medium"
+          >
+            Continue Shopping
           </Link>
 
         </div>
 
       </div>
 
-    </div>
-  )}
-
-</div>
-
       {/* CONTENT */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
 
-        {/* SHIPPING */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {/* ADDRESS */}
+        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
 
           <div className="px-6 py-5 border-b flex items-center gap-3">
 
@@ -224,109 +283,95 @@ export default function Checkout() {
 
           <div className="p-6">
 
-            <div className="grid md:grid-cols-2 gap-5">
+            {selectedAddress ? (
 
-              <div>
+              <div className="border rounded-2xl p-5 bg-blue-50">
 
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Recipient Name
-                </label>
+                <div className="flex justify-between items-start gap-5">
 
-                <input
-                  type="text"
-                  placeholder="Input recipient name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-200"
-                />
+                  <div>
+
+                    <p className="text-blue-600 text-sm font-semibold">
+                      Main Address
+                    </p>
+
+                    <h3 className="font-bold text-lg mt-2">
+                      {selectedAddress.receiver_name}
+                    </h3>
+
+                    <p className="text-gray-600 text-sm">
+                      {selectedAddress.phone}
+                    </p>
+
+                    <p className="text-gray-600 text-sm mt-2">
+                      {selectedAddress.full_address}
+                    </p>
+
+                    <p className="text-gray-500 text-sm mt-2">
+                      {selectedAddress.district}, Surabaya
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/address")}
+                    className="text-blue-600 text-sm font-semibold"
+                  >
+                    Change
+                  </button>
+
+                </div>
 
               </div>
 
-              <div>
+            ) : (
 
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Phone Number
-                </label>
+              <div className="text-center py-10">
 
-                <input
-                  type="text"
-                  placeholder="08xxxxxxxxxx"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-200"
-                />
+                <p className="text-gray-500 mb-5">
+                  No address yet
+                </p>
+
+                <button
+                  onClick={() => navigate("/address")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
+                >
+                  Add Address
+                </button>
 
               </div>
 
-            </div>
-
-            <div className="mt-5">
-
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Full Address
-              </label>
-
-              <textarea
-                placeholder="Input your full address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full border rounded-xl px-4 py-3 h-32 resize-none outline-none focus:ring-2 focus:ring-blue-200"
-              />
-
-            </div>
+            )}
 
           </div>
 
         </div>
 
-        {/* PRODUCT */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {/* PRODUCTS */}
+        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
 
           <div className="px-6 py-5 border-b flex items-center gap-3">
 
             <FiShoppingBag className="text-blue-600 text-xl" />
 
-            <h2 className="text-lg font-semibold text-blue-700">
+            <h2 className="text-xl font-semibold text-blue-700">
               Ordered Product
             </h2>
 
           </div>
 
-          {/* TABLE HEADER */}
-          <div className="hidden md:grid grid-cols-12 px-6 py-3 text-sm text-gray-400 border-b bg-gray-50">
-
-            <div className="col-span-6">
-              Product
-            </div>
-
-            <div className="col-span-2 text-center">
-              Price
-            </div>
-
-            <div className="col-span-2 text-center">
-              Qty
-            </div>
-
-            <div className="col-span-2 text-right">
-              Subtotal
-            </div>
-
-          </div>
-
-          {/* ITEMS */}
           <div className="divide-y">
 
             {items.map((item, index) => (
 
               <div
                 key={index}
-                className="grid md:grid-cols-12 gap-4 px-6 py-5 items-center bg-white"
+                className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5"
               >
 
-                {/* PRODUCT */}
-                <div className="md:col-span-6 flex gap-4">
+                <div className="flex gap-4">
 
-                  <div className="w-24 h-24 bg-blue-50 rounded-xl overflow-hidden border flex items-center justify-center">
+                  <div className="w-24 h-24 bg-blue-50 rounded-xl overflow-hidden border">
 
                     {item.cover ? (
 
@@ -338,7 +383,7 @@ export default function Checkout() {
 
                     ) : (
 
-                      <div className="text-gray-400 text-sm">
+                      <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
                         No Cover
                       </div>
 
@@ -348,31 +393,28 @@ export default function Checkout() {
 
                   <div>
 
-                    <h3 className="font-semibold text-gray-800 line-clamp-2">
+                    <h3 className="font-semibold text-gray-800">
                       {item.title}
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-2">
-                      Premium Book Collection
+                      Qty: {item.qty || 1}
                     </p>
 
                   </div>
 
                 </div>
 
-                {/* PRICE */}
-                <div className="md:col-span-2 text-center font-medium text-gray-700">
-                  Rp {item.price?.toLocaleString("id-ID")}
-                </div>
+                <div className="text-right">
 
-                {/* QTY */}
-                <div className="md:col-span-2 text-center text-gray-700">
-                  {item.qty || 1}
-                </div>
+                  <p className="text-sm text-gray-500">
+                    Price
+                  </p>
 
-                {/* SUBTOTAL */}
-                <div className="md:col-span-2 text-right font-bold text-blue-700">
-                  Rp {(item.price * (item.qty || 1)).toLocaleString("id-ID")}
+                  <p className="font-bold text-blue-700 text-lg">
+                    Rp {(item.price * (item.qty || 1)).toLocaleString("id-ID")}
+                  </p>
+
                 </div>
 
               </div>
@@ -384,151 +426,145 @@ export default function Checkout() {
         </div>
 
         {/* PAYMENT */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
 
-          {/* HEADER */}
-          <div className="px-6 py-5 border-b flex items-center justify-between">
+          <div className="px-6 py-5 border-b flex items-center gap-3">
 
-            <div className="flex items-center gap-3">
+            <FiCreditCard className="text-blue-600 text-xl" />
 
-              <FiCreditCard className="text-blue-600 text-xl" />
-
-              <h2 className="text-xl font-semibold text-blue-700">
-                Payment Method
-              </h2>
-
-            </div>
-
-            <div className="text-sm text-gray-600">
-              Midtrans Payment Gateway
-            </div>
+            <h2 className="text-xl font-semibold text-blue-700">
+              Payment Summary
+            </h2>
 
           </div>
 
-          {/* SUMMARY */}
-          <div className="p-6">
+          <div className="p-6 space-y-4">
 
-            <div className="w-full space-y-4">
+            <div className="flex justify-between text-gray-600">
 
-              <div className="flex justify-between text-gray-600">
+              <span>Subtotal</span>
 
-                <span>Subtotal Product</span>
-
-                <span>
-                  Rp {subtotal.toLocaleString("id-ID")}
-                </span>
-
-              </div>
-
-              <div className="flex justify-between text-gray-600">
-
-                <span>Shipping Fee</span>
-
-                <span>
-                  Rp {shipping.toLocaleString("id-ID")}
-                </span>
-
-              </div>
-
-              <div className="flex justify-between text-gray-600">
-
-                <span>Service Fee</span>
-
-                <span>
-                  Rp {serviceFee.toLocaleString("id-ID")}
-                </span>
-
-              </div>
-
-              <div className="border-t pt-5 flex justify-between items-center">
-
-                <span className="text-lg font-semibold text-gray-800">
-                  Total Payment
-                </span>
-
-                <span className="text-4xl font-bold text-blue-600">
-                  Rp {total.toLocaleString("id-ID")}
-                </span>
-
-              </div>
-
-              {/* BUTTON */}
-              <button
-                onClick={handlePayment}
-                className="w-full mt-6 bg-gradient-to-r from-blue-700 to-blue-500 hover:opacity-90 transition text-white py-4 rounded-lg text-lg font-semibold"
-              >
-                Proceed Payment
-              </button>
+              <span>
+                Rp {subtotal.toLocaleString("id-ID")}
+              </span>
 
             </div>
+
+            <div className="flex justify-between text-gray-600">
+
+              <span>Shipping Fee</span>
+
+              <span>
+                Rp {shipping.toLocaleString("id-ID")}
+              </span>
+
+            </div>
+
+            <div className="flex justify-between text-gray-600">
+
+              <span>Service Fee</span>
+
+              <span>
+                Rp {serviceFee.toLocaleString("id-ID")}
+              </span>
+
+            </div>
+
+            <div className="border-t pt-5 flex justify-between items-center">
+
+              <span className="text-lg font-bold text-gray-800">
+                Total
+              </span>
+
+              <span className="text-3xl font-bold text-blue-700">
+                Rp {total.toLocaleString("id-ID")}
+              </span>
+
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={isLoading}
+              className="w-full mt-5 bg-gradient-to-r from-blue-700 to-blue-500 hover:opacity-90 transition text-white py-4 rounded-xl font-semibold disabled:opacity-50"
+            >
+              {isLoading
+                ? "Processing..."
+                : "Proceed Payment"}
+            </button>
 
           </div>
 
         </div>
 
       </div>
+
       {/* FOOTER */}
-            <footer className="mt-20 bg-gray-900 text-white">
-      
-              <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
-      
-                {/* BRAND */}
-                <div>
-                  <h2 className="text-2xl font-bold text-blue-400 mb-3">
-                    BukuIn
-                  </h2>
-      
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    Discover thousands of books, explore new worlds,
-                    and enjoy a modern digital library experience.
-                  </p>
-                </div>
-      
-                {/* MENU */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-4">
-                    Navigation
-                  </h3>
-      
-                  <div className="flex flex-col gap-2 text-gray-400 text-sm">
-                    <Link to="/koleksi" className="hover:text-white">
-                      Home
-                    </Link>
-      
-                    <Link to="/belanja" className="hover:text-white">
-                      Shop
-                    </Link>
-      
-                    <Link to="/riwayat" className="hover:text-white">
-                      History
-                    </Link>
-                  </div>
-                </div>
-      
-                {/* CONTACT */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-4">
-                    About
-                  </h3>
-      
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    Built for book lovers who want a simple,
-                    elegant, and interactive reading platform.
-                  </p>
-                </div>
-      
-              </div>
-      
-              {/* BOTTOM */}
-              <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-                © 2026 BukuIn. All rights reserved.
-              </div>
-      
-            </footer>
-            {/* MASCOT (INI YANG KAMU TAMBAH) */}
-            <Floating />
+      <footer className="mt-20 bg-gray-900 text-white">
+
+        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+
+          <div>
+
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">
+              BukuIn
+            </h2>
+
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Discover thousands of books, explore new worlds,
+              and enjoy a modern digital library experience.
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3 className="font-semibold text-lg mb-4">
+              Navigation
+            </h3>
+
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+
+              <Link to="/koleksi" className="hover:text-white">
+                Home
+              </Link>
+
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
+
+              <Link to="/riwayat" className="hover:text-white">
+                History
+              </Link>
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <h3 className="font-semibold text-lg mb-4">
+              About
+            </h3>
+
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Built for book lovers who want a simple,
+              elegant, and interactive reading platform.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+          © 2026 BukuIn. All rights reserved.
+        </div>
+
+      </footer>
+
+      <Floating />
 
     </div>
-    
+
   );
+
 }

@@ -10,8 +10,8 @@ export default function Profil() {
   const location = useLocation();
   const message = location.state?.message;
   const navigate = useNavigate();
-  const [profileImage, setProfileImage] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
   const [user, setUser] = useState({
     id: "",
     name: "",
@@ -21,6 +21,16 @@ export default function Profil() {
     birth: "",
     gender: "",
     member_code: "",
+  });
+
+  const [addresses, setAddresses] = useState([]);
+
+  const [addressForm, setAddressForm] = useState({
+    label: "",
+    receiver_name: "",
+    phone: "",
+    full_address: "",
+    postal_code: "",
   });
 
   useEffect(() => {
@@ -43,6 +53,33 @@ export default function Profil() {
       navigate("/login");
     }
   }, []);
+
+  useEffect(() => {
+
+    fetchAddresses();
+
+  }, []);
+
+  const fetchAddresses = async () => {
+
+    try {
+
+      const userData = JSON.parse(localStorage.getItem("user"));
+
+      const res = await axios.get(
+        `http://localhost:3000/api/address/${userData.id}`
+      );
+
+      console.log(res.data)
+      setAddresses(res.data);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
 
   // upload foto
   const handleImageChange = (e) => {
@@ -84,6 +121,24 @@ export default function Profil() {
       console.log(err);
       alert("Gagal menyimpan profil");
     }
+  };
+
+  const setPrimaryAddress = async (id) => {
+
+    try {
+
+      await axios.put(
+        `http://localhost:3000/api/address/primary/${id}`
+      );
+
+      fetchAddresses();
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
   };
 
   //logout
@@ -143,14 +198,14 @@ export default function Profil() {
         <div className="grid md:grid-cols-2 gap-6 mt-10">
           {/* MOBILE NAV */}
           <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-    
+
             <Link to="/koleksi">
               <FiBook size={24} />
             </Link>
             <Link to="/riwayat">
               <FiClock size={24} />
             </Link>
-             <Link to="/belanja">
+            <Link to="/belanja">
               <FiShoppingCart size={24} />
             </Link>
           </div>
@@ -276,8 +331,8 @@ export default function Profil() {
                     className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
                   >
                     <option value="">Select</option>
-<option value="Male">Male</option>
-<option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
                   </select>
                 ) : (
                   <p className="font-medium">{user.gender || "-"}</p>
@@ -286,36 +341,167 @@ export default function Profil() {
             </div>
           </div>
 
-          {/* KARTU ANGGOTA */}
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-semibold text-gray-700 mb-4">Member Card</h3>
+          {/* RIGHT SIDE */}
+          <div className="space-y-6">
 
-            <div className="relative rounded-2xl p-6 text-white overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-blue-800 shadow-lg">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+            {/* KARTU ANGGOTA */}
+            <div className="bg-white rounded-2xl shadow-md p-6">
 
-              <p className="text-xs opacity-70 mb-1">Member Number</p>
+              <h3 className="font-semibold text-gray-700 mb-4">
+                Member Card
+              </h3>
 
-              <h2 className="text-2xl font-bold mb-6 tracking-wider">{user.member_code || user.id?.slice(0, 8).toUpperCase() || "-"}</h2>
+              <div className="relative rounded-2xl p-6 text-white overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-blue-800 shadow-lg">
 
-              <div className="flex justify-between text-sm">
-                <div>
-                  <p className="opacity-70 text-xs">Name</p>
-                  <p className="font-semibold">{user.name?.toUpperCase()}</p>
+                {/* EFFECT */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+
+                {/* CONTENT */}
+                <p className="text-xs opacity-70 mb-1">
+                  Member Number
+                </p>
+
+                <h2 className="text-2xl font-bold mb-6 tracking-wider">
+                  {user.member_code || user.id?.slice(0, 8).toUpperCase() || "-"}
+                </h2>
+
+                <div className="flex justify-between text-sm">
+
+                  <div>
+
+                    <p className="opacity-70 text-xs">
+                      Name
+                    </p>
+
+                    <p className="font-semibold">
+                      {user.name?.toUpperCase()}
+                    </p>
+
+                  </div>
+
+                  <div className="text-right">
+
+                    <p className="opacity-70 text-xs">
+                      Status
+                    </p>
+
+                    <p className="font-semibold text-green-300">
+                      Active
+                    </p>
+
+                  </div>
+
                 </div>
 
-                <div className="text-right">
-                  <p className="opacity-70 text-xs">Status</p>
-                  <p className="font-semibold text-green-300">Active</p>
-                </div>
               </div>
+
             </div>
+
+            {/* MY ADDRESS */}
+            <div className="bg-white rounded-2xl shadow-md p-6">
+
+              {/* HEADER */}
+              {/* HEADER */}
+              <div className="flex justify-between items-center mb-5">
+
+                <h3 className="font-semibold text-gray-700">
+                  My Addresses
+                </h3>
+
+                <Link
+                  to="/address"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition"
+                >
+                  Manage Address
+                </Link>
+              </div>
+
+              {/* ADDRESS LIST */}
+              <div className="space-y-4">
+
+                {addresses.length === 0 && (
+                  <div className="border border-dashed rounded-xl p-8 text-center text-gray-400">
+                    No address added yet
+                  </div>
+                )}
+
+                {Array.isArray(addresses) &&
+  addresses
+    .filter((item) => item.is_primary)
+    .map((item) => (
+                    <div
+                      key={item.id}
+                      className="border rounded-xl p-4"
+                    >
+
+                      <div className="flex justify-between items-start gap-4">
+
+                        <div>
+
+                          {/* LABEL */}
+                          <div className="flex items-center gap-2">
+
+                            <h4 className="font-semibold text-gray-800">
+                              {item.label}
+                            </h4>
+
+                            {item.is_primary && (
+                              <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+                                Main
+                              </span>
+                            )}
+
+                          </div>
+
+                          {/* RECEIVER */}
+                          <p className="mt-2 font-medium text-gray-700">
+                            {item.receiver_name}
+                          </p>
+
+                          {/* PHONE */}
+                          <p className="text-sm text-gray-500">
+                            {item.phone}
+                          </p>
+
+                          {/* ADDRESS */}
+                          <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                            {item.full_address}
+                          </p>
+
+                          {/* POSTAL */}
+                          <p className="text-sm text-gray-400 mt-1">
+                            Postal Code: {item.postal_code}
+                          </p>
+
+                        </div>
+
+                        {/* BUTTON */}
+                        {!item.is_primary && (
+                          <button
+                            onClick={() => setPrimaryAddress(item.id)}
+                            className="text-blue-600 text-sm hover:underline"
+                          >
+                            Set Main
+                          </button>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  ))}
+
+              </div>
+
+            </div>
+
           </div>
         </div>
 
-    
         {/* MASCOT (INI YANG KAMU TAMBAH) */}
-            <Floating />
+        <Floating />
 
         {/* LOGOUT */}
         <div className="mt-8 mb-16">
@@ -324,65 +510,66 @@ export default function Profil() {
           </button>
         </div>
       </div>
+
       {/* FOOTER */}
-  <footer className="bg-gray-900 text-white">
-    
-    <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+      <footer className="bg-gray-900 text-white">
 
-      {/* BRAND */}
-      <div>
-        <h2 className="text-2xl font-bold text-blue-400 mb-3">
-          BukuIn
-        </h2>
+        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
 
-        <p className="text-gray-400 text-sm leading-relaxed">
-          Discover thousands of books, explore new worlds,
-          and enjoy a modern digital library experience.
-        </p>
-      </div>
+          {/* BRAND */}
+          <div>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">
+              BukuIn
+            </h2>
 
-      {/* MENU */}
-      <div>
-        <h3 className="font-semibold text-lg mb-4">
-          Navigation
-        </h3>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Discover thousands of books, explore new worlds,
+              and enjoy a modern digital library experience.
+            </p>
+          </div>
 
-        <div className="flex flex-col gap-2 text-gray-400 text-sm">
-          <Link to="/koleksi" className="hover:text-white">
-            Home
-          </Link>
+          {/* MENU */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              Navigation
+            </h3>
 
-          <Link to="/belanja" className="hover:text-white">
-            Shop
-          </Link>
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/koleksi" className="hover:text-white">
+                Home
+              </Link>
 
-          <Link to="/riwayat" className="hover:text-white">
-            History
-          </Link>
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
+
+              <Link to="/riwayat" className="hover:text-white">
+                History
+              </Link>
+            </div>
+          </div>
+
+          {/* ABOUT */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">
+              About
+            </h3>
+
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Built for book lovers who want a simple,
+              elegant, and interactive reading platform.
+            </p>
+          </div>
+
         </div>
-      </div>
 
-      {/* ABOUT */}
-      <div>
-        <h3 className="font-semibold text-lg mb-4">
-          About
-        </h3>
+        {/* BOTTOM */}
+        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
+          © 2026 BukuIn. All rights reserved.
+        </div>
 
-        <p className="text-gray-400 text-sm leading-relaxed">
-          Built for book lovers who want a simple,
-          elegant, and interactive reading platform.
-        </p>
-      </div>
+      </footer>
 
-    </div>
-
-    {/* BOTTOM */}
-    <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-      © 2026 BukuIn. All rights reserved.
-    </div>
-
-  </footer>
-      
     </div>
   );
 }
