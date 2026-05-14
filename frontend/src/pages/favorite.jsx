@@ -5,6 +5,11 @@ import Floating from "./floating";
 import { FiBell } from "react-icons/fi";
 
 export default function Favorit() {
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showBorrowPopup, setShowBorrowPopup] = useState(false);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [bookDescription, setBookDescription] = useState("");
+  const [notif, setNotif] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [search, setSearch] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -29,8 +34,10 @@ export default function Favorit() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const removeFavorite = (id) => {
-    const updated = favorites.filter((item) => item.id !== id);
+  const removeFavorite = (workKey) => {
+  const updated = favorites.filter(
+    (item) => item.workKey !== workKey
+  );
     setFavorites(updated);
     localStorage.setItem("favorites", JSON.stringify(updated));
   };
@@ -38,6 +45,105 @@ export default function Favorit() {
   const filtered = favorites.filter((book) =>
     book.title.toLowerCase().includes(search.toLowerCase())
   );
+
+  const showNotif = (message) => {
+  setNotif(message);
+
+  setTimeout(() => {
+    setNotif("");
+  }, 2000);
+};
+
+const fetchDescription = async (workKey, book) => {
+  try {
+    const res = await fetch(
+      `https://openlibrary.org${workKey}.json`
+    );
+
+    const data = await res.json();
+
+    if (typeof data.description === "string") {
+      setBookDescription(data.description);
+
+    } else if (data.description?.value) {
+      setBookDescription(data.description.value);
+
+    } else {
+      setBookDescription(
+        `${book.title} is written by ${book.author}.`
+      );
+    }
+
+  } catch (err) {
+
+    if (book.firstSentence) {
+
+      setBookDescription(book.firstSentence);
+
+    } else {
+
+      setBookDescription(
+        `No detailed description available.`
+      );
+    }
+  }
+};
+
+const handleDetail = async (book) => {
+  setSelectedBook(book);
+  setShowDetailPopup(true);
+
+  await fetchDescription(book.workKey, book);
+};
+
+const handleBorrow = async (book) => {
+  setSelectedBook(book);
+  setShowBorrowPopup(true);
+
+  await fetchDescription(book.workKey, book);
+};
+
+const submitLoanRequest = async () => {
+  try {
+
+    const res = await fetch(
+      "http://localhost:3000/api/loan-requests",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          user_id: user.id,
+          book_key:
+            selectedBook.cover +
+            "_" +
+            selectedBook.title,
+
+          title: selectedBook.title,
+          author: selectedBook.author,
+          cover: selectedBook.cover,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.status) {
+      showNotif(data.message);
+      return;
+    }
+
+    showNotif("Borrow request submitted");
+
+    setShowBorrowPopup(false);
+    setSelectedBook(null);
+
+  } catch (err) {
+    showNotif("Failed to borrow book");
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -118,62 +224,120 @@ export default function Favorit() {
 </div>
 
 {/* 🔹 LIST */}
-<div className="px-5 pb-6 space-y-3 max-h-[70vh] overflow-y-auto">
+<div className="px-5 pb-10">
   {filtered.length > 0 ? (
-    filtered.map((book) => (
-      <div
-        key={book.id}
-        className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group"
-      >
-        <img
-          src={book.cover}
-          alt={book.title}
-          className="w-14 h-20 object-cover rounded-lg group-hover:scale-[1.03] transition duration-300"
-        />
 
-        <div className="flex-1">
-          <h2 className="text-sm font-semibold text-gray-800 line-clamp-1">
-            {book.title}
-          </h2>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
 
-          <p className="text-xs text-gray-500">
-            {book.author || "Unknown"}
-          </p>
+      {filtered.map((book) => (
+
+        <div
+          key={book.workKey}
+          className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+        >
+
+          {/* COVER */}
+          <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
+
+            {book.cover ? (
+              <img
+                src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+                alt={book.title}
+                className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+              />
+            ) : (
+              "No Cover"
+            )}
+
+            {/* LOVE BUTTON */}
+            <button
+              onClick={() => removeFavorite(book.workKey)}
+              className="absolute top-3 right-3 z-20 bg-white/90 p-2 rounded-full shadow hover:scale-110 transition"
+            >
+              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+            </button>
+
+          </div>
+
+          {/* CONTENT */}
+          <div className="p-4 flex flex-col h-[190px]">
+
+            <div>
+
+              <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
+                {book.title}
+              </h3>
+
+              <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
+                {book.author}
+              </p>
+
+              <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
+                {book.firstSentence ||
+                  `This book discusses ${
+                    book.subjects?.join(", ") || "various topics"
+                  }.`}
+              </p>
+
+            </div>
+
+            {/* BUTTON */}
+            <div className="flex gap-2 mt-auto">
+
+             <button
+                onClick={() => handleBorrow(book)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition"
+              >
+                Borrow
+              </button>
+
+              <button
+                onClick={() => handleDetail(book)}
+                className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300"
+              >
+                Detail
+              </button>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <button
-          onClick={() => removeFavorite(book.id)}
-          className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-red-100 transition-all duration-300 active:scale-90"
-        >
-          <Heart className="w-5 h-5 text-red-500 fill-red-500 transition-transform duration-300 group-hover:scale-110" />
-        </button>
-      </div>
-    ))
+      ))}
+
+    </div>
+
   ) : (
     <>
-      {/* EMPTY TEXT */}
+      {/* EMPTY STATE */}
       <div className="text-center mt-24">
+
         <p className="text-gray-400 text-sm">
           No favorites yet 💙
         </p>
-      </div>
 
-      {/* EMPTY STATE */}
-      <div className="flex flex-col items-center justify-center mt-6 text-center">
-        <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-4">
-          <Heart className="w-6 h-6 text-blue-500" />
+        <div className="flex flex-col items-center justify-center mt-6 text-center">
+
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-4">
+            <Heart className="w-6 h-6 text-blue-500" />
+          </div>
+
+          <p className="text-gray-400 text-sm mb-4">
+            Save the books you love so they’re easier to find later.
+          </p>
+
+          <button
+            onClick={() => navigate("/koleksi")}
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            Explore Books
+          </button>
+
         </div>
 
-        <p className="text-gray-400 text-sm mb-4">
-          Save the books you love so they’re easier to find later.
-        </p>
-
-        <button
-          onClick={() => navigate("/koleksi")}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-        >
-          Explore Books
-        </button>
       </div>
     </>
   )}
@@ -208,6 +372,109 @@ export default function Favorit() {
         </Link>
 
       </div>
+    </div>
+  </div>
+)}
+
+
+{/* NOTIFICATION */}
+{notif && (
+  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999]">
+    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">
+      {notif}
+    </div>
+  </div>
+)}
+
+{/* BORROW POPUP */}
+{showBorrowPopup && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    onClick={() => setShowBorrowPopup(false)}
+  >
+    <div
+      className="bg-white p-5 rounded-2xl w-full max-w-md"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2 className="text-xl font-bold text-blue-700">
+        Borrow Request
+      </h2>
+
+      <p className="mt-4 text-gray-700">
+        Your borrowing request will be sent to the admin.
+      </p>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowBorrowPopup(false)}
+          className="px-4 py-2 bg-gray-200 rounded-lg"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={submitLoanRequest}
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg"
+        >
+          Borrow
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* DETAIL POPUP */}
+{showDetailPopup && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    onClick={() => setShowDetailPopup(false)}
+  >
+    <div
+      className="bg-white p-5 rounded-2xl w-[90%] max-w-lg max-h-[90vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+
+      {/* COVER */}
+      <div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
+        {selectedBook?.cover ? (
+          <img
+            src={`https://covers.openlibrary.org/b/id/${selectedBook.cover}-L.jpg`}
+            alt={selectedBook?.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <p>No Cover</p>
+        )}
+      </div>
+
+      {/* TITLE */}
+      <div className="flex justify-between items-start gap-3">
+
+        <h2 className="text-2xl font-bold text-gray-800">
+          {selectedBook?.title}
+        </h2>
+
+        <button
+          onClick={() =>
+            removeFavorite(selectedBook?.workKey)
+          }
+          className="bg-red-100 p-2 rounded-full"
+        >
+          <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+        </button>
+
+      </div>
+
+      {/* AUTHOR */}
+      <p className="text-gray-500 mt-1">
+        {selectedBook?.author}
+      </p>
+
+      {/* DESC */}
+      <p className="mt-5 text-sm text-gray-600 leading-relaxed">
+        {bookDescription}
+      </p>
+
     </div>
   </div>
 )}

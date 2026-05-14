@@ -73,8 +73,18 @@ const fetchHistory = async () => {
 
 const handleExtension = async (book) => {
   try {
+
+    // tanggal lama
+    const oldDate = new Date(book.due_date);
+
+    // copy tanggal
+    const newDate = new Date(oldDate);
+
+    // tambah 14 hari
+    newDate.setDate(newDate.getDate() + 14);
+
     const res = await fetch(
-      `${API_BASE}/extensions`,
+      `${API_BASE}/extensions/request`,
       {
         method: "POST",
         headers: {
@@ -84,25 +94,29 @@ const handleExtension = async (book) => {
           user_id: user.id,
           loan_id: book.id,
           book_title: book.title,
+
           old_due_date: book.due_date,
-          new_due_date: book.due_date,
+
+          // tanggal baru +14 hari
+          new_due_date: newDate.toISOString(),
+
           status: "pending",
         }),
       }
     );
 
-    const data = await res.json();
+    const result = await res.json();
 
-    if (res.ok) {
-      alert("Extension request submitted");
-      fetchHistory();
+    console.log(result);
+
+    if (result.status) {
+      alert("Extension request sent successfully");
     } else {
-      alert(data.message || "Failed to submit request");
+      alert(result.message);
     }
 
   } catch (err) {
     console.error(err);
-    alert("An error occurred");
   }
 };
 
@@ -298,13 +312,34 @@ const handleExtension = async (book) => {
     </h3>
 
     <p className="text-sm text-gray-500">
-      {book.loan_date
-        ? new Date(book.loan_date).toLocaleDateString("id-ID")
-        : "-"}
-    </p>
+  {book.loan_date
+    ? new Date(book.loan_date).toLocaleDateString("id-ID")
+    : "-"}
+</p>
 
-  </div>
-
+<div className="mt-1">
+  <span
+    className={`text-xs px-2 py-1 rounded-full font-medium
+      ${
+        book.status === "pending"
+          ? "bg-yellow-100 text-yellow-700"
+          : book.status === "approved" || book.status === "borrowed"
+          ? "bg-green-100 text-green-700"
+          : book.status === "returned"
+          ? "bg-blue-100 text-blue-700"
+          : "bg-red-100 text-red-700"
+      }`}
+  >
+    {book.status === "pending"
+      ? "Pending"
+      : book.status === "approved" || book.status === "borrowed"
+      ? "Approved"
+      : book.status === "returned"
+      ? "Returned"
+      : "Rejected"}
+  </span>
+</div>
+</div>
 </div>
 
                         <div className="flex gap-3">
@@ -315,14 +350,14 @@ const handleExtension = async (book) => {
               </button>
             </Link>
 
-            {book.status !== "returned" && (
-              <button
-                onClick={() => handleExtension(book)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
-              >
-                Extend Book
-              </button>
-            )}
+            {book.status === "borrowed" && (
+            <button
+              onClick={() => handleExtension(book)}
+              className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
+            >
+              Request Extension
+            </button>
+          )}
            </div>
            </div>
         ))}

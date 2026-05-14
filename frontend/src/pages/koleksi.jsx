@@ -39,7 +39,16 @@ export default function HalamanUtama() {
 
   const [bookDescription, setBookDescription] = useState("");
   const [notif, setNotif] = useState("");
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+  const saved = localStorage.getItem("favorites");
+  return saved ? JSON.parse(saved) : [];
+});
+useEffect(() => {
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+}, [favorites]);
   const showNotif = (message) => {
 
   setNotif(message);
@@ -533,36 +542,54 @@ const books = data.docs.map((item) => ({
  <button
   onClick={() => {
 
-  if (favorites.includes(selectedBook?.workKey)) {
+  const isExist = favorites.find(
+    (item) => item.workKey === selectedBook?.workKey
+  );
+
+  if (isExist) {
 
     setFavorites(
       favorites.filter(
-        (item) => item !== selectedBook?.workKey
+        (item) => item.workKey !== selectedBook?.workKey
       )
     );
 
+    showNotif("Removed from favorites");
+
   } else {
+
+    const newFavorite = {
+      workKey: selectedBook?.workKey,
+      title: selectedBook?.title,
+      author: selectedBook?.author,
+      cover: selectedBook?.cover,
+      firstSentence: selectedBook?.firstSentence,
+      subjects: selectedBook?.subjects,
+    };
 
     setFavorites([
       ...favorites,
-      selectedBook?.workKey,
+      newFavorite,
     ]);
 
+    showNotif("Added to favorites");
   }
 
 }}
   className="transition flex items-center justify-center flex-shrink-0"
 >
 
-  {favorites.includes(selectedBook?.workKey) ? (
+  {favorites.some(
+  (item) => item.workKey === selectedBook?.workKey
+) ? (
 
-    <FiHeart className="text-red-500 text-2xl fill-red-500" />
+  <FiHeart className="text-red-500 text-2xl fill-red-500" />
 
-  ) : (
+) : (
 
-    <FiHeart className="text-gray-600 text-2xl" />
+  <FiHeart className="text-gray-600 text-2xl" />
 
-  )}
+)}
 
 </button>
 
@@ -670,7 +697,7 @@ const books = data.docs.map((item) => ({
                       No notifications yet
                     </div>
                     <button
-                      onClick={() => navigate("/notip")}
+                      onClick={() => navigate("/notifikasi")}
                       className="pt-2 text-sm text-gray-600 hover:text-blue-600"
                     >
                       View All

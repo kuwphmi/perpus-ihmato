@@ -365,35 +365,6 @@ app.delete("/api/cart/:id", async (req, res) => {
   }
 });
 
-/* =======================
-   HAPUS CART
-======================= */
-app.delete("/api/cart/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { error } = await supabase.from("cart").delete().eq("id", id);
-
-    if (error) {
-      return res.json({
-        status: false,
-        message: error.message,
-      });
-    }
-
-    return res.json({
-      status: true,
-      message: "Item dihapus",
-    });
-  } catch (err) {
-    return res.json({
-      status: false,
-      message: err.message,
-    });
-  }
-});
-
-
 
 /* =======================
    DELETE ADDRESS
@@ -762,30 +733,16 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
 
 app.post("/api/extensions/request", async (req, res) => {
   try {
-    const { loan_id } = req.body;
+    const {
+      user_id,
+      loan_id,
+      book_title,
+      old_due_date,
+      new_due_date,
+      status,
+    } = req.body;
 
-    // ambil data loan
-    const { data: loan, error: loanError } = await supabase.from("loans").select("*").eq("id", loan_id).single();
-
-    if (loanError || !loan) {
-      return res.json({
-        status: false,
-        message: "Data pinjaman tidak ditemukan",
-      });
-    }
-
-    // cek apakah sudah pernah ajukan
-    const { data: existing } = await supabase.from("extensions").select("*").eq("loan_id", loan_id).eq("status", "pending");
-
-    if (existing && existing.length > 0) {
-      return res.json({
-        status: false,
-        message: "Perpanjangan sudah diajukan",
-      });
-    }
-
-    // tambah extension request
-      const { data, error } = await supabase
+    const { data, error } = await supabase
       .from("extensions")
       .insert([
         {
@@ -811,7 +768,7 @@ app.post("/api/extensions/request", async (req, res) => {
 
     return res.json({
       status: true,
-      message: "Pengajuan perpanjangan berhasil",
+      message: "Extension request submitted",
     });
   } catch (err) {
     return res.json({
@@ -821,12 +778,16 @@ app.post("/api/extensions/request", async (req, res) => {
   }
 });
 
+
 /* =======================
    ADMIN EXTENSION REQUESTS
 ======================= */
 app.get("/api/admin/extension-requests", async (req, res) => {
   try {
-    const { data: extensions, error } = await supabase.from("extensions").select("*").order("id", { ascending: false });
+    const { data: extensions, error } = await supabase
+      .from("extensions")
+      .select("*")
+      .order("id", { ascending: false });
 
     if (error) {
       return res.json({
@@ -837,22 +798,30 @@ app.get("/api/admin/extension-requests", async (req, res) => {
 
     const userIds = extensions.map((item) => item.user_id);
 
-    const { data: users } = await supabase.from("users").select("id, name, member_code").in("id", userIds);
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, name, member_code")
+      .in("id", userIds);
 
     const formatted = extensions.map((item) => {
       const user = users.find((u) => u.id === item.user_id);
 
       return {
         id: item.id,
+
+        // INI YANG PENTING
+        member_code: user?.member_code || "-",
+
         member_name: user?.name || "-",
         book_title: item.book_title || "-",
         old_due_date: item.old_due_date || "-",
-        new_due_date: item.new_due_date,
-        status: item.status,
+        new_due_date: item.new_due_date || "-",
+        status: item.status || "pending",
       };
     });
 
     return res.json(formatted);
+
   } catch (err) {
     return res.json({
       status: false,
@@ -860,6 +829,7 @@ app.get("/api/admin/extension-requests", async (req, res) => {
     });
   }
 });
+
 
 /* =======================
    APPROVE EXTENSION
@@ -1017,7 +987,7 @@ app.get("/api/admin/report/monthly/pdf", async (req, res) => {
     formatted.forEach((item) => {
       html += `
         <tr>
-          <<td>${item.member_code}</td>
+          <td>${item.member_code}</td>
           <td>${item.title || "-"}</td>
           <td>${item.status || "-"}</td>
           <td>${item.loan_date || "-"}</td>
@@ -1078,7 +1048,9 @@ app.get("/api/history/:user_id", async (req, res) => {
     }));
 
     // format requests
-    const formattedRequests = (requests || []).map((item) => ({
+    const formattedRequests = (requests || [])
+    .filter((item) => item.status === "pending")
+    .map((item) => ({
       id: `request-${item.id}`,
       title: item.book_title,
       author: item.author,
@@ -1111,43 +1083,6 @@ app.get("/api/history/:user_id", async (req, res) => {
   }
 });
 
-/* =======================
-   AJUKAN PERPANJANGAN
-======================= */
-
-app.post("/api/extensions", async (req, res) => {
-  try {
-    const { user_id, loan_id, book_title, old_due_date, new_due_date, status } = req.body;
-
-    const { error } = await supabase.from("extensions").insert([
-      {
-        user_id,
-        loan_id,
-        book_title,
-        old_due_date,
-        new_due_date,
-        status,
-      },
-    ]);
-
-    if (error) {
-      return res.json({
-        status: false,
-        message: error.message,
-      });
-    }
-
-    return res.json({
-      status: true,
-      message: "Perpanjangan diajukan",
-    });
-  } catch (err) {
-    return res.json({
-      status: false,
-      message: err.message,
-    });
-  }
-});
 
 /* =======================
    GET NOTIFICATIONS
