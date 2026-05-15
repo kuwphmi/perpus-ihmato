@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiEdit2, FiCheck } from "react-icons/fi";
+import {
+  FiEdit2,
+  FiCheck,
+  FiArrowLeft,
+  FiTrash2,
+} from "react-icons/fi";
 
 export default function Address() {
 
@@ -12,6 +17,7 @@ export default function Address() {
   const [showForm, setShowForm] = useState(false);
 
   const [editId, setEditId] = useState(null);
+  const [notif, setNotif] = useState("");
 
   const [form, setForm] = useState({
     label: "",
@@ -81,6 +87,21 @@ export default function Address() {
     }
 
   };
+  const showNotif = (message) => {
+    setNotif(message);
+
+  setTimeout(() => {
+    setNotif("");
+  }, 2500);
+  
+
+  setNotif(message);
+
+  setTimeout(() => {
+    setNotif("");
+  }, 25000);
+
+};
 
   const saveAddress = async () => {
 
@@ -93,7 +114,12 @@ export default function Address() {
         !form.district ||
         !form.full_address
       ) {
-        alert("Please complete all fields");
+        showNotif("Please complete all fields");
+
+setTimeout(() => {
+}, 20000);
+
+return;
         return;
       }
 
@@ -113,7 +139,11 @@ export default function Address() {
           }
         );
 
-        alert("Address updated!");
+        showNotif("Address updated successfully");
+
+setTimeout(() => {
+  
+}, 2500);
 
       } else {
 
@@ -133,7 +163,10 @@ export default function Address() {
           }
         );
 
-        alert("Address saved!");
+        showNotif("Address added successfully");
+
+setTimeout(() => {
+}, 2500);
 
       }
 
@@ -185,6 +218,27 @@ export default function Address() {
   };
 
   const setPrimaryAddress = async (id) => {
+    const deleteAddress = async (id) => {
+
+  try {
+
+    await axios.delete(
+      `http://localhost:3000/api/address/${id}`
+    );
+
+    showNotif("Address deleted successfully");
+
+    fetchAddresses();
+
+  } catch (err) {
+
+    console.log(err);
+
+    showNotif("Failed to delete address");
+
+  }
+
+};
 
     try {
 
@@ -205,36 +259,74 @@ export default function Address() {
   return (
 
     <div className="min-h-screen bg-gray-100">
+   {notif && (
+  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999]">
 
+    <div
+      className="
+        bg-blue-600
+        text-white
+        px-6
+        py-3
+        rounded-full
+        shadow-2xl
+        text-sm
+        font-medium
+        animate-[fadeIn_.3s_ease]
+      "
+    >
+      {notif}
+    </div>
+
+  </div>
+)}
       {/* HEADER */}
-      <div className="bg-blue-600 text-white px-6 py-5 shadow-md">
+<div className="bg-blue-600 text-white px-5 py-2.5 shadow-md">
 
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+  <div className="w-full flex items-center gap-3 relative">
 
-          <div>
+    {/* BACK BUTTON */}
+    <button
+      onClick={() => {
 
-            <h1 className="text-2xl font-bold">
-              My Addresses
-            </h1>
+  navigate("/profil");
 
-            <p className="text-sm text-blue-100 mt-1">
-              Manage your shipping addresses
-            </p>
+  window.scrollTo({
+    top: 0,
+    behavior: "instant",
+  });
 
-          </div>
+}}
+      className="
+        w-9
+        h-9
+        rounded-full
+        bg-white/10
+        hover:bg-white/20
+        flex
+        items-center
+        justify-center
+        transition
+      "
+    >
+      <FiArrowLeft className="text-white text-lg" />
+    </button>
 
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm"
-          >
-            Back
-          </button>
+    {/* TITLE */}
+    <div>
 
-        </div>
+      <h1 className="text-[20px] font-semibold leading-tight">
+        My Addresses
+      </h1>
 
-      </div>
 
-      <div className="max-w-5xl mx-auto p-6">
+    </div>
+
+  </div>
+
+</div>
+
+      <div className="w-full max-w-5xl mx-auto px-4 md:px-6 py-5">
 
         {/* BUTTON */}
         <div className="flex justify-end mb-6">
@@ -244,7 +336,18 @@ export default function Address() {
               setShowForm(!showForm);
               setEditId(null);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-medium shadow"
+            className="
+  bg-blue-600
+  hover:bg-blue-700
+  text-white
+  px-6
+  py-3
+  rounded-2xl
+  font-semibold
+  shadow-lg
+  hover:shadow-blue-200
+  transition-all
+"
           >
             {showForm ? "Close Form" : "+ Add Address"}
           </button>
@@ -378,25 +481,35 @@ export default function Address() {
             <div
               key={item.id}
               onClick={() => setPrimaryAddress(item.id)}
-              className={`bg-white rounded-2xl shadow-md p-6 cursor-pointer transition border-2
+              className={`group bg-white rounded-3xl p-4 md:p-6 cursor-pointer transition-all duration-300 border shadow-sm hover:shadow-2xl hover:-translate-y-1
               ${item.is_primary
-                  ? "border-blue-600"
+                  ? "border-blue-500 ring-4 ring-blue-100"
                   : "border-transparent hover:border-blue-200"
                 }`}
             >
 
-              <div className="flex justify-between gap-5">
+              <div className="flex justify-between gap-4">
 
                 <div>
 
                   <div className="flex items-center gap-2 mb-3">
 
-                    <h3 className="font-semibold text-lg text-gray-800">
+                    <h3 className="font-bold text-lg md:text-[20px] text-gray-800 capitalize">
                       {item.label}
                     </h3>
 
                     {item.is_primary && (
-                      <span className="bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                      <span className="
+  bg-blue-50
+  text-blue-700
+  text-[11px]
+  px-3
+  py-1
+  rounded-full
+  font-medium
+  border
+  border-blue-100
+">
                         <FiCheck />
                         Main Address
                       </span>
@@ -426,16 +539,52 @@ export default function Address() {
 
                 </div>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(item);
-                  }}
-                  className="h-fit p-3 rounded-xl hover:bg-gray-100"
-                >
-                  <FiEdit2 className="text-gray-600" />
-                </button>
+                <div className="flex flex-col justify-between items-center">
 
+  {/* EDIT */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      handleEdit(item);
+    }}
+    className="
+      h-11
+      w-11
+      rounded-full
+      bg-gray-50
+      hover:bg-blue-50
+      flex
+      items-center
+      justify-center
+      transition
+    "
+  >
+    <FiEdit2 className="text-gray-600" />
+  </button>
+
+  {/* DELETE */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      deleteAddress(item.id);
+    }}
+    className="
+      h-11
+      w-11
+      rounded-full
+      bg-red-50
+      hover:bg-red-100
+      flex
+      items-center
+      justify-center
+      transition
+      mt-16
+    "
+  >
+    <FiTrash2 className="text-red-500" />
+  </button>
+
+</div>
               </div>
 
             </div>

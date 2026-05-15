@@ -39,7 +39,16 @@ export default function HalamanUtama() {
 
   const [bookDescription, setBookDescription] = useState("");
   const [notif, setNotif] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+  const saved = localStorage.getItem("favorites");
+  return saved ? JSON.parse(saved) : [];
+});
+useEffect(() => {
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+}, [favorites]);
   const showNotif = (message) => {
 
   setNotif(message);
@@ -96,6 +105,19 @@ export default function HalamanUtama() {
 }));
 
       setGenreBooks(books);
+      if (books.length === 0) {
+
+  setActiveCategory(
+    `No books found for "${search}"`
+  );
+
+} else {
+
+  setActiveCategory(
+    `Search Results: ${search}`
+  );
+
+}
 setActiveCategory(category);
 
 setTimeout(() => {
@@ -119,8 +141,8 @@ setTimeout(() => {
     },
     {
       img: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da",
-      title: "Read Anywhere",
-      subtitle: "Enjoy a modern and comfortable reading experience.",
+      title: "Borrow Books Instantly",
+  subtitle: "Request your favorite books online with a fast and simple process.",
     },
     {
       img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353",
@@ -518,19 +540,56 @@ const books = data.docs.map((item) => ({
   </h2>
 
  <button
-  onClick={() => setIsFavorite(!isFavorite)}
+  onClick={() => {
+
+  const isExist = favorites.find(
+    (item) => item.workKey === selectedBook?.workKey
+  );
+
+  if (isExist) {
+
+    setFavorites(
+      favorites.filter(
+        (item) => item.workKey !== selectedBook?.workKey
+      )
+    );
+
+    showNotif("Removed from favorites");
+
+  } else {
+
+    const newFavorite = {
+      workKey: selectedBook?.workKey,
+      title: selectedBook?.title,
+      author: selectedBook?.author,
+      cover: selectedBook?.cover,
+      firstSentence: selectedBook?.firstSentence,
+      subjects: selectedBook?.subjects,
+    };
+
+    setFavorites([
+      ...favorites,
+      newFavorite,
+    ]);
+
+    showNotif("Added to favorites");
+  }
+
+}}
   className="transition flex items-center justify-center flex-shrink-0"
 >
 
-  {isFavorite ? (
+  {favorites.some(
+  (item) => item.workKey === selectedBook?.workKey
+) ? (
 
-    <FiHeart className="text-red-500 text-2xl fill-red-500" />
+  <FiHeart className="text-red-500 text-2xl fill-red-500" />
 
-  ) : (
+) : (
 
-    <FiHeart className="text-gray-600 text-2xl" />
+  <FiHeart className="text-gray-600 text-2xl" />
 
-  )}
+)}
 
 </button>
 
@@ -638,7 +697,7 @@ const books = data.docs.map((item) => ({
                       No notifications yet
                     </div>
                     <button
-                      onClick={() => navigate("/notip")}
+                      onClick={() => navigate("/notifikasi")}
                       className="pt-2 text-sm text-gray-600 hover:text-blue-600"
                     >
                       View All

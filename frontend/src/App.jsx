@@ -13,16 +13,16 @@ import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
-import Notifications from "./pages/notifikasi";
+import Notifikasi from "./pages/notifikasi";
 
 
 import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
 import ResetPassword from "./pages/ResetPassword";
-import Notip from "./pages/notip";
 import Trackingbuku from "./pages/trackingbuku";
 import HelpCenter from "./pages/helpcenter";
 import Checkout from "./pages/checkout";
+import DetailRiwayat from "./pages/detailriwayat";
 import Address from "./pages/address";
 
 
@@ -114,6 +114,10 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
+
+        <Route path="/detail-riwayat/:id" element={<DetailRiwayat />} />
+      
+
         <Route path="/profil" element={<Profil />} />
 
         <Route
@@ -123,13 +127,6 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
               <ChatAI />
             </ProtectedRoute>
           }
-        />
-
-
-        <Route
-
-          path="/notifications"
-          element={<Notifications />}
         />
 
         <Route
@@ -142,11 +139,11 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         />
 
         <Route
-          path="/notip"
+          path="/notifikasi"
 
           element={
             <ProtectedRoute>
-              <Notip />
+              <Notifikasi />
             </ProtectedRoute>
           }
         />

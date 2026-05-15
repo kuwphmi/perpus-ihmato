@@ -428,7 +428,9 @@ export default function Profil() {
                 )}
 
                 {Array.isArray(addresses) &&
-                  addresses.map((item) => (
+  addresses
+    .filter((item) => item.is_primary)
+    .map((item) => (
                     <div
                       key={item.id}
                       className="border rounded-xl p-4"

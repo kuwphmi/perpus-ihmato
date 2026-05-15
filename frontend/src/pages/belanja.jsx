@@ -49,9 +49,29 @@ import { FaUserDoctor } from "react-icons/fa6";
 export default function Belanja() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [terbaru, setTerbaru] = useState([]);
   const [terlaris, setTerlaris] = useState([]);
   const [search, setSearch] = useState("");
+  // ================= SEARCH FILTER =================
+  const normalize = (text) =>
+    (text || "").toLowerCase();
+
+  const filterBooks = (books) => {
+    if (!search.trim()) return books;
+
+    return books.filter((b) =>
+      normalize(b.title).includes(normalize(search)) ||
+      normalize(b.author).includes(normalize(search))
+    );
+  };
+
+  // gabungan semua buku
+  const allBooks = [...terbaru, ...terlaris];
+
+  // hasil search
+  const filteredBooks = filterBooks(allBooks);
   const [cart, setCart] = useState([]);
 
   const [user, setUser] = useState({});
@@ -65,6 +85,7 @@ export default function Belanja() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notif, setNotif] = useState("");
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const genreSectionRef = useRef(null);
 
   useEffect(() => {
@@ -76,13 +97,16 @@ export default function Belanja() {
     }
 
   }, []);
+
+  const navigate = useNavigate();
+
   const showNotif = (message) => {
 
     setNotif(message);
 
     setTimeout(() => {
       setNotif("");
-    }, 5000);
+    }, 20000);
 
   };
   const genreMap = {
@@ -232,13 +256,44 @@ export default function Belanja() {
   }, [isNotifOpen]);
 
   /* ================= SEARCH ================= */
-  const handleSearch = () => {
+const handleSearch = async () => {
+  if (!search.trim()) return;
 
-    if (!search.trim()) return;
+  try {
+    setIsSearching(true);
+    setIsSearchActive(true);
 
-    navigate(`/search?source=belanja&q=${search}`);
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${search}&limit=12`
+    );
 
-  };
+    const data = await res.json();
+
+    const books = data.docs.map((item) => ({
+      workKey: item.key,
+      title: item.title ?? "-",
+      author: item.author_name?.[0] ?? "-",
+      cover: item.cover_i ?? null,
+      price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+      stock: ((item.cover_i || 1) % 15) + 5,
+    }));
+
+    setSearchResults(books);
+    setActiveCategory(`Search Results: ${search}`);
+    setIsSearchActive(true);
+
+    setTimeout(() => {
+      genreSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setIsSearching(false);
+  }
+};
 
   const categories = [
     {
@@ -394,7 +449,7 @@ export default function Belanja() {
                     </div>
 
                     <button
-                      onClick={() => navigate("/notip")}
+                      onClick={() => navigate("/notifikasi")}
                       className="pt-2 text-sm text-gray-600 hover:text-blue-600"
                     >
                       View All
@@ -476,10 +531,23 @@ export default function Belanja() {
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
             <input
+              onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(); // optional (boleh dihapus kalau mau realtime)
+                  }
+                }}
               type="text"
               placeholder="Search book titles..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+
+                if (e.target.value === "") {
+                  setSearchResults([]);
+                  setActiveCategory(null);
+                  setIsSearchActive(false);
+                }
+              }}
               className="flex-1 px-4 md:px-5 py-3 text-sm rounded-lg focus:outline-none"
             />
 
@@ -546,10 +614,59 @@ export default function Belanja() {
         </section>
       )}
 
+
+      {isSearchActive ? (
+  <section className="px-6 md:px-20 pb-14 mt-10">
+    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+      Search Results: {search}
+    </h2>
+
+    <div className="flex gap-5 overflow-x-auto">
+      {searchResults.map((book, index) => (
+        <div key={index} className="min-w-[250px]">
+          <BookCard
+            workKey={book.workKey}
+            title={book.title}
+            author={book.author}
+            cover={book.cover}
+            price={book.price}
+            stock={book.stock}
+            cart={cart}
+            setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
+            showNotif={showNotif}
+          />
+        </div>
+      ))}
+    </div>
+  </section>
+) : !activeCategory && (
+  <>
+    <BukuTerlaris
+      data={filteredBooks}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+
+    <BukuTerbaru
+      data={filteredBooks}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+  </>
+)}
+
       {/* ================= BUKU TERLARIS ================= */}
       {!activeCategory && (
         <BukuTerlaris
-          data={terlaris}
+          data={filteredBooks}
           cart={cart}
           setCart={setCart}
           setIsBuyOpen={setIsBuyOpen}
@@ -572,7 +689,7 @@ export default function Belanja() {
       {/* ================= BUKU TERBARU ================= */}
       {!activeCategory && (
         <BukuTerbaru
-          data={terbaru}
+          data={filteredBooks}
           cart={cart}
           setCart={setCart}
           setIsBuyOpen={setIsBuyOpen}

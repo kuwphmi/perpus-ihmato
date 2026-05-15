@@ -157,7 +157,7 @@ function LoginForm({ onSwitch, onForgot }) {
 
       <button
         onClick={() => {
-          window.location.href = "http://localhost:3000/api/auth/google";
+          window.location.href = "http://localhost:3000/auth/google";
         }}
         className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
       >

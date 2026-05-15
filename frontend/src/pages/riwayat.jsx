@@ -69,56 +69,22 @@ const fetchHistory = async () => {
   }
 };
 
-const requestExtension = async (loanId) => {
-  try {
-    const res = await fetch(
-      `${API_BASE}/extensions/request`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          loan_id: loanId,
-        }),
-      }
-    );
 
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("Pengajuan perpanjangan berhasil");
-      fetchHistory();
-      useEffect(() => {
-
-  if (!search.trim()) {
-
-    setFilteredBooks(historyBooks);
-    return;
-
-  }
-
-  const filtered = historyBooks.filter((book) =>
-    book.title?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  setFilteredBooks(filtered);
-
-}, [search, historyBooks]);
-    } else {
-      alert(data.message || "Gagal mengajukan");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Terjadi kesalahan");
-  }
-};
 
 const handleExtension = async (book) => {
   try {
 
+    // tanggal lama
+    const oldDate = new Date(book.due_date);
+
+    // copy tanggal
+    const newDate = new Date(oldDate);
+
+    // tambah 14 hari
+    newDate.setDate(newDate.getDate() + 14);
+
     const res = await fetch(
-      `${API_BASE}/extensions`,
+      `${API_BASE}/extensions/request`,
       {
         method: "POST",
         headers: {
@@ -128,19 +94,25 @@ const handleExtension = async (book) => {
           user_id: user.id,
           loan_id: book.id,
           book_title: book.title,
+
           old_due_date: book.due_date,
-          new_due_date: book.due_date,
+
+          // tanggal baru +14 hari
+          new_due_date: newDate.toISOString(),
+
           status: "pending",
         }),
       }
     );
 
-    const data = await res.json();
+    const result = await res.json();
 
-    if (data.status) {
-      alert("Pengajuan perpanjangan berhasil");
+    console.log(result);
+
+    if (result.status) {
+      alert("Extension request sent successfully");
     } else {
-      alert(data.message);
+      alert(result.message);
     }
 
   } catch (err) {
@@ -223,7 +195,7 @@ const handleExtension = async (book) => {
                             </div>
           
                             <button
-            onClick={() => navigate("/notip")}
+            onClick={() => navigate("/notifikasi")}
             className="pt-2 text-sm text-gray-600 hover:text-blue-600"
           >
             View All
@@ -296,24 +268,62 @@ const handleExtension = async (book) => {
       )}
 
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
 
-        <h1 className="text-3xl font-bold text-blue-700 mb-6">
+        <h1 className="
+text-2xl
+md:text-4xl
+font-bold
+text-blue-700
+mb-8
+text-center
+md:text-left
+">
           Borrowing History
         </h1>
 
-        <div className="bg-white rounded-xl shadow p-6 space-y-4">
-          <div className="bg-white rounded-xl shadow p-6 space-y-4 max-h-80 overflow-y-auto"></div>
+        <div className="grid gap-5">
 
          {filteredBooks.map((book) => (
             <div
   key={book.id}
-  className="flex items-center justify-between border-b pb-4 gap-4"
+  className="
+group
+bg-white
+rounded-3xl
+p-4 md:p-5
+shadow-sm
+border
+border-gray-100
+hover:shadow-2xl
+hover:-translate-y-1
+transition-all
+duration-300
+flex
+items-start
+justify-between
+gap-3 md:gap-4
+"
 >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
 
   {/* COVER */}
-  <div className="w-16 h-20 bg-blue-100 rounded-lg overflow-hidden flex-shrink-0 shadow">
+        <div className="
+      w-16
+      h-24
+      md:w-20
+      md:h-28
+      bg-gradient-to-br
+      from-blue-50
+      to-blue-100
+      rounded-2xl
+      overflow-hidden
+      flex-shrink-0
+      shadow-lg
+      group-hover:scale-105
+      transition
+      duration-300
+      ">
 
     {book.cover ? (
 
@@ -334,43 +344,76 @@ const handleExtension = async (book) => {
   </div>
 
   {/* INFO */}
-  <div>
+<div>
 
-    <h3 className="font-semibold text-gray-800">
-      {book.title}
-    </h3>
+  <h3 className="font-bold text-sm md:text-lg text-gray-800 line-clamp-1">
+    {book.title}
+  </h3>
 
-    <p className="text-sm text-gray-500">
-      {book.loan_date
-        ? new Date(book.loan_date).toLocaleDateString("id-ID")
-        : "-"}
-    </p>
+  <p className="text-sm text-gray-500">
+    {book.loan_date
+      ? new Date(book.loan_date).toLocaleDateString("id-ID")
+      : "-"}
+  </p>
 
+  <div className="mt-2">
+    <span
+      className={`
+        text-xs px-3 py-1 rounded-full font-medium
+        ${
+          book.status === "pending"
+            ? "bg-yellow-100 text-yellow-700"
+            : book.status === "approved" || book.status === "borrowed"
+            ? "bg-green-100 text-green-700"
+            : book.status === "returned"
+            ? "bg-blue-100 text-blue-700"
+            : "bg-red-100 text-red-700"
+        }
+      `}
+    >
+      {book.status === "pending"
+        ? "Pending"
+        : book.status === "approved" || book.status === "borrowed"
+        ? "Approved"
+        : book.status === "returned"
+        ? "Returned"
+        : "Rejected"}
+    </span>
   </div>
 
 </div>
 
-              <div className="flex gap-3">
+{/* ACTION BUTTON */}
+<div className="flex flex-col gap-2 w-[110px] ml-auto">
 
-              <button className="text-blue-600 text-sm hover:underline">
-                Detail
-              </button>
+  <Link to={`/detail-riwayat/${book.id}`}>
+    <button className="
+      w-full h-10 rounded-xl bg-blue-50 text-blue-700
+      text-[12px] md:text-sm font-medium hover:bg-blue-100 transition
+    ">
+      Detail
+    </button>
+  </Link>
 
-              {book.status !== "returned" && (
-                <button
-                  onClick={() => handleExtension(book)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600"
-                >
-                  Borrow Request
-                </button>
-              )}
-            </div>
-            </div>
-          ))}
+  {/* extension hanya kalau belum returned */}
+  {book.status !== "returned" && (
+    <button
+      onClick={() => handleExtension(book)}
+      className="
+        w-full h-10 bg-yellow-500 hover:bg-yellow-600 text-white
+        rounded-xl text-[12px] md:text-sm font-medium shadow-md transition
+      "
+    >
+      Extend Book
+    </button>
+  )}
+</div>
+ </div>  
+ </div>
+))}
+</div>
 
-        </div>
 
-      </div>
 
       {/* MOBILE NAV */}
       <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
@@ -378,8 +421,6 @@ const handleExtension = async (book) => {
         <Link to="/riwayat"><FiClock size={24} /></Link>
         <Link to="/belanja"><FiShoppingCart size={24} /></Link>
       </div>
-
-       <div className="min-h-screen flex flex-col bg-gray-900">
 
   {/* CONTENT */}
   <main className="flex-1 bg-white">
@@ -447,10 +488,7 @@ const handleExtension = async (book) => {
 
   {/* MASCOT */}
   <Floating />
-
-</div>
-      
-
-    </div>
+  </div>
+  </div>
   );
 }
