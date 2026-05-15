@@ -658,6 +658,7 @@ function BookCard({
   setSelectedBook,
 }) {
 
+  const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const fetchDescription = async () => {
@@ -695,10 +696,10 @@ function BookCard({
       state: {
         items: [
           {
-            title: book.title,
-            price: book.price,
+            title,
+            price,
             qty: 1,
-            cover: book.cover,
+            cover,
           },
         ],
       },
@@ -708,18 +709,21 @@ function BookCard({
 
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
-    showNotif("Book successfully added to cart");
 
     try {
 
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user) {
+
         showNotif("Please login first");
+
         return;
+
       }
 
       const payload = {
+
         user_id: user.id,
         book_key: `${title}_${author}`,
         title,
@@ -727,6 +731,7 @@ function BookCard({
         cover,
         price,
         stock,
+
       };
 
       const res = await axios.post(
@@ -734,45 +739,20 @@ function BookCard({
         payload
       );
 
+      // REFRESH CART DARI DB
+      const cartRes = await axios.get(
+        `http://localhost:3000/api/cart/${user.id}`
+      );
+
+      setCart(cartRes.data.data || []);
+
       showNotif(res.data.message);
-
-      setCart((prev) => {
-
-        const old = Array.isArray(prev) ? prev : [];
-
-        const existingIndex = old.findIndex(
-          (item) => item.book_key === payload.book_key
-        );
-
-        // kalau buku sudah ada
-        if (existingIndex !== -1) {
-
-          const updated = [...old];
-
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            qty: updated[existingIndex].qty + 1,
-          };
-
-          return updated;
-        }
-
-        // kalau buku belum ada
-        return [
-          ...old,
-          {
-            ...payload,
-            qty: 1,
-          },
-        ];
-
-      });
 
     } catch (err) {
 
       console.log(err);
 
-      showNotif("Failed to add to cart");
+      showNotif("Failed add cart");
 
     }
 
@@ -955,7 +935,7 @@ function BookCard({
                 </button>
 
                 <button
-                  onClick={() => handleBuy(book)}
+                  onClick={handleBuy}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 rounded-xl font-semibold transition"
                 >
                   Buy
