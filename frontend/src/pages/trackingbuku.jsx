@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import axios from "axios";
 import {
   FiBell,
   FiHeart,
@@ -22,6 +22,8 @@ export default function Trackingbuku() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const popupRef = useRef();
@@ -46,15 +48,53 @@ export default function Trackingbuku() {
 
     fetchOrders();
 
+    fetchNotifications();
+
     const interval = setInterval(() => {
 
       fetchOrders();
 
-    }, 5000);
+      fetchNotifications();
 
+    }, 5000);
     return () => clearInterval(interval);
 
   }, []);
+
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        const res =
+          await axios.get(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        setNotifications(
+          res.data || []
+        );
+
+        const unread =
+          res.data.filter(
+            (item) =>
+              !item.is_read
+          ).length;
+
+        setUnreadCount(unread);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
 
   const fetchOrders = async () => {
 
@@ -148,177 +188,164 @@ export default function Trackingbuku() {
 
             {/* NOTIFICATION */}
             <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                onClick={(e) => {
+
+              <div
+                onClick={async (e) => {
+
                   e.stopPropagation();
+
+                  if (!isNotifOpen) {
+
+                    await fetch(
+                      `http://localhost:3000/api/notifications/read/${user.id}`,
+                      {
+                        method: "PUT",
+                      }
+                    );
+
+                    setNotifications((prev) =>
+                      prev.map((n) => ({
+                        ...n,
+                        is_read: true,
+                      }))
+                    );
+
+                  }
+
                   setIsNotifOpen(!isNotifOpen);
+
                 }}
-              />
+                className="relative cursor-pointer"
+              >
 
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
+                <FiBell className="text-2xl text-gray-600 hover:text-yellow-500 transition" />
 
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Your Notification
-                    </h3>
+                {unreadCount > 0 && (
 
-                    <div className="py-6 text-sm text-gray-400 border-b">
-                      No new notifications yet.
-                    </div>
-
-                    <button
-                      onClick={() => navigate("/notip")}
-                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-                    >
-                      View All
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ================= PROFILE ================= */}
-<div className="relative">
-
-  {/* PROFILE BUTTON */}
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      setIsProfileOpen(!isProfileOpen);
-    }}
-    className="
-      relative
-      z-50
-      w-9 h-9
-      rounded-full
-      bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
-      flex items-center justify-center
-      text-white
-      font-semibold
-      shadow-lg
-      hover:scale-105
-      hover:shadow-blue-400/40
-      transition-all duration-300
-      border-2 border-white
-    "
-  >
-    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-
-    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
-  </button>
-
-  {/* DROPDOWN */}
-  {isProfileOpen && (
-    <>
-      {/* CLICK OUTSIDE */}
-      <div
-        className="fixed inset-0 z-40"
-        onClick={() => setIsProfileOpen(false)}
-      ></div>
-
-      {/* POPUP */}
-      <div
-        className="
-          absolute right-0 mt-4 w-72
-          rounded-[28px]
-          overflow-hidden
-          bg-white/80
-          backdrop-blur-2xl
-          border border-white/40
-          shadow-[0_12px_40px_rgba(0,0,0,0.16)]
-          animate-[fadeIn_.25s_ease]
-          z-50
+                  <div
+                    className="
+          absolute
+          -top-1
+          -right-1
+          min-w-[18px]
+          h-[18px]
+          px-1
+          bg-red-500
+          text-white
+          text-[10px]
+          rounded-full
+          flex
+          items-center
+          justify-center
+          font-semibold
         "
-      >
+                  >
+                    {unreadCount}
+                  </div>
 
-        {/* HEADER */}
-        <div className="
-          h-28
-          bg-gradient-to-r
-          from-blue-600
-          via-blue-500
-          to-cyan-400
-          relative
-        ">
+                )}
 
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-
-          <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
-
-          {/* AVATAR */}
-          <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
-
-            <div className="
-              w-20 h-20
-              rounded-full
-              bg-white
-              p-[3px]
-              shadow-2xl
-            ">
-
-              <div className="
-                w-full h-full
-                rounded-full
-                bg-gradient-to-br from-blue-500 to-blue-700
-                flex items-center justify-center
-                text-white
-                text-3xl
-                font-bold
-              ">
-                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
 
+              {isNotifOpen && (
+
+                <div
+                  className="
+        absolute
+        right-0
+        mt-3
+        w-80
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        border
+        z-50
+        overflow-hidden
+      "
+                >
+
+                  <div className="p-4 border-b font-semibold text-gray-700">
+
+                    Notifications
+
+                  </div>
+
+            
+
+                  <div className="max-h-96 overflow-y-auto">
+
+                    {notifications.length === 0 ? (
+
+                      <div className="p-6 text-sm text-gray-400 text-center">
+
+                        No notifications yet
+
+                      </div>
+
+                    ) : (
+
+                      notifications
+                        .filter((n) => !n.is_read)
+                        .slice(0, 2)
+                        .map((notif) => (
+
+                          <div
+                            key={notif.id}
+                            className={`
+                  p-4
+                  border-b
+                  hover:bg-gray-50
+                  transition
+
+                  ${!notif.is_read
+                                ? "bg-blue-50"
+                                : ""
+                              }
+                `}
+                          >
+
+                            <p className="font-medium text-sm text-gray-800">
+
+                              {notif.title}
+
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-1">
+
+                              {notif.message}
+
+                            </p>
+
+                          </div>
+
+                        ))
+
+                    )}
+
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      navigate("/notifikasi")
+                    }
+                    className="
+          w-full
+          py-3
+          text-sm
+          font-medium
+          text-blue-600
+          hover:bg-blue-50
+        "
+                  >
+                    View All
+                  </button>
+
+                </div>
+
+              )}
+
             </div>
-
-          </div>
-
-        </div>
-
-        {/* CONTENT */}
-        <div className="pt-14 pb-6 px-6 text-center">
-
-          <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
-            {user.name || "Unknown User"}
-          </h3>
-
-          <p className="text-sm text-gray-500 mt-1 break-all">
-            {user.email || "No email available"}
-          </p>
-
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
-
-          <Link to="/profil">
-            <button
-              className="
-                w-full
-                py-3
-                rounded-2xl
-                bg-gradient-to-r
-                from-blue-600
-                to-blue-700
-                hover:from-blue-700
-                hover:to-blue-800
-                text-white
-                font-semibold
-                shadow-lg
-                hover:shadow-blue-300/40
-                transition-all duration-300
-              "
-            >
-              View Profile
-            </button>
-          </Link>
-
-        </div>
-
-      </div>
-    </>
-  )}
-
-</div>
+            
 
           </div>
 
