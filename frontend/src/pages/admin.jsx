@@ -5,11 +5,11 @@ import { LayoutDashboard, BookOpen, Users, RotateCcw, ClipboardList, RefreshCcw,
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 const tabs = [
-  { key: "pinjaman", label: "Loans", icon: BookOpen },
+  { key: "pinjaman", label: "Borrowed", icon: BookOpen },
   { key: "anggota", label: "Members", icon: Users },
   { key: "pengembalian", label: "Returns", icon: RotateCcw },
-  { key: "ajukan", label: "Loan Requests", icon: ClipboardList },
-  { key: "perpanjangan", label: "Extensions", icon: RefreshCcw },
+  { key: "ajukan", label: "Borrow Requests", icon: ClipboardList },
+  { key: "perpanjangan", label: "Renewals", icon: RefreshCcw },
   { key: "pesanan", label: "Orders", icon: ShoppingCart },
 ];
 
@@ -189,21 +189,26 @@ export default function AdminPerpustakaan() {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
   }, [activeTab, loadDashboard, loadTabData]);
 
-useEffect(() => {
-
-  loadDashboard();
-  loadTabData(activeTab);
-
-  const interval = setInterval(() => {
+  useEffect(() => {
 
     loadDashboard();
-    loadTabData(activeTab);
 
-  }, 5000);
+    if (!loadedTabs[tabToKey[activeTab]]) {
 
-  return () => clearInterval(interval);
+      loadTabData(activeTab);
 
-}, [loadDashboard, loadTabData, activeTab]);
+    }
+
+    const interval = setInterval(() => {
+
+      loadDashboard();
+      loadTabData(activeTab);
+
+    }, 60000); // 1 menit
+
+    return () => clearInterval(interval);
+
+  }, [activeTab]);
 
   const rejectLoanRequest = async (id) => {
     try {
@@ -274,7 +279,7 @@ useEffect(() => {
       if (selectedOrder?.id === id) {
         setSelectedOrder((prev) => ({
           ...prev,
-order_status: status,
+          order_status: status,
         }));
       }
     } catch {
@@ -365,25 +370,107 @@ order_status: status,
 
   const columnsByTab = {
     pinjaman: [
+
       { key: "member_code", label: "ID" },
+
       { key: "member_name", label: "Member" },
+
       { key: "book_title", label: "Book" },
-      { key: "loan_date", label: "Loan Date" },
-      { key: "due_date", label: "Due Date" },
-      { key: "status", label: "Status", render: (row) => <Badge status={row.order_status} /> },
+
+      {
+        key: "loan_date",
+        label: "Loan Date",
+
+        render: (row) => (
+
+          row.loan_date
+            ? new Date(
+              row.loan_date
+            ).toLocaleString(
+              "en-GB",
+              {
+
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+
+              }
+            )
+            : "-"
+
+        ),
+      },
+
+      {
+        key: "due_date",
+        label: "Due Date",
+
+        render: (row) => (
+
+          row.due_date
+            ? new Date(
+              row.due_date
+            ).toLocaleDateString(
+              "en-GB",
+              {
+
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+
+              }
+            )
+            : "-"
+
+        ),
+      },
+
+      {
+        key: "status",
+        label: "Status",
+
+        render: (row) => (
+          <Badge status={row.status} />
+        ),
+      },
+
       {
         key: "action",
         label: "Action",
+
         render: (row) => (
+
           <button
             type="button"
-            onClick={() => markAsReturned(getId(row))}
-            className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all"
+            onClick={() =>
+              markAsReturned(
+                getId(row)
+              )
+            }
+            className="
+          rounded-xl
+          bg-linear-to-r
+          from-blue-600
+          to-indigo-600
+          px-3
+          py-1.5
+          text-xs
+          font-semibold
+          text-white
+          shadow-lg
+          shadow-blue-500/20
+          hover:scale-[1.02]
+          transition-all
+        "
           >
             Complete
           </button>
+
         ),
       },
+
     ],
     anggota: [
       { key: "member_code", label: "ID" },
@@ -396,9 +483,32 @@ order_status: status,
       { key: "member_code", label: "ID" },
       { key: "member_name", label: "Member" },
       { key: "book_title", label: "Book" },
-      { key: "return_date", label: "Return Date" },
-      { key: "fine", label: "Fine" },
+      {
+        key: "return_date",
+        label: "Return Date",
+
+        render: (row) => (
+
+          row.return_date
+            ? new Date(
+              row.return_date
+            ).toLocaleString(
+              "en-GB",
+              {
+
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+
+              }
+            )
+            : "-"
+        ),
+      },
     ],
+
     ajukan: [
       { key: "member_code", label: "ID" },
       { key: "member_name", label: "Member" },

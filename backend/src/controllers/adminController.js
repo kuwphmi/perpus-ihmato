@@ -20,7 +20,8 @@ export const getDashboard = async (req, res) => {
         .select("*", {
           count: "exact",
           head: true,
-        });
+        })
+        .eq("role", "user");
 
     const { count: totalReturns } =
       await supabase
@@ -197,10 +198,8 @@ export const approveLoanRequest =
     try {
 
       const {
-
         data: requestData,
         error: requestError,
-
       } = await supabase
         .from("loan_requests")
         .select("*")
@@ -236,7 +235,7 @@ export const approveLoanRequest =
               due_date:
                 new Date(
                   Date.now() +
-                    7 * 86400000
+                  7 * 86400000
                 ),
 
               status:
@@ -254,6 +253,25 @@ export const approveLoanRequest =
         })
         .eq("id", id);
 
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              requestData.user_id,
+
+            type:
+              "borrow",
+
+            title:
+              "Borrow Approved",
+
+            message:
+              `Your request for "${requestData.book_title}" has been approved.`,
+          },
+        ]);
+
       res.json({
         message:
           "Loan approved successfully",
@@ -262,43 +280,74 @@ export const approveLoanRequest =
     } catch (err) {
 
       res.status(500).json({
-        error: err.message,
+        error:
+          err.message,
       });
 
     }
 
   };
 
+
 /* ================= REJECT ================= */
 export const rejectLoanRequest =
   async (req, res) => {
-
     const { id } = req.params;
 
     try {
+
+      const {
+        data: requestData,
+      } = await supabase
+        .from("loan_requests")
+        .select("*")
+        .eq("id", id)
+        .single();
 
       const { error } =
         await supabase
           .from("loan_requests")
           .update({
-            status: "rejected",
+            status:
+              "rejected",
           })
           .eq("id", id);
 
-      if (error) throw error;
+      if (error)
+        throw error;
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              requestData.user_id,
+
+            type:
+              "borrow",
+
+            title:
+              "Borrow Rejected",
+
+            message:
+              `Your request for "${requestData.book_title}" was rejected.`,
+          },
+        ]);
 
       res.json({
-        message: "Rejected",
+        message:
+          "Rejected",
       });
 
     } catch (err) {
 
       res.status(500).json({
-        error: err.message,
+        error:
+          err.message,
       });
 
     }
-
   };
 
 /* ================= RETURN ================= */
@@ -391,6 +440,25 @@ export const markAsReturned =
       if (updateError)
         throw updateError;
 
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              user.id,
+
+            type:
+              "return",
+
+            title:
+              "Book Returned",
+
+            message:
+              `Thanks for returning "${loan.title}". Enjoy your next reading adventure ✨`,
+          },
+        ]);
+
       res.json({
         message:
           "Book returned successfully",
@@ -419,9 +487,13 @@ export const getMembers =
           .from("users")
           .select(`
             id,
+            member_code,
             name,
-            email
-          `);
+            email,
+            nik,
+            phone
+          `)
+          .eq("role", "user");
 
       if (error) throw error;
 
@@ -443,66 +515,23 @@ export const getReturns =
 
     try {
 
-      const {
+      const { data, error } =
+        await supabase
+          .from("returns")
+          .select(`
+            member_code,
+            member_name,
+            book_title,
+            return_date,
+            fine
+          `)
+          .order("return_date", {
+            ascending: false,
+          });
 
-        data: loans,
-        error: loanError,
+      if (error) throw error;
 
-      } = await supabase
-        .from("loans")
-        .select("*")
-        .eq("status", "returned");
-
-      if (loanError)
-        throw loanError;
-
-      const {
-
-        data: users,
-        error: userError,
-
-      } = await supabase
-        .from("users")
-        .select(`
-          id,
-          member_code,
-          name
-        `);
-
-      if (userError)
-        throw userError;
-
-      const formatted =
-        loans.map((loan) => {
-
-          const user =
-            users.find(
-              (u) =>
-                String(u.id) ===
-                String(loan.user_id)
-            );
-
-          return {
-
-            member_code:
-              user?.member_code || "-",
-
-            member_name:
-              user?.name || "-",
-
-            book_title:
-              loan.title || "-",
-
-            return_date:
-              loan.return_date || "-",
-
-            fine: "-",
-
-          };
-
-        });
-
-      res.json(formatted);
+      res.json(data);
 
     } catch (err) {
 
@@ -597,7 +626,7 @@ export const approveExtension =
           due_date:
             new Date(
               Date.now() +
-                7 * 86400000
+              7 * 86400000
             ),
         })
         .eq("id", ext.loan_id);
@@ -609,6 +638,23 @@ export const approveExtension =
         })
         .eq("id", id);
 
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              ext.user_id,
+
+            type:
+              "extension",
+
+            title:
+              "Extension Approved",
+
+            message:
+              "Your borrowing extension has been approved.",
+          },
+        ]);
       res.json({
         message:
           "Extension approved",
@@ -639,6 +685,30 @@ export const rejectExtension =
         })
         .eq("id", id);
 
+      const { data: ext } =
+        await supabase
+          .from("extensions")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              ext.user_id,
+
+            type:
+              "extension",
+
+            title:
+              "Extension Rejected",
+
+            message:
+              "Your borrowing extension was rejected.",
+          },
+        ]);
       res.json({
         message: "Rejected",
       });
@@ -728,16 +798,16 @@ export const getOrders =
 
     }
 
-};
+  };
 
 /* ================= UPDATE ORDER STATUS ================= */
 export const updateOrderStatus =
   async (req, res) => {
-
     const { id } = req.params;
 
-    const { order_status } =
-      req.body;
+    const {
+      order_status,
+    } = req.body;
 
     try {
 
@@ -749,7 +819,51 @@ export const updateOrderStatus =
           })
           .eq("id", id);
 
-      if (error) throw error;
+      if (error)
+        throw error;
+
+      // GET PAYMENT
+      const {
+        data: payment,
+      } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              payment.user_id,
+
+            type:
+              "order",
+
+            title:
+              "Order Update",
+
+            message:
+              order_status ===
+                "processing"
+
+                ? "Your order is being processed."
+
+                : order_status ===
+                  "shipping"
+
+                  ? "Your order is on delivery."
+
+                  : order_status ===
+                    "completed"
+
+                    ? "Your order has arrived successfully."
+
+                    : `Order status updated to ${order_status}`,
+          },
+        ]);
 
       res.json({
         message:
@@ -759,12 +873,14 @@ export const updateOrderStatus =
     } catch (err) {
 
       res.status(500).json({
-        error: err.message,
+        error:
+          err.message,
       });
 
     }
 
-};
+  };
+
 
 /* ================= COURIER ORDERS ================= */
 export const getCourierOrders =
@@ -825,5 +941,5 @@ export const getCourierOrders =
 
     }
 
-};
+  };
 

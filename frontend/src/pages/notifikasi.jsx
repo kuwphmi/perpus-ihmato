@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import {
   FiBell,
   FiHeart,
   FiSearch,
-FiArrowLeft,
+  FiArrowLeft,
 } from "react-icons/fi";
 
 import Floating from "./floating";
@@ -35,28 +36,43 @@ export default function Notifikasi() {
     };
   }, []);
 
-  const notifications = [
-    {
-      id: 1,
-      title: "Borrow Approved",
-      desc: "Atomic Habits is ready to read now.",
-      time: "2 min ago",
-    },
+  const [notifications,
+    setNotifications] =
+    useState([]);
 
-    {
-      id: 2,
-      title: "New Arrival",
-      desc: "The Psychology of Money has been added.",
-      time: "1 hour ago",
-    },
+  useEffect(() => {
 
-    {
-      id: 3,
-      title: "Return Reminder",
-      desc: "Rich Dad Poor Dad must be returned tomorrow.",
-      time: "Yesterday",
-    },
-  ];
+    fetchNotifications();
+
+  }, []);
+
+  const fetchNotifications =
+    async () => {
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem(
+              "user"
+            )
+          );
+
+        const res =
+          await axios.get(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        setNotifications(
+          res.data || []
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+    };
+
 
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -67,12 +83,12 @@ export default function Notifikasi() {
         <div className="px-5 py-3 flex items-center justify-between">
 
           {/* LEFT */}
-<div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
 
-  {/* BACK */}
-  <button
-    onClick={() => navigate(-1)}
-    className="
+            {/* BACK */}
+            <button
+              onClick={() => navigate(-1)}
+              className="
       w-10
       h-10
       rounded-full
@@ -83,26 +99,26 @@ export default function Notifikasi() {
       justify-center
       transition
     "
-  >
-    <FiArrowLeft className="text-blue-600 text-lg" />
-  </button>
+            >
+              <FiArrowLeft className="text-blue-600 text-lg" />
+            </button>
 
-  <div>
+            <div>
 
-   <h1 className="text-[20px] font-semibold text-blue-600">
-      Notifications
-    </h1>
+              <h1 className="text-[20px] font-semibold text-blue-600">
+                Notifications
+              </h1>
 
-  </div>
+            </div>
 
-</div>
+          </div>
 
           {/* RIGHT */}
           <div className="flex items-center gap-4 relative">
-           {/* ❤️ FAVORITE */}
-<Link to="/favorite">
-  <FiHeart className="text-2xl text-gray-600 hover:text-yellow-400 cursor-pointer transition" />
-</Link>
+            {/* ❤️ FAVORITE */}
+            <Link to="/favorite">
+              <FiHeart className="text-2xl text-gray-600 hover:text-yellow-400 cursor-pointer transition" />
+            </Link>
 
             {/* 👤 PROFILE */}
             <div className="relative">
@@ -205,13 +221,27 @@ export default function Notifikasi() {
                   </h2>
 
                   <span className="text-xs text-gray-400">
-                    {notif.time}
+                    {
+                      new Date(
+                        notif.created_at
+                      ).toLocaleString(
+                        "en-GB",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+
+                        }
+                      )
+                    }
                   </span>
 
                 </div>
 
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                  {notif.desc}
+                  {notif.message}
                 </p>
 
               </div>

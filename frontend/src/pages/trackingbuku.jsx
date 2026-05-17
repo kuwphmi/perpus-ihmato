@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import axios from "axios";
 import {
   FiBell,
   FiHeart,
@@ -22,6 +22,8 @@ export default function Trackingbuku() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const popupRef = useRef();
@@ -46,15 +48,53 @@ export default function Trackingbuku() {
 
     fetchOrders();
 
+    fetchNotifications();
+
     const interval = setInterval(() => {
 
       fetchOrders();
 
-    }, 5000);
+      fetchNotifications();
 
+    }, 5000);
     return () => clearInterval(interval);
 
   }, []);
+
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        const res =
+          await axios.get(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        setNotifications(
+          res.data || []
+        );
+
+        const unread =
+          res.data.filter(
+            (item) =>
+              !item.is_read
+          ).length;
+
+        setUnreadCount(unread);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
 
   const fetchOrders = async () => {
 
@@ -148,38 +188,161 @@ export default function Trackingbuku() {
 
             {/* NOTIFICATION */}
             <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                onClick={(e) => {
+
+              <div
+                onClick={async (e) => {
+
                   e.stopPropagation();
+
+                  if (!isNotifOpen) {
+
+                    await fetch(
+                      `http://localhost:3000/api/notifications/read/${user.id}`,
+                      {
+                        method: "PUT",
+                      }
+                    );
+
+                    setNotifications((prev) =>
+                      prev.map((n) => ({
+                        ...n,
+                        is_read: true,
+                      }))
+                    );
+
+                  }
+
                   setIsNotifOpen(!isNotifOpen);
+
                 }}
-              />
+                className="relative cursor-pointer"
+              >
+
+                <FiBell className="text-2xl text-gray-600 hover:text-yellow-500 transition" />
+
+                {unreadCount > 0 && (
+
+                  <div
+                    className="
+          absolute
+          -top-1
+          -right-1
+          min-w-[18px]
+          h-[18px]
+          px-1
+          bg-red-500
+          text-white
+          text-[10px]
+          rounded-full
+          flex
+          items-center
+          justify-center
+          font-semibold
+        "
+                  >
+                    {unreadCount}
+                  </div>
+
+                )}
+
+              </div>
 
               {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
 
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Your Notification
-                    </h3>
+                <div
+                  className="
+        absolute
+        right-0
+        mt-3
+        w-80
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        border
+        z-50
+        overflow-hidden
+      "
+                >
 
-                    <div className="py-6 text-sm text-gray-400 border-b">
-                      No new notifications yet.
-                    </div>
+                  <div className="p-4 border-b font-semibold text-gray-700">
 
-                    <button
-                      onClick={() => navigate("/notip")}
-                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-                    >
-                      View All
-                    </button>
+                    Notifications
+
                   </div>
-                </div>
-              )}
-            </div>
 
+                  <div className="max-h-96 overflow-y-auto">
+
+                    {notifications.length === 0 ? (
+
+                      <div className="p-6 text-sm text-gray-400 text-center">
+
+                        No notifications yet
+
+                      </div>
+
+                    ) : (
+
+                      notifications
+                        .filter((n) => !n.is_read)
+                        .slice(0, 2)
+                        .map((notif) => (
+
+                          <div
+                            key={notif.id}
+                            className={`
+                  p-4
+                  border-b
+                  hover:bg-gray-50
+                  transition
+
+                  ${!notif.is_read
+                                ? "bg-blue-50"
+                                : ""
+                              }
+                `}
+                          >
+
+                            <p className="font-medium text-sm text-gray-800">
+
+                              {notif.title}
+
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-1">
+
+                              {notif.message}
+
+                            </p>
+
+                          </div>
+
+                        ))
+
+                    )}
+
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      navigate("/notifikasi")
+                    }
+                    className="
+          w-full
+          py-3
+          text-sm
+          font-medium
+          text-blue-600
+          hover:bg-blue-50
+        "
+                  >
+                    View All
+                  </button>
+
+                </div>
+
+              )}
+
+            </div>
             {/*  PROFIL */}
             <div className="relative">
 

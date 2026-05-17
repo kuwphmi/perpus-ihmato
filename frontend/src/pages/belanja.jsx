@@ -85,20 +85,63 @@ export default function Belanja() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notif, setNotif] = useState("");
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const unreadCount =
+    notifications.filter(
+      (n) => !n.is_read
+    ).length;
+
   const [isSearchActive, setIsSearchActive] = useState(false);
   const genreSectionRef = useRef(null);
 
   useEffect(() => {
 
-    const stored = localStorage.getItem("user");
+    const stored =
+      localStorage.getItem("user");
 
     if (stored) {
-      setUser(JSON.parse(stored));
+
+      setUser(
+        JSON.parse(stored)
+      );
+
     }
+
+    fetchNotifications();
 
   }, []);
 
   const navigate = useNavigate();
+
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        const res =
+          await fetch(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        const data =
+          await res.json();
+
+        setNotifications(data);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
 
   const showNotif = (message) => {
 
@@ -256,44 +299,44 @@ export default function Belanja() {
   }, [isNotifOpen]);
 
   /* ================= SEARCH ================= */
-const handleSearch = async () => {
-  if (!search.trim()) return;
+  const handleSearch = async () => {
+    if (!search.trim()) return;
 
-  try {
-    setIsSearching(true);
-    setIsSearchActive(true);
+    try {
+      setIsSearching(true);
+      setIsSearchActive(true);
 
-    const res = await fetch(
-      `https://openlibrary.org/search.json?q=${search}&limit=12`
-    );
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${search}&limit=12`
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    const books = data.docs.map((item) => ({
-      workKey: item.key,
-      title: item.title ?? "-",
-      author: item.author_name?.[0] ?? "-",
-      cover: item.cover_i ?? null,
-      price: ((item.cover_i || 1) * 137) % 100000 + 50000,
-      stock: ((item.cover_i || 1) % 15) + 5,
-    }));
+      const books = data.docs.map((item) => ({
+        workKey: item.key,
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+        price: ((item.cover_i || 1) * 137) % 100000 + 50000,
+        stock: ((item.cover_i || 1) % 15) + 5,
+      }));
 
-    setSearchResults(books);
-    setActiveCategory(`Search Results: ${search}`);
-    setIsSearchActive(true);
+      setSearchResults(books);
+      setActiveCategory(`Search Results: ${search}`);
+      setIsSearchActive(true);
 
-    setTimeout(() => {
-      genreSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }, 100);
+      setTimeout(() => {
+        genreSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
 
-  } catch (err) {
-    console.log(err);
-  } finally {
-    setIsSearching(false);
-  }
-};
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const categories = [
     {
@@ -426,37 +469,160 @@ const handleSearch = async () => {
 
             </Link>
 
+            {/* NOTIFICATION */}
             <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                onClick={(e) => {
+
+              <div
+                onClick={async (e) => {
+
                   e.stopPropagation();
+
+                  if (!isNotifOpen) {
+
+                    await fetch(
+                      `http://localhost:3000/api/notifications/read/${user.id}`,
+                      {
+                        method: "PUT",
+                      }
+                    );
+
+                    setNotifications((prev) =>
+                      prev.map((n) => ({
+                        ...n,
+                        is_read: true,
+                      }))
+                    );
+
+                  }
+
                   setIsNotifOpen(!isNotifOpen);
+
                 }}
-              />
+                className="relative cursor-pointer"
+              >
+
+                <FiBell className="text-2xl text-gray-600 hover:text-yellow-500 transition" />
+
+                {unreadCount > 0 && (
+
+                  <div
+                    className="
+          absolute
+          -top-1
+          -right-1
+          min-w-[18px]
+          h-[18px]
+          px-1
+          bg-red-500
+          text-white
+          text-[10px]
+          rounded-full
+          flex
+          items-center
+          justify-center
+          font-semibold
+        "
+                  >
+                    {unreadCount}
+                  </div>
+
+                )}
+
+              </div>
 
               {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
 
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Your Notification
-                    </h3>
+                <div
+                  className="
+        absolute
+        right-0
+        mt-3
+        w-80
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        border
+        z-50
+        overflow-hidden
+      "
+                >
 
-                    <div className="py-6 text-sm text-gray-400 border-b">
-                      No new notifications yet.
-                    </div>
+                  <div className="p-4 border-b font-semibold text-gray-700">
 
-                    <button
-                      onClick={() => navigate("/notifikasi")}
-                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-                    >
-                      View All
-                    </button>
+                    Notifications
+
                   </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+
+                    {notifications.length === 0 ? (
+
+                      <div className="p-6 text-sm text-gray-400 text-center">
+
+                        No notifications yet
+
+                      </div>
+
+                    ) : (
+
+                      notifications
+                        .slice(0, 2)
+                        .map((notif) => (
+                          <div
+                            key={notif.id}
+                            className={`
+                  p-4
+                  border-b
+                  hover:bg-gray-50
+                  transition
+
+                  ${!notif.is_read
+                                ? "bg-blue-50"
+                                : ""
+                              }
+                `}
+                          >
+
+                            <p className="font-medium text-sm text-gray-800">
+
+                              {notif.title}
+
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-1">
+
+                              {notif.message}
+
+                            </p>
+
+                          </div>
+
+                        ))
+
+                    )}
+
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      navigate("/notifikasi")
+                    }
+                    className="
+          w-full
+          py-3
+          text-sm
+          font-medium
+          text-blue-600
+          hover:bg-blue-50
+        "
+                  >
+                    View All
+                  </button>
+
                 </div>
+
               )}
+
             </div>
 
             {/*  PROFIL */}
@@ -532,10 +698,10 @@ const handleSearch = async () => {
           <div className="bg-white rounded-2xl shadow-xl p-3 md:p-4 flex items-center gap-3">
             <input
               onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch(); // optional (boleh dihapus kalau mau realtime)
-                  }
-                }}
+                if (e.key === "Enter") {
+                  handleSearch(); // optional (boleh dihapus kalau mau realtime)
+                }
+              }}
               type="text"
               placeholder="Search book titles..."
               value={search}
@@ -614,30 +780,52 @@ const handleSearch = async () => {
         </section>
       )}
 
-{isSearchActive ? (
+      {isSearchActive ? (
 
-  <section className="px-6 md:px-20 pb-14 mt-10">
+        <section className="px-6 md:px-20 pb-14 mt-10">
 
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Search Results: {search}
-    </h2>
+          <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+            Search Results: {search}
+          </h2>
 
-    <div className="flex gap-5 overflow-x-auto">
+          <div className="flex gap-5 overflow-x-auto">
 
-      {searchResults.map((book, index) => (
+            {searchResults.map((book, index) => (
 
-        <div
-          key={index}
-          className="min-w-[250px]"
-        >
+              <div
+                key={index}
+                className="min-w-[250px]"
+              >
 
-          <BookCard
-            workKey={book.workKey}
-            title={book.title}
-            author={book.author}
-            cover={book.cover}
-            price={book.price}
-            stock={book.stock}
+                <BookCard
+                  workKey={book.workKey}
+                  title={book.title}
+                  author={book.author}
+                  cover={book.cover}
+                  price={book.price}
+                  stock={book.stock}
+                  cart={cart}
+                  setCart={setCart}
+                  setIsBuyOpen={setIsBuyOpen}
+                  setSelectedBook={setSelectedBook}
+                  showNotif={showNotif}
+                />
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </section>
+
+      ) : !activeCategory && (
+
+        <>
+
+          {/* ================= BUKU TERLARIS ================= */}
+          <BukuTerlaris
+            data={filterBooks(terlaris)}
             cart={cart}
             setCart={setCart}
             setIsBuyOpen={setIsBuyOpen}
@@ -645,56 +833,34 @@ const handleSearch = async () => {
             showNotif={showNotif}
           />
 
-        </div>
+          {/* ================= LANDSCAPE ================= */}
+          <section className="px-4 md:px-20 pb-14">
 
-      ))}
+            <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
 
-    </div>
+              <img
+                src={banner5}
+                className="w-full h-auto object-contain"
+                alt="Banner"
+              />
 
-  </section>
+            </div>
 
-) : !activeCategory && (
+          </section>
 
-  <>
+          {/* ================= BUKU TERBARU ================= */}
+          <BukuTerbaru
+            data={filterBooks(terbaru)}
+            cart={cart}
+            setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
+            showNotif={showNotif}
+          />
 
-    {/* ================= BUKU TERLARIS ================= */}
-    <BukuTerlaris
-      data={filteredBooks}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
+        </>
 
-    {/* ================= LANDSCAPE ================= */}
-    <section className="px-4 md:px-20 pb-14">
-
-      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-
-        <img
-          src={banner5}
-          className="w-full h-auto object-contain"
-          alt="Banner"
-        />
-
-      </div>
-
-    </section>
-
-    {/* ================= BUKU TERBARU ================= */}
-    <BukuTerbaru
-      data={filteredBooks}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
-
-  </>
-
-)}
+      )}
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -840,8 +1006,8 @@ function BookCard({
       const payload = {
 
         user_id: user.id,
-        book_key: `${title}_${author}`,
-        title,
+        book_key:
+          workKey || `${title}_${author}`, title,
         author,
         cover,
         price,
@@ -1115,7 +1281,7 @@ function BukuTerlaris({
         className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
       >
         {data.map((book, index) => (
-          <div key={index} className="min-w-[250px] snap-start">
+          <div key={book.workKey} className="min-w-[250px] snap-start">
             <BookCard
               workKey={book.workKey}
               title={book.title}
