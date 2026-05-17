@@ -6,6 +6,7 @@ import {
   FiMapPin,
   FiShoppingBag,
   FiCreditCard,
+  FiArrowLeft,
 } from "react-icons/fi";
 
 import Floating from "./floating";
@@ -242,28 +243,41 @@ export default function Checkout() {
       )}
 
       {/* HEADER */}
-      <div className="bg-white shadow-sm border-b">
+<div className="bg-blue-600 text-white px-5 py-2.5 shadow-md">
 
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
+  <div className="w-full flex items-center gap-3">
 
-          <h1 className="text-2xl font-bold text-blue-700 flex items-center gap-2">
+    {/* BACK */}
+    <button
+      onClick={() => navigate(-1)}
+      className="
+        w-9
+        h-9
+        rounded-full
+        bg-white/10
+        hover:bg-white/20
+        flex
+        items-center
+        justify-center
+        transition
+      "
+    >
 
-            <FiCreditCard />
+      <FiArrowLeft className="text-white text-lg" />
 
-            Checkout
+    </button>
 
-          </h1>
+    <div>
 
-          <Link
-            to="/belanja"
-            className="text-sm text-blue-600 font-medium"
-          >
-            Continue Shopping
-          </Link>
+      <h1 className="text-[20px] font-semibold">
+        Checkout
+      </h1>
 
-        </div>
+    </div>
 
-      </div>
+  </div>
+
+</div>
 
       {/* CONTENT */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">

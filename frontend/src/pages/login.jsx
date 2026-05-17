@@ -13,7 +13,7 @@ function getStrength(password) {
   return score;
 }
 const strengthColors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
-const strengthLabels = ["Lemah", "Cukup", "Kuat", "Sangat Kuat"];
+const strengthLabels = ["Weak", "Fair", "Strong", "Very Strong"];
 
 // ─── Google Icon ──────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -32,7 +32,7 @@ function Logo() {
   return (
     <div className="flex items-center gap-2.5">
       <img src={logo} alt="logo" className="w-9 h-9 object-contain" />
-      <span className="text-white font-semibold text-base tracking-tight">BukuIn</span>
+      <span className="text-white font-semibold text-base tracking-tight"></span>
     </div>
   );
 }
@@ -102,19 +102,10 @@ function LoginForm({ onSwitch, onForgot }) {
       localStorage.setItem("token", res.data.token);
 
       // CEK ROLE
-if (user.role === "admin") {
-
-  navigate("/admin");
-  return;
-
-}
-
-if (user.role === "courier") {
-
-  navigate("/courier");
-  return;
-
-}
+      if (user.role === "admin") {
+        navigate("/admin");
+        return;
+      }
 
       // CEK PROFIL MEMBER
       if (!user?.nik || !user?.birth || !user?.gender) {
@@ -133,40 +124,40 @@ if (user.role === "courier") {
   return (
     <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
       <div className="mb-7">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Masuk ke akun</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Sign in to your account</h1>
         <p className="text-sm text-gray-500">
-          Belum punya akun?{" "}
+          Don't have an account?{" "}
           <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-            Daftar sekarang
+            Create one now
           </button>
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Field label="Email Address" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         <div className="flex flex-col gap-1.5">
-          <Field label="Kata Sandi" type="password" placeholder="Masukkan kata sandi" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Field label="Password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <div className="text-right">
             {/* ← Tombol lupa kata sandi dihubungkan ke onForgot */}
             <button type="button" onClick={onForgot} className="text-xs text-blue-700 hover:underline">
-              Lupa kata sandi?
+              Forgot password?
             </button>
           </div>
         </div>
         <button type="submit" className="mt-1 h-11 bg-gradient-to-br from-blue-700 to-blue-900 bg-blue-900 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-          Masuk
+          Sign In
         </button>
       </form>
 
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-xs text-gray-400">atau lanjutkan dengan</span>
+        <span className="text-xs text-gray-400">or continue with</span>
         <div className="flex-1 h-px bg-gray-100" />
       </div>
 
       <button
         onClick={() => {
-          window.location.href = "http://localhost:3000/auth/google";
+          window.location.href = "http://localhost:3000/api/auth/google";
         }}
         className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
       >
@@ -217,27 +208,27 @@ if (user.role === "courier") {
     return (
       <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Buat akun baru</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Create a new account</h1>
           <p className="text-sm text-gray-500">
-            Sudah punya akun?{" "}
+           Already have an account?{" "}
             <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-              Masuk di sini
+              Sign in here
             </button>
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Nama Depan" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
-            <Field label="Nama Belakang" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
+            <Field label="First Name" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
+            <Field label="Last Name" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
           </div>
-          <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
-          <Field label="Nomor Telepon" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
+          <Field label="Email Address" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
+          <Field label="Phone Number" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-600">Kata Sandi</label>
+            <label className="text-sm font-medium text-gray-600">Password</label>
             <input
               type="password"
-              placeholder="Min. 8 karakter"
+              placeholder="Minimum 8 characters"
               value={form.password}
               onChange={set("password")}
               className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
@@ -256,18 +247,18 @@ if (user.role === "courier") {
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input type="checkbox" checked={form.agree} onChange={set("agree")} className="mt-0.5 accent-blue-700" />
             <span className="text-sm text-gray-500 leading-relaxed">
-              Saya menyetujui{" "}
+              I agree to the{" "}
               <a href="#" className="text-blue-700 hover:underline">
-                Syarat & Ketentuan
+                Terms & Conditions
               </a>{" "}
-              dan{" "}
+              and{" "}
               <a href="#" className="text-blue-700 hover:underline">
-                Kebijakan Privasi
+                Privacy Policy
               </a>
             </span>
           </label>
           <button type="submit" className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-            Buat Akun
+            Create Account
           </button>
         </form>
       </div>
@@ -318,14 +309,14 @@ if (user.role === "courier") {
             </div>
 
             <div className="mb-7">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Lupa kata sandi?</h1>
-              <p className="text-sm text-gray-500 leading-relaxed">Masukkan email yang terdaftar. Kami akan mengirimkan tautan untuk mereset kata sandi kamu.</p>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Forgot your password?</h1>
+              <p className="text-sm text-gray-500 leading-relaxed">Enter your registered email address. We'll send you a link to reset your password.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               <button type="submit" disabled={loading} className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? "Mengirim..." : "Kirim Tautan Reset"}
+                {loading ? "Sending..." : "Send Reset Link"}
               </button>
             </form>
           </>
@@ -337,12 +328,12 @@ if (user.role === "courier") {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Email terkirim!</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Sent!</h2>
             <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              Kami telah mengirimkan tautan reset kata sandi ke <span className="font-medium text-gray-700">{email}</span>. Periksa kotak masuk atau folder spam kamu.
+              We've sent a password reset link to <span className="font-medium text-gray-700">{email}</span>. Please check your inbox or spam folder..
             </p>
             <button onClick={onBack} className="h-11 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg text-sm transition-all">
-              Kembali ke Login
+             Back to Login
             </button>
             <button
               onClick={() => {
@@ -351,7 +342,7 @@ if (user.role === "courier") {
               }}
               className="mt-3 text-xs text-gray-400 hover:text-blue-600 transition"
             >
-              Kirim ulang email
+              Resend email
             </button>
           </div>
         )}
@@ -386,11 +377,11 @@ z-10
 >
           {/* Side Panel */}
           {isForgot ? (
-            <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset kata sandi" description="Jangan khawatir, kami akan membantu kamu mendapatkan kembali akses ke akunmu." />
+            <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset passwordntol" description="Don't worry, we'll help you regain access to your account." />
           ) : isLogin ? (
-            <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Selamat datang kembali!" description="Masuk ke akun Anda untuk melanjutkan dan mengakses semua fitur yang tersedia." />
+            <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Welcome Back!" description="Sign in to continue and access all available features." />
           ) : (
-            <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Bergabung bersama kami hari ini" description="Buat akun gratis dan nikmati semua fitur platform kami tanpa batas waktu." />
+            <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Join Us Today" description="Create a free account and enjoy unlimited access to all platform features." />
           )}
 
           {/* Form Area */}

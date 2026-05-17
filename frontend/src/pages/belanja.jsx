@@ -106,7 +106,7 @@ export default function Belanja() {
 
     setTimeout(() => {
       setNotif("");
-    }, 20000);
+    }, 3000);
 
   };
   const genreMap = {
@@ -279,7 +279,7 @@ const handleSearch = async () => {
     }));
 
     setSearchResults(books);
-    setActiveCategory(`Search Results: ${search}`);
+    setActiveCategory(null);
     setIsSearchActive(true);
 
     setTimeout(() => {
@@ -416,7 +416,7 @@ const handleSearch = async () => {
             {/* CART */}
             <Link to="/keranjang" className="relative">
 
-              <FiShoppingCart className="text-2xl text-gray-600 hover:text-blue-600 transition cursor-pointer" />
+              <FiShoppingCart className="text-2xl text-gray-600 hover:text-yellow-500 transition cursor-pointer" />
 
               {cart.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
@@ -459,51 +459,145 @@ const handleSearch = async () => {
               )}
             </div>
 
-            {/*  PROFIL */}
-            <div className="relative">
+  {/* ================= PROFILE ================= */}
+<div className="relative">
 
-              {/* ICON PROFILE */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
-                }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-              >
-                {user.name ? user.name.charAt(0) : "U"}
+  {/* PROFILE BUTTON */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="
+      relative
+      z-50
+      w-9 h-9
+      rounded-full
+      bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
+      flex items-center justify-center
+      text-white
+      font-semibold
+      shadow-lg
+      hover:scale-105
+      hover:shadow-blue-400/40
+      transition-all duration-300
+      border-2 border-white
+    "
+  >
+    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+
+    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+  </button>
+
+  {/* DROPDOWN */}
+  {isProfileOpen && (
+    <>
+      {/* CLICK OUTSIDE */}
+      <div
+        className="fixed inset-0 z-40"
+        onClick={() => setIsProfileOpen(false)}
+      ></div>
+
+      {/* POPUP */}
+      <div
+        className="
+          absolute right-0 mt-4 w-72
+          rounded-[28px]
+          overflow-hidden
+          bg-white/80
+          backdrop-blur-2xl
+          border border-white/40
+          shadow-[0_12px_40px_rgba(0,0,0,0.16)]
+          animate-[fadeIn_.25s_ease]
+          z-50
+        "
+      >
+
+        {/* HEADER */}
+        <div className="
+          h-28
+          bg-gradient-to-r
+          from-blue-600
+          via-blue-500
+          to-cyan-400
+          relative
+        ">
+
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+
+          {/* AVATAR */}
+          <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
+
+            <div className="
+              w-20 h-20
+              rounded-full
+              bg-white
+              p-[3px]
+              shadow-2xl
+            ">
+
+              <div className="
+                w-full h-full
+                rounded-full
+                bg-gradient-to-br from-blue-500 to-blue-700
+                flex items-center justify-center
+                text-white
+                text-3xl
+                font-bold
+              ">
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
 
-              {/* DROPDOWN PROFILE */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
-
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-                      {user.name ? user.name.charAt(0) : "U"}
-                    </div>
-
-                    <h3 className="font-semibold text-gray-700 text-sm">
-                      {user.name || "-"}
-                    </h3>
-
-                    <p className="text-xs text-gray-500">
-                      {user.email || "-"}
-                    </p>
-                  </div>
-
-                  {/* BUTTON PROFIL */}
-                  <div className="px-4 py-4">
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                        My Profile
-                      </button>
-                    </Link>
-                  </div>
-
-                </div>
-              )}
             </div>
+
+          </div>
+
+        </div>
+
+        {/* CONTENT */}
+        <div className="pt-14 pb-6 px-6 text-center">
+
+          <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
+            {user.name || "Unknown User"}
+          </h3>
+
+          <p className="text-sm text-gray-500 mt-1 break-all">
+            {user.email || "No email available"}
+          </p>
+
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
+
+          <Link to="/profil">
+            <button
+              className="
+                w-full
+                py-3
+                rounded-2xl
+                bg-gradient-to-r
+                from-blue-600
+                to-blue-700
+                hover:from-blue-700
+                hover:to-blue-800
+                text-white
+                font-semibold
+                shadow-lg
+                hover:shadow-blue-300/40
+                transition-all duration-300
+              "
+            >
+              View Profile
+            </button>
+          </Link>
+
+        </div>
+
+      </div>
+    </>
+  )}
+
+</div>
 
           </div>
 
@@ -595,17 +689,18 @@ const handleSearch = async () => {
             {genreBooks.map((book, index) => (
               <div key={index} className="min-w-[250px]">
                 <BookCard
-                  workKey={book.workKey}
-                  title={book.title}
-                  author={book.author}
-                  cover={book.cover}
-                  price={book.price}
-                  stock={book.stock}
-                  cart={cart}
-                  setCart={setCart}
-                  setIsBuyOpen={setIsBuyOpen}
-                  setSelectedBook={setSelectedBook}
-                />
+  workKey={book.workKey}
+  title={book.title}
+  author={book.author}
+  cover={book.cover}
+  price={book.price}
+  stock={book.stock}
+  cart={cart}
+  setCart={setCart}
+  setIsBuyOpen={setIsBuyOpen}
+  setSelectedBook={setSelectedBook}
+  showNotif={showNotif}
+/>
               </div>
             ))}
           </div>
@@ -616,11 +711,13 @@ const handleSearch = async () => {
 
 {isSearchActive ? (
 
-  <section className="px-6 md:px-20 pb-14 mt-10">
-
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Search Results: {search}
-    </h2>
+  <section
+  ref={genreSectionRef}
+  className="px-6 md:px-20 pb-14 mt-10"
+>
+   <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+    Search Results: {search}
+  </h2>
 
     <div className="flex gap-5 overflow-x-auto">
 
@@ -760,7 +857,7 @@ const handleSearch = async () => {
 /* ================= BOOK CARD ================= */
 
 function BookCard({
-  showNotif,
+  showNotif = () => {},
   title,
   author,
   cover,
@@ -807,6 +904,26 @@ function BookCard({
   // ================= HANDLE BUY =================
   const handleBuy = () => {
 
+  window.scrollTo({
+    top: 0,
+    behavior: "instant",
+  });
+
+  navigate("/checkout", {
+    state: {
+      items: [
+        {
+          title,
+          price,
+          qty: 1,
+          cover,
+        },
+      ],
+    },
+  });
+
+
+
     navigate("/checkout", {
       state: {
         items: [
@@ -831,7 +948,7 @@ function BookCard({
 
       if (!user) {
 
-        showNotif("Please login first");
+        showNotif?.("Please login first");
 
         return;
 
@@ -861,13 +978,13 @@ function BookCard({
 
       setCart(cartRes.data.data || []);
 
-      showNotif(res.data.message);
+      showNotif?.(res.data.message);
 
     } catch (err) {
 
       console.log(err);
 
-      showNotif("Failed add cart");
+      showNotif?.("Failed add cart");
 
     }
 

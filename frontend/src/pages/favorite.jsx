@@ -223,13 +223,33 @@ const submitLoanRequest = async () => {
                 )}
               </div>
 
-    {/* 👤 PROFILE */}
-    <div
-      onClick={() => setIsProfileOpen(true)}
-      className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer hover:scale-105 transition"
-    >
-      {user.name ? user.name.charAt(0) : "U"}
-    </div>
+   {/* 👤 PROFILE */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    setIsProfileOpen(!isProfileOpen);
+  }}
+  className="
+    relative
+    z-50
+    w-9 h-9
+    rounded-full
+    bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
+    flex items-center justify-center
+    text-white
+    text-sm
+    font-semibold
+    shadow-lg
+    hover:scale-105
+    hover:shadow-blue-400/40
+    transition-all duration-300
+    border-2 border-white
+  "
+>
+  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+
+  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+</button>
 
   </div>
 </div>
@@ -371,35 +391,111 @@ const submitLoanRequest = async () => {
 
 {/* 🔥 POPUP PROFILE */}
 {isProfileOpen && (
-  <div
-    ref={popupRef}
-    className="absolute right-0 translate-x-[-15%] top-14"
-  >
-    <div className="w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scaleIn">
+  <>
+    {/* CLICK OUTSIDE */}
+    <div
+      className="fixed inset-0 z-40"
+      onClick={() => setIsProfileOpen(false)}
+    ></div>
 
-      <div className="flex flex-col items-center py-6">
+    {/* POPUP */}
+    <div
+      ref={popupRef}
+      className="
+        absolute right-5 top-16 z-50
+        w-72
+        rounded-[28px]
+        overflow-hidden
+        bg-white/80
+        backdrop-blur-2xl
+        border border-white/40
+        shadow-[0_12px_40px_rgba(0,0,0,0.16)]
+        animate-[fadeIn_.25s_ease]
+      "
+    >
 
-        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3">
-          {user.name ? user.name.charAt(0) : "U"}
+      {/* HEADER */}
+      <div className="
+        h-28
+        bg-gradient-to-r
+        from-blue-600
+        via-blue-500
+        to-cyan-400
+        relative
+      ">
+
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+
+        <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+
+        {/* AVATAR */}
+        <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
+
+          <div className="
+            w-20 h-20
+            rounded-full
+            bg-white
+            p-[3px]
+            shadow-2xl
+          ">
+
+            <div className="
+              w-full h-full
+              rounded-full
+              bg-gradient-to-br from-blue-500 to-blue-700
+              flex items-center justify-center
+              text-white
+              text-3xl
+              font-bold
+            ">
+              {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+            </div>
+
+          </div>
+
         </div>
 
-        <h2 className="font-semibold text-gray-800">
-          {user.name || "-"}
-        </h2>
+      </div>
 
-        <p className="text-sm text-gray-500 mb-5">
-          {user.email || "-"}
+      {/* CONTENT */}
+      <div className="pt-14 pb-6 px-6 text-center">
+
+        <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
+          {user.name || "Unknown User"}
+        </h3>
+
+        <p className="text-sm text-gray-500 mt-1 break-all">
+          {user.email || "No email available"}
         </p>
 
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
+
         <Link to="/profil">
-          <button className="w-56 bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">
-            My Profile
+          <button
+            className="
+              w-full
+              py-3
+              rounded-2xl
+              bg-gradient-to-r
+              from-blue-600
+              to-blue-700
+              hover:from-blue-700
+              hover:to-blue-800
+              text-white
+              font-semibold
+              shadow-lg
+              hover:shadow-blue-300/40
+              transition-all duration-300
+            "
+          >
+            View Profile
           </button>
         </Link>
 
       </div>
+
     </div>
-  </div>
+  </>
 )}
 
 
