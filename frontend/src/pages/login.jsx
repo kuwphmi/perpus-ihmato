@@ -102,10 +102,19 @@ function LoginForm({ onSwitch, onForgot }) {
       localStorage.setItem("token", res.data.token);
 
       // CEK ROLE
-      if (user.role === "admin") {
-        navigate("/admin");
-        return;
-      }
+if (user.role === "admin") {
+
+  navigate("/admin");
+  return;
+
+}
+
+if (user.role === "courier") {
+
+  navigate("/courier");
+  return;
+
+}
 
       // CEK PROFIL MEMBER
       if (!user?.nik || !user?.birth || !user?.gender) {

@@ -314,7 +314,9 @@ export default function Checkout() {
                   </div>
 
                   <button
-                    onClick={() => navigate("/address")}
+                    onClick={() =>
+                      navigate("/address?from=checkout")
+                    }
                     className="text-blue-600 text-sm font-semibold"
                   >
                     Change

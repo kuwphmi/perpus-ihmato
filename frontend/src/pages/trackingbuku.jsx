@@ -26,6 +26,7 @@ export default function Trackingbuku() {
 
   const popupRef = useRef();
   const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -44,6 +45,14 @@ export default function Trackingbuku() {
   useEffect(() => {
 
     fetchOrders();
+
+    const interval = setInterval(() => {
+
+      fetchOrders();
+
+    }, 5000);
+
+    return () => clearInterval(interval);
 
   }, []);
 
@@ -69,28 +78,16 @@ export default function Trackingbuku() {
 
   };
 
-  const getStatus = (status) => {
-
-    if (status === "pending") return "Unpaid";
-
-    if (status === "success") return "Completed";
-
-    if (status === "shipping") return "Shipping";
-
-    return status;
-
-  };
-
   const unpaidCount = orders.filter(
-    (o) => getStatus(o.status) === "Unpaid"
+    (o) => o.order_status === "waiting_payment"
   ).length;
 
   const shippingCount = orders.filter(
-    (o) => getStatus(o.status) === "Shipping"
+    (o) => o.order_status === "shipping"
   ).length;
 
   const completedCount = orders.filter(
-    (o) => getStatus(o.status) === "Completed"
+    (o) => o.order_status === "completed"
   ).length;
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -117,6 +114,8 @@ export default function Trackingbuku() {
         </div>
 
       </div>
+
+
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-0 z-50">
@@ -365,7 +364,7 @@ export default function Trackingbuku() {
                     </h3>
 
                     <p className="text-gray-400 mt-1">
-                      Order ID: {order.id}
+                      Order ID: {order.order_id}
                     </p>
 
                     <p className="text-blue-600 font-bold mt-3">
@@ -379,51 +378,36 @@ export default function Trackingbuku() {
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
 
-                  {getStatus(order.status) === "Unpaid" && (
+                  {order.order_status === "waiting_payment" && (
+
                     <>
                       <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">
-                        Unpaid
+                        Waiting Payment
                       </span>
 
                       <button
-                        onClick={() => {
-window.snap.pay(order.snap_token, {
-
-  onSuccess: function () {
-    fetchOrders();
-  },
-
-  onPending: function () {
-    fetchOrders();
-  },
-
-  onClose: function () {
-
-    console.log("Popup closed");
-
-  },
-
-  onError: function (err) {
-
-    console.log(err);
-
-  },
-
-});                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition"
+                        onClick={() => setSelectedOrder(order)}
+                        className="border border-blue-600 text-blue-600 px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition"
                       >
-                        View Payment Code
+                        View Detail
                       </button>
                     </>
+
                   )}
 
-                  {getStatus(order.status) === "Shipping" && (
+                  {order.order_status === "processing" && (
+                    <span className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium">
+                      Processing
+                    </span>
+                  )}
+
+                  {order.order_status === "shipping" && (
                     <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
                       Shipping
                     </span>
                   )}
 
-                  {getStatus(order.status) === "Completed" && (
+                  {order.order_status === "completed" && (
                     <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
                       Completed
                     </span>
@@ -463,20 +447,20 @@ window.snap.pay(order.snap_token, {
               Navigation
             </h3>
 
-{/* MOBILE NAV */}
+            {/* MOBILE NAV */}
             <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-                
-                        <Link to="/koleksi">
-                          <FiHome size={24} />
-                        </Link>
-                        <Link to="/belanja">
-                          <FiShoppingCart size={24} />
-                        </Link>
-                         <Link to="/trackingbuku">
-                          <FiPackage size={24} />
-                        </Link>
-                      </div>
-            
+
+              <Link to="/koleksi">
+                <FiHome size={24} />
+              </Link>
+              <Link to="/belanja">
+                <FiShoppingCart size={24} />
+              </Link>
+              <Link to="/trackingbuku">
+                <FiPackage size={24} />
+              </Link>
+            </div>
+
           </div>
 
           {/* CONTACT */}
@@ -500,6 +484,148 @@ window.snap.pay(order.snap_token, {
 
       </footer>
 
+      {selectedOrder && (
+
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 relative animate-fadeIn">
+
+            {/* CLOSE */}
+            <button
+              onClick={() => setSelectedOrder(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
+            >
+              ✕
+            </button>
+
+            {/* COVER */}
+            <img
+              src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+              alt={selectedOrder.title}
+              className="w-32 h-44 object-cover rounded-2xl mx-auto shadow"
+            />
+
+            {/* TITLE */}
+            <h2 className="text-2xl font-bold text-center mt-5">
+              {selectedOrder.title}
+            </h2>
+
+            {/* STATUS */}
+            <div className="flex justify-center mt-3">
+
+              <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
+
+                {selectedOrder.order_status === "waiting_payment" &&
+                  "Waiting Payment"}
+
+                {selectedOrder.order_status === "processing" &&
+                  "Processing"}
+
+                {selectedOrder.order_status === "shipping" &&
+                  "Shipping"}
+
+                {selectedOrder.order_status === "completed" &&
+                  "Completed"}
+
+              </span>
+
+            </div>
+
+            {/* DETAIL */}
+            <div className="mt-6 space-y-4 text-sm">
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Order ID
+                </span>
+
+                <span className="font-medium">
+                  {selectedOrder.order_id}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Payment
+                </span>
+
+                <span className="font-medium">
+                  Midtrans
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Total
+                </span>
+
+                <span className="font-bold text-blue-600">
+                  Rp {selectedOrder.amount?.toLocaleString("id-ID")}
+                </span>
+              </div>
+
+            </div>
+
+            {/* PAYMENT BUTTON */}
+            {selectedOrder.order_status ===
+              "waiting_payment" && (
+
+                <button
+                  onClick={() => {
+
+                    window.snap.pay(
+                      selectedOrder.snap_token,
+
+                      {
+
+                        onSuccess: function () {
+
+                          fetchOrders();
+
+                        },
+                      }
+
+                    );
+
+                  }}
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold transition"
+                >
+                  View Payment QR
+                </button>
+
+              )}
+
+
+            {/* COMPLETED */}
+            {selectedOrder.order_status === "processing" && (
+
+              <div className="mt-6 bg-indigo-100 text-indigo-700 py-3 rounded-2xl text-center font-semibold">
+                Order is being processed
+              </div>
+
+            )}
+
+            {selectedOrder.order_status === "shipping" && (
+
+              <div className="mt-6 bg-blue-100 text-blue-700 py-3 rounded-2xl text-center font-semibold">
+                Your order is being shipped
+              </div>
+
+            )}
+
+            {selectedOrder.order_status === "completed" && (
+
+              <div className="mt-6 bg-green-100 text-green-700 py-3 rounded-2xl text-center font-semibold">
+                Order Completed
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
       {/* FLOATING */}
       <Floating />
 

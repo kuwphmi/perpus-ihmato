@@ -24,7 +24,7 @@ import HelpCenter from "./pages/helpcenter";
 import Checkout from "./pages/checkout";
 import DetailRiwayat from "./pages/detailriwayat";
 import Address from "./pages/address";
-
+import CourierPage from "./pages/CourierPage";
 
 function AppWrapper() {
   const [cart, setCart] = useState([]);
@@ -116,7 +116,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
 
 
         <Route path="/detail-riwayat/:id" element={<DetailRiwayat />} />
-      
+
 
         <Route path="/profil" element={<Profil />} />
 
@@ -151,6 +151,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/search" element={<SearchPage />} />
 
         <Route path="/admin" element={<AdminPerpustakaan />} />
+        <Route path="/courier" element={<CourierPage />}/>
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>
 

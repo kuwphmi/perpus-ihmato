@@ -26,4 +26,17 @@ router.get("/extension-requests", admin.getExtensions);
 router.post("/extension-requests/:id/approve", admin.approveExtension);
 router.post("/extension-requests/:id/reject", admin.rejectExtension);
 
+router.get(
+  "/orders",
+  admin.getOrders);
+
+router.put(
+  "/orders/:id/status",
+  admin.updateOrderStatus
+);
+
+router.get(
+  "/courier-orders",
+  admin.getCourierOrders
+);
 export default router;

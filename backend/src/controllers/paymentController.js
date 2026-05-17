@@ -1,182 +1,345 @@
 import snap from "../config/midtrans.js";
 import supabase from "../config/supabase.js";
 
-// CREATE TRANSACTION
-export const createTransaction = async (req, res) => {
-  try {
+/* =========================
+   CREATE TRANSACTION
+========================= */
+export const createTransaction =
+  async (req, res) => {
 
-    const { user_id, items, loan_id } = req.body;
+    try {
 
-    if (!user_id || !items) {
-      return res.status(400).json({
-        message: "user_id dan items wajib",
-      });
-    }
+      const {
+        user_id,
+        items,
+        loan_id,
+        address_id,
+      } = req.body;
 
-    const order_id = `ORDER-${Date.now()}`;
+      // VALIDATION
+      if (
+        !user_id ||
+        !items ||
+        items.length === 0
+      ) {
 
-    const gross_amount = items.reduce((sum, item) => {
-      return sum + item.price * (item.qty || 1);
-    }, 0);
+        return res.status(400).json({
+          message:
+            "user_id dan items wajib",
+        });
 
-    // MIDTRANS PARAMETER
-    const parameter = {
-      transaction_details: {
-        order_id,
-        gross_amount,
-      },
+      }
 
-      item_details: items.map((item) => ({
-        id: item.book_key,
-        price: item.price,
-        quantity: item.qty || 1,
-        name: item.title,
-      })),
-    };
+      // ORDER ID
+      const order_id =
+        `ORDER-${Date.now()}`;
 
-    // CREATE MIDTRANS TRANSACTION
-    const transaction = await snap.createTransaction(parameter);
+      // TOTAL PRICE
+      const gross_amount =
+        items.reduce((sum, item) => {
 
-    console.log("MASUK CONTROLLER");
-    console.log("REQ BODY:", req.body);
-    console.log("ITEMS:", items);
-    console.log("USER:", user_id);
+          return (
+            sum +
+            item.price *
+            (item.qty || 1)
+          );
 
-    // SAVE TO DATABASE
-    const { data, error } = await supabase
-      .from("payments")
-      .insert([
-        {
-          user_id,
-          loan_id: loan_id || null,
+        }, 0);
+
+      /* =========================
+         MIDTRANS PARAMETER
+      ========================= */
+      const parameter = {
+
+        transaction_details: {
           order_id,
-          amount: gross_amount,
-          status: "pending",
-          payment_method: "midtrans",
-
-          snap_token: transaction.token,
-
-          title: items[0]?.title || null,
-          author: items[0]?.author || null,
-          cover: items[0]?.cover || null,
+          gross_amount,
         },
-      ])
-      .select();
 
-    if (error) throw error;
+        callbacks: {
 
-    // RESPONSE
-    res.json({
-      token: transaction.token,
-      redirect_url: transaction.redirect_url,
-    });
+          finish:
+            "http://localhost:5173/trackingbuku",
 
-  } catch (error) {
+          pending:
+            "http://localhost:5173/trackingbuku",
 
-    console.log(error);
+          error:
+            "http://localhost:5173/trackingbuku",
 
-    res.status(500).json({
-      message: error.message,
-    });
+        },
 
-  }
-};
+        item_details:
+          items.map((item) => ({
 
-// MIDTRANS NOTIFICATION
-export const midtransNotification = async (req, res) => {
+            id: item.book_key,
 
-  try {
+            price: item.price,
 
-    const status = req.body.transaction_status;
-    const order_id = req.body.order_id;
+            quantity:
+              item.qty || 1,
 
-    console.log("MIDTRANS NOTIF:", req.body);
+            name: item.title,
 
-    // SUCCESS
-    if (status === "settlement") {
+          })),
 
-      await supabase
-        .from("payments")
-        .update({
-          status: "success",
-        })
-        .eq("order_id", order_id);
+      };
 
-    }
+      /* =========================
+         CREATE MIDTRANS
+      ========================= */
+      const transaction =
+        await snap.createTransaction(
+          parameter
+        );
 
-    // PENDING
-    if (status === "pending") {
+      /* =========================
+         SAVE DATABASE
+      ========================= */
+      const { error } =
+        await supabase
+          .from("payments")
+.insert([
+  {
+    user_id,
+    address_id,
 
-      await supabase
-        .from("payments")
-        .update({
-          status: "pending",
-        })
-        .eq("order_id", order_id);
+              loan_id:
+                loan_id || null,
 
-    }
+              order_id,
 
-    // EXPIRED
-    if (status === "expire") {
+              amount:
+                gross_amount,
 
-      await supabase
-        .from("payments")
-        .update({
-          status: "expired",
-        })
-        .eq("order_id", order_id);
+              // PAYMENT STATUS
+              payment_status:
+                "pending",
 
-    }
+              // ORDER STATUS
+              order_status:
+                "waiting_payment",
 
-    // CANCELLED
-    if (status === "cancel") {
+              payment_method:
+                "midtrans",
 
-      await supabase
-        .from("payments")
-        .update({
-          status: "cancelled",
-        })
-        .eq("order_id", order_id);
+              snap_token:
+                transaction.token,
 
-    }
+              redirect_url:
+                transaction.redirect_url,
 
-    res.sendStatus(200);
+              title:
+                items[0]?.title ||
+                null,
 
-  } catch (err) {
+              author:
+                items[0]?.author ||
+                null,
 
-    console.log(err);
+              cover:
+                items[0]?.cover ||
+                null,
 
-    res.sendStatus(500);
+            },
+          ]);
 
-  }
+      if (error) throw error;
 
-};
+      /* =========================
+         RESPONSE
+      ========================= */
+      res.json({
 
-// GET USER PAYMENTS
-export const getPayments = async (req, res) => {
+        token:
+          transaction.token,
 
-  try {
+        redirect_url:
+          transaction.redirect_url,
 
-    const { user_id } = req.params;
-
-    const { data, error } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("user_id", user_id)
-      .order("created_at", {
-        ascending: false,
       });
 
-    if (error) throw error;
+    } catch (error) {
 
-    res.json(data);
+      console.log(error);
 
-  } catch (err) {
+      res.status(500).json({
+        message:
+          error.message,
+      });
 
-    res.status(500).json({
-      message: err.message,
-    });
+    }
 
-  }
+  };
 
-};
+/* =========================
+   MIDTRANS WEBHOOK
+========================= */
+export const midtransNotification =
+  async (req, res) => {
+
+    try {
+
+      const transaction_status =
+        req.body.transaction_status;
+
+      const order_id =
+        req.body.order_id;
+
+      console.log(
+        "MIDTRANS NOTIFICATION:",
+        req.body
+      );
+
+      let payment_status =
+        "pending";
+
+      let order_status =
+        "waiting_payment";
+
+      /* =========================
+         SUCCESS PAYMENT
+      ========================= */
+      if (
+
+        transaction_status ===
+        "settlement" ||
+
+        transaction_status ===
+        "capture"
+
+      ) {
+
+        payment_status =
+          "paid";
+
+        order_status =
+          "processing";
+
+      }
+
+      /* =========================
+         PENDING
+      ========================= */
+      else if (
+        transaction_status ===
+        "pending"
+      ) {
+
+        payment_status =
+          "pending";
+
+        order_status =
+          "waiting_payment";
+
+      }
+
+      /* =========================
+         EXPIRED
+      ========================= */
+      else if (
+        transaction_status ===
+        "expire"
+      ) {
+
+        payment_status =
+          "expired";
+
+        order_status =
+          "cancelled";
+
+      }
+
+      /* =========================
+         FAILED / CANCEL
+      ========================= */
+      else if (
+
+        transaction_status ===
+        "cancel" ||
+
+        transaction_status ===
+        "deny"
+
+      ) {
+
+        payment_status =
+          "failed";
+
+        order_status =
+          "cancelled";
+
+      }
+
+      /* =========================
+         UPDATE DATABASE
+      ========================= */
+      const { error } =
+        await supabase
+          .from("payments")
+          .update({
+
+            payment_status,
+
+            order_status,
+
+          })
+          .eq(
+            "order_id",
+            order_id
+          );
+
+      if (error) throw error;
+
+      res.sendStatus(200);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.sendStatus(500);
+
+    }
+
+  };
+
+/* =========================
+   GET USER PAYMENTS
+========================= */
+export const getPayments =
+  async (req, res) => {
+
+    try {
+
+      const { user_id } =
+        req.params;
+
+      const { data, error } =
+        await supabase
+          .from("payments")
+          .select("*")
+          .eq(
+            "user_id",
+            user_id
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          );
+
+      if (error) throw error;
+
+      res.json(data);
+
+    } catch (err) {
+
+      res.status(500).json({
+        message:
+          err.message,
+      });
+
+    }
+
+  };

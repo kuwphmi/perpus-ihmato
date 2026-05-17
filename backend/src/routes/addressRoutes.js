@@ -4,17 +4,20 @@ import {
   saveAddress,
   getAddress,
   setPrimaryAddress,
+  updateAddress,
+  deleteAddress,
 } from "../controllers/addressController.js";
 
 const router = express.Router();
 
-// save address
 router.post("/", saveAddress);
 
-// get all address by user
 router.get("/:user_id", getAddress);
 
-// set primary address
 router.put("/primary/:id", setPrimaryAddress);
+
+router.put("/:id", updateAddress);
+
+router.delete("/:id", deleteAddress);
 
 export default router;

@@ -8,10 +8,22 @@ import {
 
 const router = express.Router();
 
-router.post("/create", createTransaction);
+// CREATE PAYMENT
+router.post(
+  "/create",
+  createTransaction
+);
 
-router.post("/notification", midtransNotification);
+// MIDTRANS WEBHOOK
+router.post(
+  "/notification",
+  midtransNotification
+);
 
-router.get("/:user_id", getPayments);
+// GET USER PAYMENT
+router.get(
+  "/:user_id",
+  getPayments
+);
 
 export default router;

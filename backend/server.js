@@ -16,6 +16,7 @@ import reportRoutes from "./src/routes/reportRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
 import addressRoutes from "./src/routes/addressRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 const app = express();
 
 app.use(
@@ -410,6 +411,7 @@ app.use("/api", reportRoutes);
 app.use("/api", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
+app.use("/api/admin", adminRoutes);
 
 /* =======================
    ADMIN DASHBOARD

@@ -614,16 +614,23 @@ const handleSearch = async () => {
         </section>
       )}
 
+{isSearchActive ? (
 
-      {isSearchActive ? (
   <section className="px-6 md:px-20 pb-14 mt-10">
+
     <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
       Search Results: {search}
     </h2>
 
     <div className="flex gap-5 overflow-x-auto">
+
       {searchResults.map((book, index) => (
-        <div key={index} className="min-w-[250px]">
+
+        <div
+          key={index}
+          className="min-w-[250px]"
+        >
+
           <BookCard
             workKey={book.workKey}
             title={book.title}
@@ -637,12 +644,20 @@ const handleSearch = async () => {
             setSelectedBook={setSelectedBook}
             showNotif={showNotif}
           />
+
         </div>
+
       ))}
+
     </div>
+
   </section>
+
 ) : !activeCategory && (
+
   <>
+
+    {/* ================= BUKU TERLARIS ================= */}
     <BukuTerlaris
       data={filteredBooks}
       cart={cart}
@@ -652,6 +667,22 @@ const handleSearch = async () => {
       showNotif={showNotif}
     />
 
+    {/* ================= LANDSCAPE ================= */}
+    <section className="px-4 md:px-20 pb-14">
+
+      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
+
+        <img
+          src={banner5}
+          className="w-full h-auto object-contain"
+          alt="Banner"
+        />
+
+      </div>
+
+    </section>
+
+    {/* ================= BUKU TERBARU ================= */}
     <BukuTerbaru
       data={filteredBooks}
       cart={cart}
@@ -660,43 +691,10 @@ const handleSearch = async () => {
       setSelectedBook={setSelectedBook}
       showNotif={showNotif}
     />
+
   </>
+
 )}
-
-      {/* ================= BUKU TERLARIS ================= */}
-      {!activeCategory && (
-        <BukuTerlaris
-          data={filteredBooks}
-          cart={cart}
-          setCart={setCart}
-          setIsBuyOpen={setIsBuyOpen}
-          setSelectedBook={setSelectedBook}
-          showNotif={showNotif}
-        />
-      )}
-
-      {/* ================= LANDSCAPE ================= */}
-      <section className="px-4 md:px-20 pb-14">
-        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-          <img
-            src={banner5}
-            className="w-full h-auto object-contain"
-            alt="Banner"
-          />
-        </div>
-      </section>
-
-      {/* ================= BUKU TERBARU ================= */}
-      {!activeCategory && (
-        <BukuTerbaru
-          data={filteredBooks}
-          cart={cart}
-          setCart={setCart}
-          setIsBuyOpen={setIsBuyOpen}
-          setSelectedBook={setSelectedBook}
-          showNotif={showNotif}
-        />
-      )}
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">

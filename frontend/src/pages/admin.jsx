@@ -14,11 +14,37 @@ const tabs = [
 ];
 
 const ORDER_STATUSES = [
-  { key: "pending", label: "Pending", color: "amber" },
-  { key: "processing", label: "Processing", color: "blue" },
-  { key: "shipped", label: "Shipped", color: "indigo" },
-  { key: "delivered", label: "Delivered", color: "emerald" },
-  { key: "cancelled", label: "Cancelled", color: "rose" },
+
+  {
+    key: "waiting_payment",
+    label: "Waiting Payment",
+    color: "amber",
+  },
+
+  {
+    key: "processing",
+    label: "Processing",
+    color: "blue",
+  },
+
+  {
+    key: "shipping",
+    label: "Shipping",
+    color: "indigo",
+  },
+
+  {
+    key: "completed",
+    label: "Completed",
+    color: "emerald",
+  },
+
+  {
+    key: "cancelled",
+    label: "Cancelled",
+    color: "rose",
+  },
+
 ];
 
 const statColorMap = {
@@ -163,10 +189,21 @@ export default function AdminPerpustakaan() {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
   }, [activeTab, loadDashboard, loadTabData]);
 
-  useEffect(() => {
+useEffect(() => {
+
+  loadDashboard();
+  loadTabData(activeTab);
+
+  const interval = setInterval(() => {
+
     loadDashboard();
     loadTabData(activeTab);
-  }, [loadDashboard, loadTabData, activeTab]);
+
+  }, 5000);
+
+  return () => clearInterval(interval);
+
+}, [loadDashboard, loadTabData, activeTab]);
 
   const rejectLoanRequest = async (id) => {
     try {
@@ -227,7 +264,9 @@ export default function AdminPerpustakaan() {
     try {
       await fetchJson(`${API_BASE}/admin/orders/${id}/status`, {
         method: "PUT",
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          order_status: status,
+        }),
       });
 
       await refreshCurrentView();
@@ -235,7 +274,7 @@ export default function AdminPerpustakaan() {
       if (selectedOrder?.id === id) {
         setSelectedOrder((prev) => ({
           ...prev,
-          status,
+order_status: status,
         }));
       }
     } catch {
@@ -251,7 +290,7 @@ export default function AdminPerpustakaan() {
   const badgeClass = (status) => {
     const s = String(status || "").toLowerCase();
 
-    if (s.includes("approved") || s.includes("selesai") || s.includes("returned") || s.includes("delivered")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    if (s.includes("approved") || s.includes("selesai") || s.includes("returned") || s.includes("completed")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
 
     if (s.includes("pending") || s.includes("menunggu")) return "bg-amber-100 text-amber-700 border-amber-200";
 
@@ -259,7 +298,7 @@ export default function AdminPerpustakaan() {
 
     if (s.includes("processing") || s.includes("diproses")) return "bg-blue-100 text-blue-700 border-blue-200";
 
-    if (s.includes("shipped") || s.includes("dikirim")) return "bg-indigo-100 text-indigo-700 border-indigo-200";
+    if (s.includes("shipping") || s.includes("dikirim")) return "bg-indigo-100 text-indigo-700 border-indigo-200";
 
     return "bg-slate-100 text-slate-700 border-slate-200";
   };
@@ -269,8 +308,8 @@ export default function AdminPerpustakaan() {
     const map = {
       pending: "Pending",
       processing: "Processing",
-      shipped: "Shipped",
-      delivered: "Delivered",
+      shipping: "Shipping",
+      completed: "Completed",
       cancelled: "Cancelled",
       returned: "Returned",
       approved: "Approved",
@@ -312,7 +351,9 @@ export default function AdminPerpustakaan() {
     if (activeTab === "pesanan") {
       let orders = data.orders;
       if (orderStatusFilter !== "all") {
-        orders = orders.filter((x) => x.status?.toLowerCase() === orderStatusFilter);
+        orders = orders.filter(
+          (x) =>
+            x.order_status?.toLowerCase() === orderStatusFilter);
       }
       return orders.filter(match);
     }
@@ -329,7 +370,7 @@ export default function AdminPerpustakaan() {
       { key: "book_title", label: "Book" },
       { key: "loan_date", label: "Loan Date" },
       { key: "due_date", label: "Due Date" },
-      { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
+      { key: "status", label: "Status", render: (row) => <Badge status={row.order_status} /> },
       {
         key: "action",
         label: "Action",
@@ -394,108 +435,160 @@ export default function AdminPerpustakaan() {
         ),
       },
     ],
-   perpanjangan: [
-  { key: "member_code", label: "ID" },
-  { key: "member_name", label: "Member" },
-  { key: "book_title", label: "Book" },
-  { key: "old_due_date", label: "Old Due Date" },
-  { key: "new_due_date", label: "New Due Date" },
-  {
-    key: "status",
-    label: "Status",
-    render: (row) => <Badge status={row.status} />,
-  },
-  {
-    key: "action",
-    label: "Action",
-    render: (row) => (
-      <div className="flex items-center gap-2">
-        {/* APPROVE BUTTON */}
-        <button
-          type="button"
-          onClick={() => approveExtension(getId(row))}
-          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-        >
-          Approve
-        </button>
-
-        {/* REJECT BUTTON */}
-        <button
-          type="button"
-          onClick={() => rejectExtension(getId(row))}
-          className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
-        >
-          Reject
-        </button>
-      </div>
-    ),
-  },
-],
-    pesanan: [
-      { key: "order_code", label: "Order No." },
-      { key: "buyer_name", label: "Buyer" },
+    perpanjangan: [
+      { key: "member_code", label: "ID" },
+      { key: "member_name", label: "Member" },
       { key: "book_title", label: "Book" },
-      { key: "qty", label: "Qty" },
+      { key: "old_due_date", label: "Old Due Date" },
+      { key: "new_due_date", label: "New Due Date" },
       {
-        key: "total_price",
-        label: "Total",
-        render: (row) => (row.total_price ? `Rp ${Number(row.total_price).toLocaleString("id-ID")}` : "-"),
+        key: "status",
+        label: "Status",
+        render: (row) => <Badge status={row.status} />,
       },
-      { key: "order_date", label: "Date" },
-      { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
       {
         key: "action",
         label: "Action",
         render: (row) => (
-          <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
-            Manage
-          </button>
+          <div className="flex items-center gap-2">
+            {/* APPROVE BUTTON */}
+            <button
+              type="button"
+              onClick={() => approveExtension(getId(row))}
+              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+            >
+              Approve
+            </button>
+
+            {/* REJECT BUTTON */}
+            <button
+              type="button"
+              onClick={() => rejectExtension(getId(row))}
+              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
+            >
+              Reject
+            </button>
+          </div>
         ),
       },
+    ],
+
+    pesanan: [
+
+      {
+        key: "order_id",
+        label: "Order No.",
+      },
+
+      {
+        key: "user_id",
+        label: "Buyer",
+      },
+
+      {
+        key: "title",
+        label: "Book",
+      },
+
+      {
+        key: "amount",
+        label: "Total",
+
+        render: (row) => (
+
+          row.amount
+            ? `Rp ${Number(
+              row.amount
+            ).toLocaleString("id-ID")}`
+            : "-"
+
+        ),
+      },
+
+      {
+        key: "created_at",
+        label: "Date",
+      },
+
+      {
+        key: "status",
+        label: "Status",
+
+        render: (row) => (
+          <Badge status={row.order_status} />
+        ),
+      },
+
+      {
+        key: "action",
+        label: "Action",
+
+        render: (row) => (
+
+          <button
+
+            type="button"
+
+            onClick={() =>
+              setSelectedOrder(row)
+            }
+
+            className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors"
+          >
+            Manage
+          </button>
+
+        ),
+      },
+
     ],
   };
 
   const orderSteps = [
+
     {
-      key: "pending",
-      label: "Pending",
-      desc: "Waiting for confirmation",
+      key: "waiting_payment",
+      label: "Waiting Payment",
+      desc: "Waiting for payment",
       icon: Clock3,
     },
+
     {
       key: "processing",
       label: "Processing",
       desc: "Order is being processed",
       icon: RefreshCcw,
     },
+
     {
-      key: "shipped",
-      label: "Shipped",
+      key: "shipping",
+      label: "Shipping",
       desc: "Package is on delivery",
       icon: Truck,
     },
+
     {
-      key: "delivered",
-      label: "Delivered",
+      key: "completed",
+      label: "Completed",
       desc: "Package received successfully",
       icon: PackageCheck,
     },
+
   ];
 
   const getStepIndex = (status) => orderSteps.findIndex((s) => s.key === status?.toLowerCase());
 
   const OrderModal = ({ order, onClose }) => {
-    const currentStep = getStepIndex(order.status);
+    const currentStep = getStepIndex(order.order_status);
     const nextStatus = currentStep < orderSteps.length - 1 ? orderSteps[currentStep + 1]?.key : null;
-    const isCancelled = order.status?.toLowerCase() === "cancelled";
-
+    const isCancelled = order.order_status?.toLowerCase() === "cancelled";
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
           <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
             <div>
               <h3 className="font-bold text-slate-900 text-lg">Order Details</h3>
-              <p className="text-sm text-slate-500">{order.order_code || `#${order.id}`}</p>
+              <p className="text-sm text-slate-500">{order.order_id || `#${order.id}`}</p>
             </div>
             <button type="button" onClick={onClose} className="rounded-full w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
               ✕
@@ -506,19 +599,24 @@ export default function AdminPerpustakaan() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Buyer</div>
-                <div className="font-semibold text-slate-800">{order.buyer_name || "-"}</div>
+                <div className="font-semibold text-slate-800">{order.user_id || "-"}</div>
               </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Book</div>
-                <div className="font-semibold text-slate-800">{order.book_title || "-"}</div>
+                <div className="font-semibold text-slate-800">{order.title || "-"}</div>
               </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Total</div>
-                <div className="font-bold text-blue-700">{order.total_price ? `Rp ${Number(order.total_price).toLocaleString("id-ID")}` : "-"}</div>
-              </div>
+                <div className="font-bold text-blue-700">
+                  {order.amount
+                    ? `Rp ${Number(
+                      order.amount
+                    ).toLocaleString("id-ID")}`
+                    : "-"}
+                </div>                </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Date</div>
-                <div className="font-semibold text-slate-800">{order.order_date || "-"}</div>
+                <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
               </div>
               {order.address && (
                 <div className="col-span-2 rounded-lg bg-slate-50 p-3">
@@ -575,7 +673,7 @@ export default function AdminPerpustakaan() {
                 Move to: {orderSteps.find((s) => s.key === nextStatus)?.label}
               </button>
             )}
-            {!["delivered", "cancelled"].includes(order.status?.toLowerCase()) && (
+            {!["completed", "cancelled"].includes(order.order_status?.toLowerCase()) && (
               <button
                 type="button"
                 onClick={() => {
@@ -600,10 +698,10 @@ export default function AdminPerpustakaan() {
     const orders = data.orders;
     return {
       total: orders.length,
-      pending: orders.filter((o) => o.status?.toLowerCase() === "pending").length,
-      processing: orders.filter((o) => o.status?.toLowerCase() === "processing").length,
-      shipped: orders.filter((o) => o.status?.toLowerCase() === "shipped").length,
-      delivered: orders.filter((o) => o.status?.toLowerCase() === "delivered").length,
+      pending: orders.filter((o) => o.order_status?.toLowerCase() === "waiting_payment").length,
+      processing: orders.filter((o) => o.order_status?.toLowerCase() === "processing").length,
+      shipping: orders.filter((o) => o.order_status?.toLowerCase() === "shipping").length,
+      completed: orders.filter((o) => o.order_status?.toLowerCase() === "completed").length,
     };
   }, [data.orders]);
 
@@ -761,8 +859,8 @@ export default function AdminPerpustakaan() {
                 { label: "Total Orders", value: orderStats.total, icon: "🛒", bg: "bg-slate-100", text: "text-slate-700" },
                 { label: "Pending", value: orderStats.pending, icon: "🕐", bg: "bg-amber-50", text: "text-amber-700" },
                 { label: "Processing", value: orderStats.processing, icon: "⚙️", bg: "bg-blue-50", text: "text-blue-700" },
-                { label: "Shipped", value: orderStats.shipped, icon: "🚚", bg: "bg-indigo-50", text: "text-indigo-700" },
-                { label: "Delivered", value: orderStats.delivered, icon: "✅", bg: "bg-emerald-50", text: "text-emerald-700" },
+                { label: "Shipping", value: orderStats.shipping, icon: "🚚", bg: "bg-indigo-50", text: "text-indigo-700" },
+                { label: "Completed", value: orderStats.completed, icon: "✅", bg: "bg-emerald-50", text: "text-emerald-700" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-4 shadow-lg shadow-slate-200/40">
                   <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${stat.bg} text-xl mb-2`}>{stat.icon}</div>
