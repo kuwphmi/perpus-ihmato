@@ -40,25 +40,33 @@ export default function HalamanUtama() {
 
   const [bookDescription, setBookDescription] = useState("");
   const [notif, setNotif] = useState("");
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const unreadCount =
+    notifications.filter(
+      (n) => !n.is_read
+    ).length;
+
   const [favorites, setFavorites] = useState(() => {
-  const saved = localStorage.getItem("favorites");
-  return saved ? JSON.parse(saved) : [];
-});
-useEffect(() => {
-  localStorage.setItem(
-    "favorites",
-    JSON.stringify(favorites)
-  );
-}, [favorites]);
+    const saved = localStorage.getItem("favorites");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem(
+      "favorites",
+      JSON.stringify(favorites)
+    );
+  }, [favorites]);
   const showNotif = (message) => {
 
-  setNotif(message);
+    setNotif(message);
 
-  setTimeout(() => {
-    setNotif("");
-  }, 2000);
+    setTimeout(() => {
+      setNotif("");
+    }, 2000);
 
-};
+  };
   const genreMap = {
 
     Art: "art",
@@ -74,14 +82,41 @@ useEffect(() => {
   };
 
   const navigate = useNavigate();
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        const res =
+          await fetch(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        const data =
+          await res.json();
+
+        setNotifications(data);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
   const fetchGenreBooks = async (category) => {
     if (activeCategory === category) {
 
-  setActiveCategory(null);
-  setGenreBooks([]);
+      setActiveCategory(null);
+      setGenreBooks([]);
 
-  return;
-}
+      return;
+    }
     try {
       const query = genreMap[category] || category.toLowerCase();
 
@@ -91,41 +126,41 @@ useEffect(() => {
 
       const data = await res.json();
 
-     const books = data.docs.map((item) => ({
-  workKey: item.key,
-  title: item.title ?? "-",
-  author: item.author_name?.[0] ?? "-",
-  cover: item.cover_i ?? null,
+      const books = data.docs.map((item) => ({
+        workKey: item.key,
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
 
-  firstSentence:
-    item.first_sentence?.[0] ||
-    item.first_sentence ||
-    "",
+        firstSentence:
+          item.first_sentence?.[0] ||
+          item.first_sentence ||
+          "",
 
-  subjects: item.subject?.slice(0, 5) || [],
-}));
+        subjects: item.subject?.slice(0, 5) || [],
+      }));
 
       setGenreBooks(books);
       if (books.length === 0) {
 
-  setActiveCategory(
-    `No books found for "${search}"`
-  );
+        setActiveCategory(
+          `No books found for "${search}"`
+        );
 
-} else {
+      } else {
 
-  setActiveCategory(
-    `Search Results: ${search}`
-  );
+        setActiveCategory(
+          `Search Results: ${search}`
+        );
 
-}
-setActiveCategory(category);
+      }
+      setActiveCategory(category);
 
-setTimeout(() => {
-  bookSectionRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}, 100);
+      setTimeout(() => {
+        bookSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
 
     } catch (err) {
       console.log("error genre:", err);
@@ -143,7 +178,7 @@ setTimeout(() => {
     {
       img: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da",
       title: "Borrow Books Instantly",
-  subtitle: "Request your favorite books online with a fast and simple process.",
+      subtitle: "Request your favorite books online with a fast and simple process.",
     },
     {
       img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353",
@@ -176,30 +211,30 @@ setTimeout(() => {
         const data = await res.json();
 
         const books = data.docs.map((item) => ({
-  workKey: item.key,
-  title: item.title ?? "-",
-  author: item.author_name?.[0] ?? "-",
-  cover: item.cover_i ?? null,
+          workKey: item.key,
+          title: item.title ?? "-",
+          author: item.author_name?.[0] ?? "-",
+          cover: item.cover_i ?? null,
 
-  firstSentence:
-    item.first_sentence?.[0] ||
-    item.first_sentence ||
-    "",
+          firstSentence:
+            item.first_sentence?.[0] ||
+            item.first_sentence ||
+            "",
 
-  subjects: item.subject?.slice(0, 5) || [],
-}));
+          subjects: item.subject?.slice(0, 5) || [],
+        }));
 
         setGenreBooks(books);
 
-// supaya judul berubah
-setActiveCategory(`Search Results: ${search}`);
+        // supaya judul berubah
+        setActiveCategory(`Search Results: ${search}`);
 
-setTimeout(() => {
-  bookSectionRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}, 100);
-        
+        setTimeout(() => {
+          bookSectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+          });
+        }, 100);
+
 
       } catch (err) {
         console.log(err);
@@ -330,10 +365,20 @@ setTimeout(() => {
 
   ];
   useEffect(() => {
-    const stored = localStorage.getItem("user");
+
+    const stored =
+      localStorage.getItem("user");
+
     if (stored) {
-      setUser(JSON.parse(stored));
+
+      setUser(
+        JSON.parse(stored)
+      );
+
     }
+
+    fetchNotifications();
+
   }, []);
 
   const submitLoanRequest = async () => {
@@ -400,41 +445,41 @@ setTimeout(() => {
 
       if (typeof data.description === "string") {
 
-  setBookDescription(data.description);
+        setBookDescription(data.description);
 
-} else if (data.description?.value) {
+      } else if (data.description?.value) {
 
-  setBookDescription(data.description.value);
+        setBookDescription(data.description.value);
 
-} else {
+      } else {
 
-  // fallback otomatis
-  setBookDescription(
-    `${selectedBook?.title} is a book written by ${selectedBook?.author}. This book is available in the BukuIn digital library collection and can be explored through the detail and borrowing features.`
-  );
+        // fallback otomatis
+        setBookDescription(
+          `${selectedBook?.title} is a book written by ${selectedBook?.author}. This book is available in the BukuIn digital library collection and can be explored through the detail and borrowing features.`
+        );
 
-}
+      }
 
     } catch (err) {
 
       console.log(err);
-    if (selectedBook?.firstSentence) {
+      if (selectedBook?.firstSentence) {
 
-  setBookDescription(selectedBook.firstSentence);
+        setBookDescription(selectedBook.firstSentence);
 
-} else if (selectedBook?.subjects?.length > 0) {
+      } else if (selectedBook?.subjects?.length > 0) {
 
-  setBookDescription(
-    `This book discusses ${selectedBook.subjects.join(", ")}.`
-  );
+        setBookDescription(
+          `This book discusses ${selectedBook.subjects.join(", ")}.`
+        );
 
-} else {
+      } else {
 
-  setBookDescription(
-    `No detailed description is available for this book yet.`
-  );
+        setBookDescription(
+          `No detailed description is available for this book yet.`
+        );
 
-}
+      }
 
     }
   };
@@ -455,27 +500,27 @@ setTimeout(() => {
   return (
     <div className="bg-white min-h-screen">
       {notif && (
-  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] animate-bounce">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] animate-bounce">
 
-    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">
-      {notif}
-    </div>
+          <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">
+            {notif}
+          </div>
 
-  </div>
-)}
+        </div>
+      )}
 
 
       {/* BORROW POPUP */}
       {showBorrowPopup && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    onClick={() => setShowBorrowPopup(false)}
-  >
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setShowBorrowPopup(false)}
+        >
 
-    <div
- className="bg-white p-5 rounded-2xl w-full max-w-md"
-  onClick={(e) => e.stopPropagation()}
-    >
+          <div
+            className="bg-white p-5 rounded-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
 
             <h2 className="text-xl font-bold text-blue-700">
               Borrow Request
@@ -506,21 +551,21 @@ setTimeout(() => {
               </ul>
               <div className="flex justify-end gap-3 mt-6">
 
-  <button
-    onClick={() => setShowBorrowPopup(false)}
-    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
-  >
-    Cancel
-  </button>
+                <button
+                  onClick={() => setShowBorrowPopup(false)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                >
+                  Cancel
+                </button>
 
-  <button
-    onClick={submitLoanRequest}
-    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-  >
-    Borrow
-  </button>
+                <button
+                  onClick={submitLoanRequest}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >
+                  Borrow
+                </button>
 
-</div>
+              </div>
             </div>
 
           </div>
@@ -529,13 +574,13 @@ setTimeout(() => {
 
       {/* DETAIL POPUP */}
       {showDetailPopup && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    onClick={() => setShowDetailPopup(false)}
-  >
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setShowDetailPopup(false)}
+        >
 
-    <div
-      className="
+          <div
+            className="
   bg-white
   p-4 md:p-6
   rounded-2xl
@@ -544,20 +589,21 @@ setTimeout(() => {
   max-h-[75vh] md:max-h-[90vh]
   overflow-y-auto
 "
-      onClick={(e) => e.stopPropagation()}
-    >
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
 
-  <h2 className="text-lg md:text-xl font-bold text-blue-700">
-    Book Detail
-  </h2>
+              <h2 className="text-lg md:text-xl font-bold text-blue-700">
+                Book Detail
+              </h2>
 
-</div>
+            </div>
 
             {/* COVER */}
-<div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
+            <div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
 
-  {selectedBook?.cover ? (
+              {selectedBook?.cover ? (
+
 
     <img
       src={
@@ -571,98 +617,97 @@ setTimeout(() => {
         e.target.style.display = "none";
       }}
     />
+              ) : (
 
-  ) : (
+                <p className="text-gray-400">
+                  No Cover Available
+                </p>
 
-    <p className="text-gray-400">
-      No Cover Available
-    </p>
+              )}
 
-  )}
+            </div>
 
-</div>
+            {/* TITLE */}
+            <div className="flex items-start justify-between gap-3">
 
-{/* TITLE */}
-<div className="flex items-start justify-between gap-3">
+              <h2 className="text-xl font-bold text-gray-800">
+                {selectedBook?.title}
+              </h2>
 
-  <h2 className="text-xl font-bold text-gray-800">
-    {selectedBook?.title}
-  </h2>
+              <button
+                onClick={() => {
 
- <button
-  onClick={() => {
+                  const isExist = favorites.find(
+                    (item) => item.workKey === selectedBook?.workKey
+                  );
 
-  const isExist = favorites.find(
-    (item) => item.workKey === selectedBook?.workKey
-  );
+                  if (isExist) {
 
-  if (isExist) {
+                    setFavorites(
+                      favorites.filter(
+                        (item) => item.workKey !== selectedBook?.workKey
+                      )
+                    );
 
-    setFavorites(
-      favorites.filter(
-        (item) => item.workKey !== selectedBook?.workKey
-      )
-    );
+                    showNotif("Removed from favorites");
 
-    showNotif("Removed from favorites");
+                  } else {
 
-  } else {
+                    const newFavorite = {
+                      workKey: selectedBook?.workKey,
+                      title: selectedBook?.title,
+                      author: selectedBook?.author,
+                      cover: selectedBook?.cover,
+                      firstSentence: selectedBook?.firstSentence,
+                      subjects: selectedBook?.subjects,
+                    };
 
-    const newFavorite = {
-      workKey: selectedBook?.workKey,
-      title: selectedBook?.title,
-      author: selectedBook?.author,
-      cover: selectedBook?.cover,
-      firstSentence: selectedBook?.firstSentence,
-      subjects: selectedBook?.subjects,
-    };
+                    setFavorites([
+                      ...favorites,
+                      newFavorite,
+                    ]);
 
-    setFavorites([
-      ...favorites,
-      newFavorite,
-    ]);
+                    showNotif("Added to favorites");
+                  }
 
-    showNotif("Added to favorites");
-  }
+                }}
+                className="transition flex items-center justify-center flex-shrink-0"
+              >
 
-}}
-  className="transition flex items-center justify-center flex-shrink-0"
->
+                {favorites.some(
+                  (item) => item.workKey === selectedBook?.workKey
+                ) ? (
 
-  {favorites.some(
-  (item) => item.workKey === selectedBook?.workKey
-) ? (
+                  <FiHeart className="text-red-500 text-2xl fill-red-500" />
 
-  <FiHeart className="text-red-500 text-2xl fill-red-500" />
+                ) : (
 
-) : (
+                  <FiHeart className="text-gray-600 text-2xl" />
 
-  <FiHeart className="text-gray-600 text-2xl" />
+                )}
 
-)}
+              </button>
 
-</button>
+            </div>
 
-</div>
+            <div className="max-h-40 overflow-y-auto pr-2 mt-2">
 
-<div className="max-h-40 overflow-y-auto pr-2 mt-2">
+              {/* AUTHOR */}
+              <p className="text-gray-500">
+                {selectedBook?.author}
+              </p>
 
-  {/* AUTHOR */}
-  <p className="text-gray-500">
-    {selectedBook?.author}
-  </p>
+              {/* DESCRIPTION */}
+              <p className="mt-4 text-sm text-gray-600 leading-relaxed">
+                {bookDescription}
+              </p>
 
-  {/* DESCRIPTION */}
-  <p className="mt-4 text-sm text-gray-600 leading-relaxed">
-    {bookDescription}
-  </p>
-
-</div>
-
-</div>
+            </div>
 
           </div>
-      
+
+        </div>
+
       )}
 
 
@@ -701,19 +746,19 @@ setTimeout(() => {
                 value={search}
                 onChange={(e) => {
 
-  const value = e.target.value;
+                  const value = e.target.value;
 
-  setSearch(value);
+                  setSearch(value);
 
-  // kalau search dikosongkan
-  if (!value.trim()) {
+                  // kalau search dikosongkan
+                  if (!value.trim()) {
 
-    setActiveCategory(null);
-    setGenreBooks([]);
+                    setActiveCategory(null);
+                    setGenreBooks([]);
 
-  }
+                  }
 
-}}
+                }}
                 onKeyDown={handleSearch}
                 className="w-full pl-10 pr-4 py-2 border rounded-full"
               />
@@ -727,81 +772,301 @@ setTimeout(() => {
               <FiHeart className="text-2xl text-gray-600 cursor-pointer transition duration-300 hover:text-yellow-400" />
             </Link>
 
-            {/* NOTIF */}
-            <div className="relative">
-              <FiBell
-                className="text-2xl cursor-pointer transition duration-300 hover:text-yellow-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsNotifOpen(!isNotifOpen);
-                }}
-              />
-
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold border-b pb-2">
-                      Your Notifications
-                    </h3>
-                    <div className="py-6 text-gray-400">
-                      No notifications yet
-                    </div>
-                    <button
-                      onClick={() => navigate("/notifikasi")}
-                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-                    >
-                      View All
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/*  PROFIL */}
+            {/* NOTIFICATION */}
             <div className="relative">
 
-              {/* ICON PROFILE */}
               <div
-                onClick={(e) => {
+                onClick={async (e) => {
+
                   e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
+
+                  if (!isNotifOpen) {
+
+                    await fetch(
+                      `http://localhost:3000/api/notifications/read/${user.id}`,
+                      {
+                        method: "PUT",
+                      }
+                    );
+
+                    setNotifications((prev) =>
+                      prev.map((n) => ({
+                        ...n,
+                        is_read: true,
+                      }))
+                    );
+
+                  }
+
+                  setIsNotifOpen(!isNotifOpen);
+
                 }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+                className="relative cursor-pointer"
               >
-                {user.name ? user.name.charAt(0) : "U"}
+
+                <FiBell className="text-2xl text-gray-600 hover:text-yellow-500 transition" />
+
+                {unreadCount > 0 && (
+
+                  <div
+                    className="
+          absolute
+          -top-1
+          -right-1
+          min-w-[18px]
+          h-[18px]
+          px-1
+          bg-red-500
+          text-white
+          text-[10px]
+          rounded-full
+          flex
+          items-center
+          justify-center
+          font-semibold
+        "
+                  >
+                    {unreadCount}
+                  </div>
+
+                )}
+
               </div>
 
-              {/* DROPDOWN PROFILE */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+              {isNotifOpen && (
 
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-                      {user.name ? user.name.charAt(0) : "U"}
-                    </div>
+                <div
+                  className="
+        absolute
+        right-0
+        mt-3
+        w-80
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        border
+        z-50
+        overflow-hidden
+      "
+                >
 
-                    <h3 className="font-semibold text-gray-700 text-sm">
-                      {user.name || "-"}
-                    </h3>
+                  <div className="p-4 border-b font-semibold text-gray-700">
 
-                    <p className="text-xs text-gray-500">
-                      {user.email || "-"}
-                    </p>
+                    Notifications
+
                   </div>
 
-                  {/* BUTTON PROFIL */}
-                  <div className="px-4 py-4">
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                        My Profile
-                      </button>
-                    </Link>
+                  <div className="max-h-96 overflow-y-auto">
+
+                    {notifications.length === 0 ? (
+
+                      <div className="p-6 text-sm text-gray-400 text-center">
+
+                        No notifications yet
+
+                      </div>
+
+                    ) : (
+
+                      notifications
+                        .slice(0, 2)
+                        .map((notif) => (
+
+                          <div
+                            key={notif.id}
+                            className={`
+                  p-4
+                  border-b
+                  hover:bg-gray-50
+                  transition
+
+                  ${!notif.is_read
+                                ? "bg-blue-50"
+                                : ""
+                              }
+                `}
+                          >
+
+                            <p className="font-medium text-sm text-gray-800">
+
+                              {notif.title}
+
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-1">
+
+                              {notif.message}
+
+                            </p>
+
+                          </div>
+
+                        ))
+
+                    )}
+
                   </div>
+
+                  <button
+                    onClick={() =>
+                      navigate("/notifikasi")
+                    }
+                    className="
+          w-full
+          py-3
+          text-sm
+          font-medium
+          text-blue-600
+          hover:bg-blue-50
+        "
+                  >
+                    View All
+                  </button>
 
                 </div>
+
               )}
             </div>
+
+            {/* ================= PROFILE ================= */}
+<div className="relative">
+
+  {/* PROFILE BUTTON */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="
+      relative
+      z-50
+      w-9 h-9
+      rounded-full
+      bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
+      flex items-center justify-center
+      text-white
+      font-semibold
+      shadow-lg
+      hover:scale-105
+      hover:shadow-blue-400/40
+      transition-all duration-300
+      border-2 border-white
+    "
+  >
+    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+
+    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+  </button>
+
+  {/* DROPDOWN */}
+  {isProfileOpen && (
+    <>
+      {/* CLICK OUTSIDE */}
+      <div
+        className="fixed inset-0 z-40"
+        onClick={() => setIsProfileOpen(false)}
+      ></div>
+
+      {/* POPUP */}
+      <div
+        className="
+          absolute right-0 mt-4 w-72
+          rounded-[28px]
+          overflow-hidden
+          bg-white/80
+          backdrop-blur-2xl
+          border border-white/40
+          shadow-[0_12px_40px_rgba(0,0,0,0.16)]
+          animate-[fadeIn_.25s_ease]
+          z-50
+        "
+      >
+
+        {/* HEADER */}
+        <div className="
+          h-28
+          bg-gradient-to-r
+          from-blue-600
+          via-blue-500
+          to-cyan-400
+          relative
+        ">
+
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+
+          {/* AVATAR */}
+          <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
+
+            <div className="
+              w-20 h-20
+              rounded-full
+              bg-white
+              p-[3px]
+              shadow-2xl
+            ">
+
+              <div className="
+                w-full h-full
+                rounded-full
+                bg-gradient-to-br from-blue-500 to-blue-700
+                flex items-center justify-center
+                text-white
+                text-3xl
+                font-bold
+              ">
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* CONTENT */}
+        <div className="pt-14 pb-6 px-6 text-center">
+
+          <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
+            {user.name || "Unknown User"}
+          </h3>
+
+          <p className="text-sm text-gray-500 mt-1 break-all">
+            {user.email || "No email available"}
+          </p>
+
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
+
+          <Link to="/profil">
+            <button
+              className="
+                w-full
+                py-3
+                rounded-2xl
+                bg-gradient-to-r
+                from-blue-600
+                to-blue-700
+                hover:from-blue-700
+                hover:to-blue-800
+                text-white
+                font-semibold
+                shadow-lg
+                hover:shadow-blue-300/40
+                transition-all duration-300
+              "
+            >
+              View Profile
+            </button>
+          </Link>
+
+        </div>
+
+      </div>
+    </>
+  )}
+
+</div>
 
           </div>
         </div>
@@ -888,20 +1153,20 @@ setTimeout(() => {
 
       {/* ================= LIST BUKU ================= */}
       <section
-  ref={bookSectionRef}
-  className="px-6 md:px-20 py-12"
->
+        ref={bookSectionRef}
+        className="px-6 md:px-20 py-12"
+      >
         <div className="relative flex items-center justify-center mb-6">
 
-         <h2 className="text-2xl font-bold text-blue-700 text-center">
+          <h2 className="text-2xl font-bold text-blue-700 text-center">
 
-  {activeCategory?.includes("Search Results:")
-    ? activeCategory
-    : activeCategory
-    ? `Genre: ${activeCategory}`
-    : "Recommended Books"}
+            {activeCategory?.includes("Search Results:")
+              ? activeCategory
+              : activeCategory
+                ? `Genre: ${activeCategory}`
+                : "Recommended Books"}
 
-</h2>
+          </h2>
 
         </div>
 
@@ -931,27 +1196,27 @@ setTimeout(() => {
                 "No Cover"
               )}
             </div>
-           
 
-           <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
 
-  <div>
+            <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
 
-    <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
-      {book.title}
-    </h3>
+              <div>
 
-    <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
-      {book.author}
-    </p>
+                <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
+                  {book.title}
+                </h3>
 
-    <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
-      Click detail to see description
-    </p>
+                <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
+                  {book.author}
+                </p>
 
-  </div>
+                <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
+                  Click detail to see description
+                </p>
 
-  <div className="flex gap-2 mt-auto">
+              </div>
+
+              <div className="flex gap-2 mt-auto">
 
                 <button
                   onClick={() => handlePinjam(book)}
@@ -1041,7 +1306,7 @@ setTimeout(() => {
         </div>
 
       </footer>
-      
+
 
 
     </div>

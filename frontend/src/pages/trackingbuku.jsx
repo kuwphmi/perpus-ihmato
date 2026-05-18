@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import axios from "axios";
 import {
   FiBell,
   FiHeart,
@@ -22,10 +22,13 @@ export default function Trackingbuku() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const popupRef = useRef();
   const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -45,7 +48,53 @@ export default function Trackingbuku() {
 
     fetchOrders();
 
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+
+      fetchOrders();
+
+      fetchNotifications();
+
+    }, 5000);
+    return () => clearInterval(interval);
+
   }, []);
+
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        const res =
+          await axios.get(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        setNotifications(
+          res.data || []
+        );
+
+        const unread =
+          res.data.filter(
+            (item) =>
+              !item.is_read
+          ).length;
+
+        setUnreadCount(unread);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
 
   const fetchOrders = async () => {
 
@@ -69,28 +118,16 @@ export default function Trackingbuku() {
 
   };
 
-  const getStatus = (status) => {
-
-    if (status === "pending") return "Unpaid";
-
-    if (status === "success") return "Completed";
-
-    if (status === "shipping") return "Shipping";
-
-    return status;
-
-  };
-
   const unpaidCount = orders.filter(
-    (o) => getStatus(o.status) === "Unpaid"
+    (o) => o.order_status === "waiting_payment"
   ).length;
 
   const shippingCount = orders.filter(
-    (o) => getStatus(o.status) === "Shipping"
+    (o) => o.order_status === "shipping"
   ).length;
 
   const completedCount = orders.filter(
-    (o) => getStatus(o.status) === "Completed"
+    (o) => o.order_status === "completed"
   ).length;
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -117,6 +154,8 @@ export default function Trackingbuku() {
         </div>
 
       </div>
+
+
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-0 z-50">
@@ -149,83 +188,164 @@ export default function Trackingbuku() {
 
             {/* NOTIFICATION */}
             <div className="relative">
-              <FiBell
-                className="text-2xl text-gray-600 cursor-pointer hover:text-yellow-500 transition"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsNotifOpen(!isNotifOpen);
-                }}
-              />
 
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border z-50">
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t"></div>
-
-                  <div className="py-3 text-center">
-                    <h3 className="font-semibold text-gray-700 pb-2 border-b">
-                      Your Notification
-                    </h3>
-
-                    <div className="py-6 text-sm text-gray-400 border-b">
-                      No new notifications yet.
-                    </div>
-
-                    <button
-                      onClick={() => navigate("/notip")}
-                      className="pt-2 text-sm text-gray-600 hover:text-blue-600"
-                    >
-                      View All
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/*  PROFIL */}
-            <div className="relative">
-
-              {/* ICON PROFILE */}
               <div
-                onClick={(e) => {
+                onClick={async (e) => {
+
                   e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
+
+                  if (!isNotifOpen) {
+
+                    await fetch(
+                      `http://localhost:3000/api/notifications/read/${user.id}`,
+                      {
+                        method: "PUT",
+                      }
+                    );
+
+                    setNotifications((prev) =>
+                      prev.map((n) => ({
+                        ...n,
+                        is_read: true,
+                      }))
+                    );
+
+                  }
+
+                  setIsNotifOpen(!isNotifOpen);
+
                 }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
+                className="relative cursor-pointer"
               >
-                {user.name ? user.name.charAt(0) : "U"}
+
+                <FiBell className="text-2xl text-gray-600 hover:text-yellow-500 transition" />
+
+                {unreadCount > 0 && (
+
+                  <div
+                    className="
+          absolute
+          -top-1
+          -right-1
+          min-w-[18px]
+          h-[18px]
+          px-1
+          bg-red-500
+          text-white
+          text-[10px]
+          rounded-full
+          flex
+          items-center
+          justify-center
+          font-semibold
+        "
+                  >
+                    {unreadCount}
+                  </div>
+
+                )}
+
               </div>
 
-              {/* DROPDOWN PROFILE */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+              {isNotifOpen && (
 
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-                      {user.name ? user.name.charAt(0) : "U"}
-                    </div>
+                <div
+                  className="
+        absolute
+        right-0
+        mt-3
+        w-80
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        border
+        z-50
+        overflow-hidden
+      "
+                >
 
-                    <h3 className="font-semibold text-gray-700 text-sm">
-                      {user.name || "-"}
-                    </h3>
+                  <div className="p-4 border-b font-semibold text-gray-700">
 
-                    <p className="text-xs text-gray-500">
-                      {user.email || "-"}
-                    </p>
+                    Notifications
+
                   </div>
 
-                  {/* BUTTON PROFIL */}
-                  <div className="px-4 py-4">
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                        My Profile
-                      </button>
-                    </Link>
+            
+
+                  <div className="max-h-96 overflow-y-auto">
+
+                    {notifications.length === 0 ? (
+
+                      <div className="p-6 text-sm text-gray-400 text-center">
+
+                        No notifications yet
+
+                      </div>
+
+                    ) : (
+
+                      notifications
+                        .filter((n) => !n.is_read)
+                        .slice(0, 2)
+                        .map((notif) => (
+
+                          <div
+                            key={notif.id}
+                            className={`
+                  p-4
+                  border-b
+                  hover:bg-gray-50
+                  transition
+
+                  ${!notif.is_read
+                                ? "bg-blue-50"
+                                : ""
+                              }
+                `}
+                          >
+
+                            <p className="font-medium text-sm text-gray-800">
+
+                              {notif.title}
+
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-1">
+
+                              {notif.message}
+
+                            </p>
+
+                          </div>
+
+                        ))
+
+                    )}
+
                   </div>
+
+                  <button
+                    onClick={() =>
+                      navigate("/notifikasi")
+                    }
+                    className="
+          w-full
+          py-3
+          text-sm
+          font-medium
+          text-blue-600
+          hover:bg-blue-50
+        "
+                  >
+                    View All
+                  </button>
 
                 </div>
+
               )}
+
             </div>
+            
 
           </div>
 
@@ -365,7 +485,7 @@ export default function Trackingbuku() {
                     </h3>
 
                     <p className="text-gray-400 mt-1">
-                      Order ID: {order.id}
+                      Order ID: {order.order_id}
                     </p>
 
                     <p className="text-blue-600 font-bold mt-3">
@@ -379,51 +499,36 @@ export default function Trackingbuku() {
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
 
-                  {getStatus(order.status) === "Unpaid" && (
+                  {order.order_status === "waiting_payment" && (
+
                     <>
                       <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">
-                        Unpaid
+                        Waiting Payment
                       </span>
 
                       <button
-                        onClick={() => {
-window.snap.pay(order.snap_token, {
-
-  onSuccess: function () {
-    fetchOrders();
-  },
-
-  onPending: function () {
-    fetchOrders();
-  },
-
-  onClose: function () {
-
-    console.log("Popup closed");
-
-  },
-
-  onError: function (err) {
-
-    console.log(err);
-
-  },
-
-});                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition"
+                        onClick={() => setSelectedOrder(order)}
+                        className="border border-blue-600 text-blue-600 px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition"
                       >
-                        View Payment Code
+                        View Detail
                       </button>
                     </>
+
                   )}
 
-                  {getStatus(order.status) === "Shipping" && (
+                  {order.order_status === "processing" && (
+                    <span className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium">
+                      Processing
+                    </span>
+                  )}
+
+                  {order.order_status === "shipping" && (
                     <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
                       Shipping
                     </span>
                   )}
 
-                  {getStatus(order.status) === "Completed" && (
+                  {order.order_status === "completed" && (
                     <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
                       Completed
                     </span>
@@ -463,20 +568,20 @@ window.snap.pay(order.snap_token, {
               Navigation
             </h3>
 
-{/* MOBILE NAV */}
+            {/* MOBILE NAV */}
             <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
-                
-                        <Link to="/koleksi">
-                          <FiHome size={24} />
-                        </Link>
-                        <Link to="/belanja">
-                          <FiShoppingCart size={24} />
-                        </Link>
-                         <Link to="/trackingbuku">
-                          <FiPackage size={24} />
-                        </Link>
-                      </div>
-            
+
+              <Link to="/koleksi">
+                <FiHome size={24} />
+              </Link>
+              <Link to="/belanja">
+                <FiShoppingCart size={24} />
+              </Link>
+              <Link to="/trackingbuku">
+                <FiPackage size={24} />
+              </Link>
+            </div>
+
           </div>
 
           {/* CONTACT */}
@@ -500,6 +605,148 @@ window.snap.pay(order.snap_token, {
 
       </footer>
 
+      {selectedOrder && (
+
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 relative animate-fadeIn">
+
+            {/* CLOSE */}
+            <button
+              onClick={() => setSelectedOrder(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
+            >
+              ✕
+            </button>
+
+            {/* COVER */}
+            <img
+              src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+              alt={selectedOrder.title}
+              className="w-32 h-44 object-cover rounded-2xl mx-auto shadow"
+            />
+
+            {/* TITLE */}
+            <h2 className="text-2xl font-bold text-center mt-5">
+              {selectedOrder.title}
+            </h2>
+
+            {/* STATUS */}
+            <div className="flex justify-center mt-3">
+
+              <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
+
+                {selectedOrder.order_status === "waiting_payment" &&
+                  "Waiting Payment"}
+
+                {selectedOrder.order_status === "processing" &&
+                  "Processing"}
+
+                {selectedOrder.order_status === "shipping" &&
+                  "Shipping"}
+
+                {selectedOrder.order_status === "completed" &&
+                  "Completed"}
+
+              </span>
+
+            </div>
+
+            {/* DETAIL */}
+            <div className="mt-6 space-y-4 text-sm">
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Order ID
+                </span>
+
+                <span className="font-medium">
+                  {selectedOrder.order_id}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Payment
+                </span>
+
+                <span className="font-medium">
+                  Midtrans
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Total
+                </span>
+
+                <span className="font-bold text-blue-600">
+                  Rp {selectedOrder.amount?.toLocaleString("id-ID")}
+                </span>
+              </div>
+
+            </div>
+
+            {/* PAYMENT BUTTON */}
+            {selectedOrder.order_status ===
+              "waiting_payment" && (
+
+                <button
+                  onClick={() => {
+
+                    window.snap.pay(
+                      selectedOrder.snap_token,
+
+                      {
+
+                        onSuccess: function () {
+
+                          fetchOrders();
+
+                        },
+                      }
+
+                    );
+
+                  }}
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold transition"
+                >
+                  View Payment QR
+                </button>
+
+              )}
+
+
+            {/* COMPLETED */}
+            {selectedOrder.order_status === "processing" && (
+
+              <div className="mt-6 bg-indigo-100 text-indigo-700 py-3 rounded-2xl text-center font-semibold">
+                Order is being processed
+              </div>
+
+            )}
+
+            {selectedOrder.order_status === "shipping" && (
+
+              <div className="mt-6 bg-blue-100 text-blue-700 py-3 rounded-2xl text-center font-semibold">
+                Your order is being shipped
+              </div>
+
+            )}
+
+            {selectedOrder.order_status === "completed" && (
+
+              <div className="mt-6 bg-green-100 text-green-700 py-3 rounded-2xl text-center font-semibold">
+                Order Completed
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
       {/* FLOATING */}
       <Floating />
 

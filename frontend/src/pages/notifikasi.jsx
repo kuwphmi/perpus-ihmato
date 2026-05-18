@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import {
   FiBell,
   FiHeart,
   FiSearch,
-FiArrowLeft,
+  FiArrowLeft,
 } from "react-icons/fi";
 
 import Floating from "./floating";
@@ -35,28 +36,43 @@ export default function Notifikasi() {
     };
   }, []);
 
-  const notifications = [
-    {
-      id: 1,
-      title: "Borrow Approved",
-      desc: "Atomic Habits is ready to read now.",
-      time: "2 min ago",
-    },
+  const [notifications,
+    setNotifications] =
+    useState([]);
 
-    {
-      id: 2,
-      title: "New Arrival",
-      desc: "The Psychology of Money has been added.",
-      time: "1 hour ago",
-    },
+  useEffect(() => {
 
-    {
-      id: 3,
-      title: "Return Reminder",
-      desc: "Rich Dad Poor Dad must be returned tomorrow.",
-      time: "Yesterday",
-    },
-  ];
+    fetchNotifications();
+
+  }, []);
+
+  const fetchNotifications =
+    async () => {
+      try {
+
+        const user =
+          JSON.parse(
+            localStorage.getItem(
+              "user"
+            )
+          );
+
+        const res =
+          await axios.get(
+            `http://localhost:3000/api/notifications/${user.id}`
+          );
+
+        setNotifications(
+          res.data || []
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+    };
+
 
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -67,12 +83,12 @@ export default function Notifikasi() {
         <div className="px-5 py-3 flex items-center justify-between">
 
           {/* LEFT */}
-<div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
 
-  {/* BACK */}
-  <button
-    onClick={() => navigate(-1)}
-    className="
+            {/* BACK */}
+            <button
+              onClick={() => navigate(-1)}
+              className="
       w-10
       h-10
       rounded-full
@@ -83,80 +99,166 @@ export default function Notifikasi() {
       justify-center
       transition
     "
-  >
-    <FiArrowLeft className="text-blue-600 text-lg" />
-  </button>
+            >
+              <FiArrowLeft className="text-blue-600 text-lg" />
+            </button>
 
-  <div>
+            <div>
 
-   <h1 className="text-[20px] font-semibold text-blue-600">
-      Notifications
-    </h1>
+              <h1 className="text-[20px] font-semibold text-blue-600">
+                Notifications
+              </h1>
 
-  </div>
+            </div>
 
-</div>
+          </div>
 
           {/* RIGHT */}
           <div className="flex items-center gap-4 relative">
-           {/* ❤️ FAVORITE */}
-<Link to="/favorite">
-  <FiHeart className="text-2xl text-gray-600 hover:text-yellow-400 cursor-pointer transition" />
-</Link>
+            {/* ❤️ FAVORITE */}
+            <Link to="/favorite">
+              <FiHeart className="text-2xl text-gray-600 hover:text-yellow-400 cursor-pointer transition" />
+            </Link>
 
-            {/* 👤 PROFILE */}
-            <div className="relative">
+            {/* ================= PROFILE ================= */}
+<div className="relative">
 
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsProfileOpen(!isProfileOpen);
-                }}
-                className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-full text-sm cursor-pointer"
-              >
+  {/* PROFILE BUTTON */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsProfileOpen(!isProfileOpen);
+    }}
+    className="
+      relative
+      z-50
+      w-9 h-9
+      rounded-full
+      bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
+      flex items-center justify-center
+      text-white
+      font-semibold
+      shadow-lg
+      hover:scale-105
+      hover:shadow-blue-400/40
+      transition-all duration-300
+      border-2 border-white
+    "
+  >
+    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+
+    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+  </button>
+
+  {/* DROPDOWN */}
+  {isProfileOpen && (
+    <>
+      {/* CLICK OUTSIDE */}
+      <div
+        className="fixed inset-0 z-40"
+        onClick={() => setIsProfileOpen(false)}
+      ></div>
+
+      {/* POPUP */}
+      <div
+        className="
+          absolute right-0 mt-4 w-72
+          rounded-[28px]
+          overflow-hidden
+          bg-white/80
+          backdrop-blur-2xl
+          border border-white/40
+          shadow-[0_12px_40px_rgba(0,0,0,0.16)]
+          animate-[fadeIn_.25s_ease]
+          z-50
+        "
+      >
+
+        {/* HEADER */}
+        <div className="
+          h-28
+          bg-gradient-to-r
+          from-blue-600
+          via-blue-500
+          to-cyan-400
+          relative
+        ">
+
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+
+          {/* AVATAR */}
+          <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
+
+            <div className="
+              w-20 h-20
+              rounded-full
+              bg-white
+              p-[3px]
+              shadow-2xl
+            ">
+
+              <div className="
+                w-full h-full
+                rounded-full
+                bg-gradient-to-br from-blue-500 to-blue-700
+                flex items-center justify-center
+                text-white
+                text-3xl
+                font-bold
+              ">
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
 
-              {isProfileOpen && (
-                <div
-                  ref={popupRef}
-                  className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border z-50 overflow-hidden"
-                >
-
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center py-6 bg-gray-50">
-
-                    <div className="w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2">
-                      {user?.name
-                        ? user.name.charAt(0).toUpperCase()
-                        : "U"}
-                    </div>
-
-                    <h3 className="font-semibold text-gray-700 text-sm">
-                      {user?.name || "-"}
-                    </h3>
-
-                    <p className="text-xs text-gray-500">
-                      {user?.email || "-"}
-                    </p>
-
-                  </div>
-
-                  {/* BUTTON */}
-                  <div className="px-4 py-4">
-
-                    <Link to="/profil">
-                      <button className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition">
-                        My profile
-                      </button>
-                    </Link>
-
-                  </div>
-
-                </div>
-              )}
-
             </div>
+
+          </div>
+
+        </div>
+
+        {/* CONTENT */}
+        <div className="pt-14 pb-6 px-6 text-center">
+
+          <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
+            {user.name || "Unknown User"}
+          </h3>
+
+          <p className="text-sm text-gray-500 mt-1 break-all">
+            {user.email || "No email available"}
+          </p>
+
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
+
+          <Link to="/profil">
+            <button
+              className="
+                w-full
+                py-3
+                rounded-2xl
+                bg-gradient-to-r
+                from-blue-600
+                to-blue-700
+                hover:from-blue-700
+                hover:to-blue-800
+                text-white
+                font-semibold
+                shadow-lg
+                hover:shadow-blue-300/40
+                transition-all duration-300
+              "
+            >
+              View Profile
+            </button>
+          </Link>
+
+        </div>
+
+      </div>
+    </>
+  )}
+
+</div>
 
           </div>
 
@@ -205,13 +307,27 @@ export default function Notifikasi() {
                   </h2>
 
                   <span className="text-xs text-gray-400">
-                    {notif.time}
+                    {
+                      new Date(
+                        notif.created_at
+                      ).toLocaleString(
+                        "en-GB",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+
+                        }
+                      )
+                    }
                   </span>
 
                 </div>
 
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                  {notif.desc}
+                  {notif.message}
                 </p>
 
               </div>

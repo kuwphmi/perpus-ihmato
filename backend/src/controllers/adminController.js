@@ -2,35 +2,81 @@ import supabase from "../config/supabase.js";
 
 /* ================= DASHBOARD ================= */
 export const getDashboard = async (req, res) => {
+
   try {
-    const { count: totalLoans } = await supabase
-      .from("loans")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "borrowed");
 
-    const { count: totalMembers } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true });
+    const { count: totalLoans } =
+      await supabase
+        .from("loans")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "borrowed");
 
-    const { count: totalReturns } = await supabase
-      .from("loans")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "returned");
+    const { count: totalMembers } =
+      await supabase
+        .from("users")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("role", "user");
 
-    const { count: totalRequests } = await supabase
-      .from("loans")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending");
+    const { count: totalReturns } =
+      await supabase
+        .from("loans")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "returned");
+
+    const { count: totalRequests } =
+      await supabase
+        .from("loan_requests")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "pending");
+
+    // ORDERS
+    const { count: totalOrders } =
+      await supabase
+        .from("payments")
+        .select("*", {
+          count: "exact",
+          head: true,
+        });
 
     res.json({
-      total_loans: totalLoans || 0,
-      total_members: totalMembers || 0,
-      total_returns: totalReturns || 0,
-      total_requests: totalRequests || 0,
+
+      total_loans:
+        totalLoans || 0,
+
+      total_members:
+        totalMembers || 0,
+
+      total_returns:
+        totalReturns || 0,
+
+      total_requests:
+        totalRequests || 0,
+
+      total_orders:
+        totalOrders || 0,
+
     });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message,
+    });
+
   }
+
 };
 
 /* ================= MANAGE BOOKS ================= */
@@ -109,7 +155,9 @@ export const addBooks = async (req, res) => {
 
 /* ================= LOANS ================= */
 export const getLoans = async (req, res) => {
+
   try {
+<<<<<<< HEAD
     const { data, error } = await supabase
       .from("loans")
       .select(`
@@ -121,207 +169,418 @@ export const getLoans = async (req, res) => {
         users(name, member_code)
       `)
       .eq("status", "borrowed");
+=======
+
+    const { data, error } =
+      await supabase
+        .from("loans")
+        .select(`
+          id,
+          title,
+          loan_date,
+          due_date,
+          status,
+          users(name)
+        `)
+        .eq("status", "borrowed");
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
     if (error) throw error;
 
     res.json(
+
       data.map((item) => ({
+
         id: item.id,
+<<<<<<< HEAD
         member_code: item.users?.member_code || "-",
         member_name: item.users?.name || "-",
         book_title: item.title,
         loan_date: item.loan_date,
         due_date: item.due_date,
         status: item.status,
+=======
+
+        member_name:
+          item.users?.name,
+
+        book_title:
+          item.title,
+
+        loan_date:
+          item.loan_date,
+
+        due_date:
+          item.due_date,
+
+        status:
+          item.status,
+
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
       }))
+
     );
 
   } catch (err) {
+<<<<<<< HEAD
     res.status(500).json({
       error: err.message,
     });
+=======
+
+    res.status(500).json({
+      error: err.message,
+    });
+
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
   }
+
 };
 
 /* ================= LOAN REQUEST ================= */
-export const getLoanRequests = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("loan_requests")
-      .select(`
-        id,
-        book_title,
-        request_date,
-        status,
-        users(name, member_code)
-      `)
-      .eq("status", "pending");
+export const getLoanRequests =
+  async (req, res) => {
 
-    if (error) throw error;
+    try {
 
-    res.json(
-      data.map((item) => ({
-        id: item.id,
-        member_code: item.users?.member_code || "-",
-        member_name: item.users?.name || "-",
-        book_title: item.book_title || "-",
-        request_date: item.request_date,
-        status: item.status,
-      }))
-    );
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+      const { data, error } =
+        await supabase
+          .from("loan_requests")
+          .select(`
+            id,
+            book_title,
+            request_date,
+            status,
+            users(name, member_code)
+          `)
+          .eq("status", "pending");
+
+      if (error) throw error;
+
+      res.json(
+
+        data.map((item) => ({
+
+          id: item.id,
+
+          member_code:
+            item.users?.member_code || "-",
+
+          member_name:
+            item.users?.name || "-",
+
+          book_title:
+            item.book_title || "-",
+
+          request_date:
+            item.request_date,
+
+          status:
+            item.status,
+
+        }))
+
+      );
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
 
 /* ================= APPROVE ================= */
-export const approveLoanRequest = async (req, res) => {
-  const { id } = req.params;
+export const approveLoanRequest =
+  async (req, res) => {
 
-  try {
+    const { id } = req.params;
 
-    // ambil request
-    const { data: requestData, error: requestError } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("id", id)
-      .single();
+    try {
 
-    if (requestError) throw requestError;
+      const {
+        data: requestData,
+        error: requestError,
+      } = await supabase
+        .from("loan_requests")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    // insert ke loans
-    const { error: loanError } = await supabase
-      .from("loans")
-      .insert([
-        {
-          user_id: requestData.user_id,
-          book_key: requestData.book_key,
-          title: requestData.book_title,
-          author: requestData.author,
-          cover: requestData.cover,
-          loan_date: new Date(),
-          due_date: new Date(Date.now() + 7 * 86400000),
-          status: "borrowed",
-        },
-      ]);
+      if (requestError)
+        throw requestError;
 
-    if (loanError) throw loanError;
+      const { error: loanError } =
+        await supabase
+          .from("loans")
+          .insert([
+            {
+              user_id:
+                requestData.user_id,
 
-    // update request
-    await supabase
-      .from("loan_requests")
-      .update({
-        status: "approved",
-      })
-      .eq("id", id);
+              book_key:
+                requestData.book_key,
 
-    res.json({
-      message: "Loan approved successfully",
-    });
+              title:
+                requestData.book_title,
 
-  } catch (err) {
+              author:
+                requestData.author,
 
-    res.status(500).json({
-      error: err.message,
-    });
+              cover:
+                requestData.cover,
 
-  }
-};
+              loan_date:
+                new Date(),
+
+              due_date:
+                new Date(
+                  Date.now() +
+                  7 * 86400000
+                ),
+
+              status:
+                "borrowed",
+            },
+          ]);
+
+      if (loanError)
+        throw loanError;
+
+      await supabase
+        .from("loan_requests")
+        .update({
+          status: "approved",
+        })
+        .eq("id", id);
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              requestData.user_id,
+
+            type:
+              "borrow",
+
+            title:
+              "Borrow Approved",
+
+            message:
+              `Your request for "${requestData.book_title}" has been approved.`,
+          },
+        ]);
+
+      res.json({
+        message:
+          "Loan approved successfully",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+
+    }
+
+  };
 
 
 /* ================= REJECT ================= */
-export const rejectLoanRequest = async (req, res) => {
-  const { id } = req.params;
+export const rejectLoanRequest =
+  async (req, res) => {
+    const { id } = req.params;
 
-  try {
-    const { error } = await supabase
-      .from("loan_requests")
-      .update({ status: "rejected" })
-      .eq("id", id);
+    try {
 
-    if (error) throw error;
+      const {
+        data: requestData,
+      } = await supabase
+        .from("loan_requests")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    res.json({ message: "Rejected" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+      const { error } =
+        await supabase
+          .from("loan_requests")
+          .update({
+            status:
+              "rejected",
+          })
+          .eq("id", id);
+
+      if (error)
+        throw error;
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              requestData.user_id,
+
+            type:
+              "borrow",
+
+            title:
+              "Borrow Rejected",
+
+            message:
+              `Your request for "${requestData.book_title}" was rejected.`,
+          },
+        ]);
+
+      res.json({
+        message:
+          "Rejected",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+
+    }
+  };
 
 /* ================= RETURN ================= */
-export const markAsReturned = async (req, res) => {
-  const { id } = req.params;
+export const markAsReturned =
+  async (req, res) => {
 
-  try {
+    const { id } = req.params;
 
-    // ambil loan
-    const { data: loan, error: loanError } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("id", id)
-      .single();
+    try {
 
-    if (loanError) throw loanError;
+      const {
 
-    // ambil user
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("id, member_code, name")
-      .eq("id", loan.user_id)
-      .single();
+        data: loan,
+        error: loanError,
 
-    if (userError) throw userError;
+      } = await supabase
+        .from("loans")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    // simpan ke returns
-    const { error: returnError } = await supabase
-      .from("returns")
-      .insert([
-        {
-          loan_id: loan.id,
-          user_id: user.id,
+      if (loanError)
+        throw loanError;
 
-          member_code: user.member_code,
-          member_name: user.name,
+      const {
 
-          book_key: loan.book_key,
-          book_title: loan.title,
-          author: loan.author,
-          cover: loan.cover,
+        data: user,
+        error: userError,
 
-          return_date: new Date(),
+      } = await supabase
+        .from("users")
+        .select(`
+          id,
+          member_code,
+          name
+        `)
+        .eq("id", loan.user_id)
+        .single();
 
-          fine: 0,
-        },
-      ]);
+      if (userError)
+        throw userError;
 
-    if (returnError) throw returnError;
+      const { error: returnError } =
+        await supabase
+          .from("returns")
+          .insert([
+            {
+              loan_id: loan.id,
 
-    // update loans
-    const { error: updateError } = await supabase
-      .from("loans")
-      .update({
-        status: "returned",
-        return_date: new Date(),
-      })
-      .eq("id", id);
+              user_id: user.id,
 
-    if (updateError) throw updateError;
+              member_code:
+                user.member_code,
 
-    res.json({
-      message: "Book returned successfully",
-    });
+              member_name:
+                user.name,
 
-  } catch (err) {
+              book_key:
+                loan.book_key,
 
-    console.error(err);
+              book_title:
+                loan.title,
 
-    res.status(500).json({
-      error: err.message,
-    });
+              author:
+                loan.author,
 
-  }
-};
+              cover:
+                loan.cover,
+
+              return_date:
+                new Date(),
+
+              fine: 0,
+            },
+          ]);
+
+      if (returnError)
+        throw returnError;
+
+      const { error: updateError } =
+        await supabase
+          .from("loans")
+          .update({
+            status: "returned",
+            return_date:
+              new Date(),
+          })
+          .eq("id", id);
+
+      if (updateError)
+        throw updateError;
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              user.id,
+
+            type:
+              "return",
+
+            title:
+              "Book Returned",
+
+            message:
+              `Thanks for returning "${loan.title}". Enjoy your next reading adventure ✨`,
+          },
+        ]);
+
+      res.json({
+        message:
+          "Book returned successfully",
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
 
 /* ================= MEMBERS ================= */
+<<<<<<< HEAD
 export const getMembers = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -334,9 +593,14 @@ export const getMembers = async (req, res) => {
         nik,
         phone
       `);
+=======
+export const getMembers =
+  async (req, res) => {
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
-    if (error) throw error;
+    try {
 
+<<<<<<< HEAD
     res.json(data);
 
   } catch (err) {
@@ -345,52 +609,76 @@ export const getMembers = async (req, res) => {
     });
   }
 };
+=======
+      const { data, error } =
+        await supabase
+          .from("users")
+          .select(`
+            id,
+            member_code,
+            name,
+            email,
+            nik,
+            phone
+          `)
+          .eq("role", "user");
+
+      if (error) throw error;
+
+      res.json(data);
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
 /* ================= RETURNS ================= */
-export const getReturns = async (req, res) => {
-  try {
-    // ambil data loans returned
-    const { data: loans, error: loanError } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("status", "returned");
+export const getReturns =
+  async (req, res) => {
 
-    if (loanError) throw loanError;
+    try {
 
-    // ambil semua users
-    const { data: users, error: userError } = await supabase
-      .from("users")
-      .select("id, member_code, name");
+      const { data, error } =
+        await supabase
+          .from("returns")
+          .select(`
+            member_code,
+            member_name,
+            book_title,
+            return_date,
+            fine
+          `)
+          .order("return_date", {
+            ascending: false,
+          });
 
-    if (userError) throw userError;
+      if (error) throw error;
 
-    // gabungkan manual
-    const formatted = loans.map((loan) => {
-      const user = users.find(
-  (u) => String(u.id) === String(loan.user_id)
-);
+      res.json(data);
 
-      return {
-        member_code: user?.member_code || "-",
-        member_name: user?.name || "-",
-        book_title: loan.title || "-",
-        return_date: loan.return_date || "-",
-        fine: "-",
-      };
-    });
+    } catch (err) {
 
-    res.json(formatted);
+      console.error(
+        "GET RETURNS ERROR:",
+        err
+      );
 
-  } catch (err) {
-    console.error("GET RETURNS ERROR:", err);
+      res.status(500).json({
+        error: err.message,
+      });
 
-    res.status(500).json({
-      error: err.message,
-    });
-  }
-};
+    }
+
+  };
 
 /* ================= EXTENSIONS ================= */
+<<<<<<< HEAD
 export const getExtensions = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -405,9 +693,14 @@ export const getExtensions = async (req, res) => {
           users(name, member_code)
         )
       `);
+=======
+export const getExtensions =
+  async (req, res) => {
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
-    if (error) throw error;
+    try {
 
+<<<<<<< HEAD
     res.json(
       data.map((item) => ({
         id: item.id,
@@ -423,48 +716,394 @@ export const getExtensions = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+=======
+      const { data, error } =
+        await supabase
+          .from("extensions")
+          .select(`
+            id,
+            new_due_date,
+            status,
+            loans(
+              title,
+              due_date,
+              users(name)
+            )
+          `);
+
+      if (error) throw error;
+
+      res.json(
+
+        data.map((item) => ({
+
+          id: item.id,
+
+          member_name:
+            item.loans?.users?.name,
+
+          book_title:
+            item.loans?.title,
+
+          old_due_date:
+            item.loans?.due_date,
+
+          new_due_date:
+            item.new_due_date,
+
+          status:
+            item.status,
+
+        }))
+
+      );
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
+>>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
 /* ================= APPROVE EXTENSION ================= */
-export const approveExtension = async (req, res) => {
-  const { id } = req.params;
+export const approveExtension =
+  async (req, res) => {
 
-  try {
-    const { data: ext } = await supabase
-      .from("extensions")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { id } = req.params;
 
-    await supabase
-      .from("loans")
-      .update({
-        due_date: new Date(Date.now() + 7 * 86400000),
-      })
-      .eq("id", ext.loan_id);
+    try {
 
-    await supabase
-      .from("extensions")
-      .update({ status: "approved" })
-      .eq("id", id);
+      const { data: ext } =
+        await supabase
+          .from("extensions")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-    res.json({ message: "Extension approved" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+      await supabase
+        .from("loans")
+        .update({
+          due_date:
+            new Date(
+              Date.now() +
+              7 * 86400000
+            ),
+        })
+        .eq("id", ext.loan_id);
+
+      await supabase
+        .from("extensions")
+        .update({
+          status: "approved",
+        })
+        .eq("id", id);
+
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              ext.user_id,
+
+            type:
+              "extension",
+
+            title:
+              "Extension Approved",
+
+            message:
+              "Your borrowing extension has been approved.",
+          },
+        ]);
+      res.json({
+        message:
+          "Extension approved",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
 
 /* ================= REJECT EXTENSION ================= */
-export const rejectExtension = async (req, res) => {
-  const { id } = req.params;
+export const rejectExtension =
+  async (req, res) => {
 
-  try {
-    await supabase
-      .from("extensions")
-      .update({ status: "rejected" })
-      .eq("id", id);
+    const { id } = req.params;
 
-    res.json({ message: "Rejected" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    try {
+
+      await supabase
+        .from("extensions")
+        .update({
+          status: "rejected",
+        })
+        .eq("id", id);
+
+      const { data: ext } =
+        await supabase
+          .from("extensions")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              ext.user_id,
+
+            type:
+              "extension",
+
+            title:
+              "Extension Rejected",
+
+            message:
+              "Your borrowing extension was rejected.",
+          },
+        ]);
+      res.json({
+        message: "Rejected",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
+
+/* ================= ORDERS ================= */
+
+// GET ALL ORDERS
+export const getOrders =
+  async (req, res) => {
+
+    try {
+
+      // PAYMENTS
+      const {
+        data: payments,
+        error,
+      } = await supabase
+        .from("payments")
+        .select("*")
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) throw error;
+
+      // ADDRESSES
+      const {
+        data: addresses,
+      } = await supabase
+        .from("addresses")
+        .select("*");
+
+      // JOIN MANUAL
+      const formatted =
+        payments.map((item) => {
+
+          const address =
+            addresses.find(
+              (a) =>
+                String(a.id) ===
+                String(item.address_id)
+            );
+
+          return {
+
+            ...item,
+
+            receiver_name:
+              address?.receiver_name ||
+              "-",
+
+            phone:
+              address?.phone || "-",
+
+            full_address:
+              address?.full_address ||
+              "-",
+
+            district:
+              address?.district || "-",
+
+            postal_code:
+              address?.postal_code ||
+              "-",
+
+          };
+
+        });
+
+      res.json(formatted);
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
+
+/* ================= UPDATE ORDER STATUS ================= */
+export const updateOrderStatus =
+  async (req, res) => {
+    const { id } = req.params;
+
+    const {
+      order_status,
+    } = req.body;
+
+    try {
+
+      const { error } =
+        await supabase
+          .from("payments")
+          .update({
+            order_status,
+          })
+          .eq("id", id);
+
+      if (error)
+        throw error;
+
+      // GET PAYMENT
+      const {
+        data: payment,
+      } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      // NOTIFICATION
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id:
+              payment.user_id,
+
+            type:
+              "order",
+
+            title:
+              "Order Update",
+
+            message:
+              order_status ===
+                "processing"
+
+                ? "Your order is being processed."
+
+                : order_status ===
+                  "shipping"
+
+                  ? "Your order is on delivery."
+
+                  : order_status ===
+                    "completed"
+
+                    ? "Your order has arrived successfully."
+
+                    : `Order status updated to ${order_status}`,
+          },
+        ]);
+
+      res.json({
+        message:
+          "Order updated successfully",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+
+    }
+
+  };
+
+
+/* ================= COURIER ORDERS ================= */
+export const getCourierOrders =
+  async (req, res) => {
+
+    try {
+
+      const {
+        data: payments,
+        error,
+      } = await supabase
+        .from("payments")
+        .select("*")
+        .in("order_status", [
+          "processing",
+          "shipping",
+          "completed",
+        ])
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) throw error;
+
+      const {
+        data: addresses,
+      } = await supabase
+        .from("addresses")
+        .select("*");
+
+      const result =
+        payments.map((item) => {
+
+          const address =
+            addresses.find(
+              (a) =>
+                String(a.id) ===
+                String(item.address_id)
+            );
+
+          return {
+
+            ...item,
+
+            address,
+
+          };
+
+        });
+
+      res.json(result);
+
+    } catch (err) {
+
+      res.status(500).json({
+        error: err.message,
+      });
+
+    }
+
+  };
+

@@ -18,12 +18,12 @@ export const addToCart = async (req, res) => {
     } = req.body;
 
     // cek item sudah ada belum
-    const { data: existing, error: checkError } = await supabase
-      .from("cart")
-      .select("*")
-      .eq("user_id", user_id)
-      .eq("book_key", book_key)
-      .single();
+const { data: existing } = await supabase
+  .from("cart")
+  .select("*")
+  .eq("user_id", user_id)
+  .eq("book_key", book_key)
+  .maybeSingle();
 
     // kalau ada → tambah qty
     if (existing) {
@@ -96,38 +96,15 @@ export const getCart = async (req, res) => {
 
     if (error) throw error;
 
-    // merge item duplicate
-    const merged = [];
-
-    data.forEach((item) => {
-
-      const existing = merged.find(
-        (x) => x.book_key === item.book_key
-      );
-
-      if (existing) {
-
-        existing.qty += item.qty;
-
-      } else {
-
-        merged.push({
-          ...item,
-        });
-
-      }
-
-    });
-
     res.json({
       status: true,
-      data: merged,
+      data,
     });
 
   } catch (error) {
 
     res.status(500).json({
-      message: "Gagal ambil cart",
+      message: "Failed get cart",
       error: error.message,
     });
 

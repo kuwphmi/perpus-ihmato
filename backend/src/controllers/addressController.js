@@ -131,3 +131,88 @@ export const setPrimaryAddress = async (req, res) => {
   }
 
 };
+
+/* ================= UPDATE ================= */
+
+export const updateAddress =
+  async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+      const { error } =
+        await supabase
+          .from("addresses")
+          .update({
+
+            label:
+              req.body.label,
+
+            receiver_name:
+              req.body.receiver_name,
+
+            phone:
+              req.body.phone,
+
+            district:
+              req.body.district,
+
+            postal_code:
+              req.body.postal_code,
+
+            full_address:
+              req.body.full_address,
+
+          })
+          .eq("id", id);
+
+      if (error) throw error;
+
+      res.json({
+        message:
+          "Address updated",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+
+    }
+
+};
+
+/* ================= DELETE ================= */
+export const deleteAddress =
+  async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+      const { error } =
+        await supabase
+          .from("addresses")
+          .delete()
+          .eq("id", id);
+
+      if (error) throw error;
+
+      res.json({
+        message:
+          "Address deleted",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+
+    }
+
+};
