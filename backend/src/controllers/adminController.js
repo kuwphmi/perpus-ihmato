@@ -155,9 +155,7 @@ export const addBooks = async (req, res) => {
 
 /* ================= LOANS ================= */
 export const getLoans = async (req, res) => {
-
   try {
-<<<<<<< HEAD
     const { data, error } = await supabase
       .from("loans")
       .select(`
@@ -169,72 +167,25 @@ export const getLoans = async (req, res) => {
         users(name, member_code)
       `)
       .eq("status", "borrowed");
-=======
-
-    const { data, error } =
-      await supabase
-        .from("loans")
-        .select(`
-          id,
-          title,
-          loan_date,
-          due_date,
-          status,
-          users(name)
-        `)
-        .eq("status", "borrowed");
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
     if (error) throw error;
 
     res.json(
-
       data.map((item) => ({
-
         id: item.id,
-<<<<<<< HEAD
         member_code: item.users?.member_code || "-",
         member_name: item.users?.name || "-",
         book_title: item.title,
         loan_date: item.loan_date,
         due_date: item.due_date,
         status: item.status,
-=======
-
-        member_name:
-          item.users?.name,
-
-        book_title:
-          item.title,
-
-        loan_date:
-          item.loan_date,
-
-        due_date:
-          item.due_date,
-
-        status:
-          item.status,
-
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
       }))
-
     );
-
   } catch (err) {
-<<<<<<< HEAD
     res.status(500).json({
       error: err.message,
     });
-=======
-
-    res.status(500).json({
-      error: err.message,
-    });
-
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
   }
-
 };
 
 /* ================= LOAN REQUEST ================= */
@@ -580,7 +531,6 @@ export const markAsReturned =
   };
 
 /* ================= MEMBERS ================= */
-<<<<<<< HEAD
 export const getMembers = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -592,51 +542,18 @@ export const getMembers = async (req, res) => {
         email,
         nik,
         phone
-      `);
-=======
-export const getMembers =
-  async (req, res) => {
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
+      `)
+      .eq("role", "user");
 
-    try {
+    if (error) throw error;
 
-<<<<<<< HEAD
     res.json(data);
-
   } catch (err) {
     res.status(500).json({
       error: err.message,
     });
   }
 };
-=======
-      const { data, error } =
-        await supabase
-          .from("users")
-          .select(`
-            id,
-            member_code,
-            name,
-            email,
-            nik,
-            phone
-          `)
-          .eq("role", "user");
-
-      if (error) throw error;
-
-      res.json(data);
-
-    } catch (err) {
-
-      res.status(500).json({
-        error: err.message,
-      });
-
-    }
-
-  };
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
 /* ================= RETURNS ================= */
 export const getReturns =
@@ -678,7 +595,6 @@ export const getReturns =
   };
 
 /* ================= EXTENSIONS ================= */
-<<<<<<< HEAD
 export const getExtensions = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -687,25 +603,20 @@ export const getExtensions = async (req, res) => {
         id,
         new_due_date,
         status,
-        loans( 
+        loans(
           title,
           due_date,
           users(name, member_code)
         )
       `);
-=======
-export const getExtensions =
-  async (req, res) => {
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
-    try {
+    if (error) throw error;
 
-<<<<<<< HEAD
     res.json(
       data.map((item) => ({
         id: item.id,
-        member_name: item.loans?.users?.name,
-        member_code: item.loans?.users?.member_code,
+        member_name: item.loans?.users?.name || "-",
+        member_code: item.loans?.users?.member_code || "-",
         book_title: item.loans?.title,
         old_due_date: item.loans?.due_date,
         new_due_date: item.new_due_date,
@@ -713,61 +624,11 @@ export const getExtensions =
       }))
     );
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
-=======
-      const { data, error } =
-        await supabase
-          .from("extensions")
-          .select(`
-            id,
-            new_due_date,
-            status,
-            loans(
-              title,
-              due_date,
-              users(name)
-            )
-          `);
-
-      if (error) throw error;
-
-      res.json(
-
-        data.map((item) => ({
-
-          id: item.id,
-
-          member_name:
-            item.loans?.users?.name,
-
-          book_title:
-            item.loans?.title,
-
-          old_due_date:
-            item.loans?.due_date,
-
-          new_due_date:
-            item.new_due_date,
-
-          status:
-            item.status,
-
-        }))
-
-      );
-
-    } catch (err) {
-
-      res.status(500).json({
-        error: err.message,
-      });
-
-    }
-
-  };
->>>>>>> ca20f4a33c93a229f8e3dd50f5ab1ce883a5f908
 
 /* ================= APPROVE EXTENSION ================= */
 export const approveExtension =
