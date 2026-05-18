@@ -17,7 +17,6 @@ import reportRoutes from "./src/routes/reportRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
 import addressRoutes from "./src/routes/addressRoutes.js";
-import adminRoutes from "./src/routes/adminRoutes.js";
 import notificationRoutes from "./src/routes/notificationRoutes.js";
 const app = express();
 
@@ -368,20 +367,14 @@ app.delete("/api/cart/:id", async (req, res) => {
   }
 });
 
-
 /* =======================
    DELETE ADDRESS
 ======================= */
 app.delete("/api/address/:id", async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from("addresses")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("addresses").delete().eq("id", id);
 
     if (error) {
       return res.json({
@@ -394,16 +387,12 @@ app.delete("/api/address/:id", async (req, res) => {
       status: true,
       message: "Address deleted",
     });
-
   } catch (err) {
-
     return res.json({
       status: false,
       message: err.message,
     });
-
   }
-
 });
 
 app.use("/api/admin", adminRoutes);
@@ -661,25 +650,23 @@ app.post("/api/admin/loan-requests/:id/approve", async (req, res) => {
 
     // update request jadi approved
     // update request jadi approved
-await supabase
-  .from("loan_requests")
-  .update({
-    status: "approved",
-  })
-  .eq("id", id);
+    await supabase
+      .from("loan_requests")
+      .update({
+        status: "approved",
+      })
+      .eq("id", id);
 
-// kirim notifikasi
-await supabase
-  .from("notifications")
-  .insert([
-    {
-      user_id: requestData.user_id,
-      type: "loan_approved",
-      title: "Peminjaman Disetujui",
-      message: `Pengajuan buku "${requestData.book_title}" telah disetujui admin.`,
-      is_read: false,
-    },
-  ]);
+    // kirim notifikasi
+    await supabase.from("notifications").insert([
+      {
+        user_id: requestData.user_id,
+        type: "loan_approved",
+        title: "Peminjaman Disetujui",
+        message: `Pengajuan buku "${requestData.book_title}" telah disetujui admin.`,
+        is_read: false,
+      },
+    ]);
 
     return res.json({
       status: true,
@@ -701,11 +688,7 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: requestData } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data: requestData } = await supabase.from("loan_requests").select("*").eq("id", id).single();
 
     const { error } = await supabase
       .from("loan_requests")
@@ -739,14 +722,7 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
 
 app.post("/api/extensions/request", async (req, res) => {
   try {
-    const {
-      user_id,
-      loan_id,
-      book_title,
-      old_due_date,
-      new_due_date,
-      status,
-    } = req.body;
+    const { user_id, loan_id, book_title, old_due_date, new_due_date, status } = req.body;
 
     const { data, error } = await supabase
       .from("extensions")
@@ -784,16 +760,12 @@ app.post("/api/extensions/request", async (req, res) => {
   }
 });
 
-
 /* =======================
    ADMIN EXTENSION REQUESTS
 ======================= */
 app.get("/api/admin/extension-requests", async (req, res) => {
   try {
-    const { data: extensions, error } = await supabase
-      .from("extensions")
-      .select("*")
-      .order("id", { ascending: false });
+    const { data: extensions, error } = await supabase.from("extensions").select("*").order("id", { ascending: false });
 
     if (error) {
       return res.json({
@@ -804,10 +776,7 @@ app.get("/api/admin/extension-requests", async (req, res) => {
 
     const userIds = extensions.map((item) => item.user_id);
 
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, name, member_code")
-      .in("id", userIds);
+    const { data: users } = await supabase.from("users").select("id, name, member_code").in("id", userIds);
 
     const formatted = extensions.map((item) => {
       const user = users.find((u) => u.id === item.user_id);
@@ -827,7 +796,6 @@ app.get("/api/admin/extension-requests", async (req, res) => {
     });
 
     return res.json(formatted);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -835,7 +803,6 @@ app.get("/api/admin/extension-requests", async (req, res) => {
     });
   }
 });
-
 
 /* =======================
    APPROVE EXTENSION
@@ -1028,22 +995,15 @@ app.get("/api/history/:user_id", async (req, res) => {
     const { user_id } = req.params;
 
     // ambil loans
-    const { data: loans, error: loansError } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("user_id", user_id);
+    const { data: loans, error: loansError } = await supabase.from("loans").select("*").eq("user_id", user_id);
 
     // ambil loan requests
-    const { data: requests, error: requestsError } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("user_id", user_id);
+    const { data: requests, error: requestsError } = await supabase.from("loan_requests").select("*").eq("user_id", user_id);
 
     if (loansError || requestsError) {
       return res.json({
         status: false,
-        message:
-          loansError?.message || requestsError?.message,
+        message: loansError?.message || requestsError?.message,
       });
     }
 
@@ -1055,32 +1015,25 @@ app.get("/api/history/:user_id", async (req, res) => {
 
     // format requests
     const formattedRequests = (requests || [])
-    .filter((item) => item.status === "pending")
-    .map((item) => ({
-      id: `request-${item.id}`,
-      title: item.book_title,
-      author: item.author,
-      cover: item.cover,
-      loan_date: item.request_date,
-      due_date: null,
-      status: item.status,
-      history_type: "request",
-    }));
+      .filter((item) => item.status === "pending")
+      .map((item) => ({
+        id: `request-${item.id}`,
+        title: item.book_title,
+        author: item.author,
+        cover: item.cover,
+        loan_date: item.request_date,
+        due_date: null,
+        status: item.status,
+        history_type: "request",
+      }));
 
     // gabung
-    const combined = [
-      ...formattedLoans,
-      ...formattedRequests,
-    ];
+    const combined = [...formattedLoans, ...formattedRequests];
 
     // urut terbaru
-    combined.sort(
-      (a, b) =>
-        new Date(b.loan_date) - new Date(a.loan_date)
-    );
+    combined.sort((a, b) => new Date(b.loan_date) - new Date(a.loan_date));
 
     return res.json(combined);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -1089,21 +1042,15 @@ app.get("/api/history/:user_id", async (req, res) => {
   }
 });
 
-
 /* =======================
    GET NOTIFICATIONS
 ======================= */
 
 app.get("/api/notifications/:userId", async (req, res) => {
   try {
-
     const { userId } = req.params;
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false });
 
     if (error) {
       return res.json({
@@ -1113,7 +1060,6 @@ app.get("/api/notifications/:userId", async (req, res) => {
     }
 
     return res.json(data);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -1203,14 +1149,9 @@ app.post("/api/forgot-password", async (req, res) => {
 
 app.get("/api/history/detail/:id", async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    const { data, error } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data, error } = await supabase.from("loans").select("*").eq("id", id).single();
 
     if (error) {
       return res.status(404).json({
@@ -1220,7 +1161,6 @@ app.get("/api/history/detail/:id", async (req, res) => {
     }
 
     return res.json(data);
-
   } catch (err) {
     return res.status(500).json({
       status: false,
