@@ -9,6 +9,7 @@ import Keranjang from "./pages/keranjang";
 import Riwayat from "./pages/riwayat";
 import Profil from "./pages/profil";
 import AdminPerpustakaan from "./pages/admin";
+import ManageBooks from "./pages/ManageBooks";
 import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
@@ -147,6 +148,8 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/admin/books/manage" element={<ManageBooks />} />
 
         <Route path="/search" element={<SearchPage />} />
 

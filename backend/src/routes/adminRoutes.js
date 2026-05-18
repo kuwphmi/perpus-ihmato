@@ -6,6 +6,10 @@ const router = express.Router();
 /* ================= DASHBOARD ================= */
 router.get("/dashboard", admin.getDashboard);
 
+/* ================= MANAGE BOOKS ================= */
+router.get("/books", admin.getBooks);
+router.post("/books", admin.addBooks);
+
 /* ================= LOANS ================= */
 router.get("/loans", admin.getLoans);
 router.post("/loans/:id/return", admin.markAsReturned);

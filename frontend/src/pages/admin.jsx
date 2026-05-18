@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { LayoutDashboard, BookOpen, Users, RotateCcw, ClipboardList, RefreshCcw, ShoppingCart, Search, Printer, ChevronLeft, ChevronRight, Menu, CheckCircle2, Clock3, Truck, PackageCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { LayoutDashboard, BookOpen, Users, RotateCcw, ClipboardList, RefreshCcw, ShoppingCart, Search, Printer, ChevronLeft, ChevronRight, Menu, CheckCircle2, Clock3, Truck, PackageCheck, LibraryBig } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 const tabs = [
+  { key: "buku", label: "Manage Books", icon: LibraryBig },
   { key: "pinjaman", label: "Loans", icon: BookOpen },
   { key: "anggota", label: "Members", icon: Users },
   { key: "pengembalian", label: "Returns", icon: RotateCcw },
@@ -32,6 +33,7 @@ const getCurrentMonth = () => String(new Date().getMonth() + 1);
 const getCurrentYear = () => String(new Date().getFullYear());
 
 const tabToKey = {
+  buku: "books",
   pinjaman: "loans",
   anggota: "members",
   pengembalian: "returns",
@@ -51,6 +53,7 @@ export default function AdminPerpustakaan() {
   const [selectedMonth] = useState(getCurrentMonth());
   const [selectedYear] = useState(getCurrentYear());
   const [loadedTabs, setLoadedTabs] = useState({
+    books: false,
     loans: false,
     members: false,
     returns: false,
@@ -59,7 +62,18 @@ export default function AdminPerpustakaan() {
     orders: false,
   });
 
+  const [bookForm, setBookForm] = useState({
+    title: "",
+    author: "",
+    category: "",
+    stock: "",
+    price: "",
+    description: "",
+    cover: "",
+  });
+
   const [data, setData] = useState({
+    books: [],
     loans: [],
     members: [],
     returns: [],
@@ -75,6 +89,33 @@ export default function AdminPerpustakaan() {
       pending_orders: 0,
     },
   });
+
+  const navigate = useNavigate();
+
+  const addBook = async () => {
+  try {
+    await fetchJson(`${API_BASE}/admin/books`, {
+      method: "POST",
+      body: JSON.stringify(bookForm),
+    });
+
+    alert("Book added successfully");
+
+    loadTabData("buku");
+
+    setBookForm({
+      title: "",
+      author: "",
+      category: "",
+      stock: "",
+      price: "",
+      description: "",
+      cover: "",
+    });
+  } catch {
+    alert("Failed to add book");
+  }
+};
 
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(url, {
@@ -123,6 +164,9 @@ export default function AdminPerpustakaan() {
       let result = [];
 
       switch (tabKey) {
+        case "buku":
+          result = await fetchJson(`${API_BASE}/admin/books`);
+          break;
         case "pinjaman":
           result = await fetchJson(`${API_BASE}/admin/loans`);
           break;
@@ -309,6 +353,10 @@ export default function AdminPerpustakaan() {
         .map((x) => ({ ...x, _type: "extension_request" }))
         .filter(match);
 
+    if (activeTab === "buku") {
+      return data.books.filter(match);
+    }
+
     if (activeTab === "pesanan") {
       let orders = data.orders;
       if (orderStatusFilter !== "all") {
@@ -323,6 +371,25 @@ export default function AdminPerpustakaan() {
   const getId = (row) => row.loan_id || row.id;
 
   const columnsByTab = {
+    buku: [
+      {
+        key: "no",
+        label: "No",
+        render: (_, index) => index + 1,
+      },
+      { key: "title", label: "Title" },
+      { key: "author", label: "Author" },
+      { key: "category", label: "Category" },
+      { key: "stock", label: "Stock" },
+      {
+        key: "price",
+        label: "Price",
+        render: (row) =>
+          row.price
+            ? `Rp ${Number(row.price).toLocaleString("id-ID")}`
+            : "-"
+      },
+    ],
     pinjaman: [
       { key: "member_code", label: "ID" },
       { key: "member_name", label: "Member" },
@@ -804,6 +871,24 @@ export default function AdminPerpustakaan() {
             />
           </div>
 
+          {activeTab === "buku" && (
+  <div className="mb-6">
+    {/* HEADER */}
+    <h2 className="text-xl font-bold mb-3">
+      Add New Book
+    </h2>
+
+    {/* BUTTON ADD BOOK */}
+    <button
+      onClick={() => navigate("/admin/books/manage")}
+      className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition"
+    >
+      + Add Book
+    </button>
+
+   </div>
+)}
+
           <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/40">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
@@ -834,11 +919,13 @@ export default function AdminPerpustakaan() {
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((row) => (
+                    filtered.map((row, index) => (
                       <tr key={row.loan_id || row.id || Math.random()} className="hover:bg-slate-50/70 transition-colors">
                         {columnsByTab[activeTab].map((col) => (
                           <td key={col.key} className="px-4 py-4 text-slate-700">
-                            {col.render ? col.render(row) : (row[col.key] ?? "-")}
+                            {col.render
+                              ? col.render(row, index)
+                              : (row[col.key] ?? "-")}
                           </td>
                         ))}
                       </tr>

@@ -31,6 +31,7 @@ export default function HalamanUtama() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
   const [rekomendasi, setRekomendasi] = useState([]);
+  const [localBooks, setLocalBooks] = useState([]);
 
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBorrowPopup, setShowBorrowPopup] = useState(false);
@@ -214,19 +215,19 @@ setTimeout(() => {
 
         const data = await res.json();
 
-const books = data.docs.map((item) => ({
-  workKey: item.key,
-  title: item.title ?? "-",
-  author: item.author_name?.[0] ?? "-",
-  cover: item.cover_i ?? null,
+        const books = data.docs.map((item) => ({
+          workKey: item.key,
+          title: item.title ?? "-",
+          author: item.author_name?.[0] ?? "-",
+          cover: item.cover_i ?? null,
 
-  firstSentence:
-    item.first_sentence?.[0] ||
-    item.first_sentence ||
-    "",
+          firstSentence:
+            item.first_sentence?.[0] ||
+            item.first_sentence ||
+            "",
 
-  subjects: item.subject?.slice(0, 5) || [],
-}));
+          subjects: item.subject?.slice(0, 5) || [],
+        }));
 
         setRekomendasi(books);
 
@@ -237,6 +238,43 @@ const books = data.docs.map((item) => ({
 
     fetchRekomendasi();
   }, []);
+
+  useEffect(() => {
+  const fetchLocalBooks = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:3000/api/admin/books"
+      );
+
+      const data = await res.json();
+
+      const books = data.map((item) => ({
+        id: item.id,
+
+        workKey: "local_" + item.id,
+
+        title: item.title,
+        author: item.author,
+
+        cover_url: item.cover,
+
+        description: item.description,
+
+        stock: item.stock,
+        price: item.price,
+
+        isLocal: true,
+      }));
+
+      setLocalBooks(books);
+
+    } catch (err) {
+      console.log("local books error:", err);
+    }
+  };
+
+  fetchLocalBooks();
+}, []);
 
 
   const categories = [
@@ -345,6 +383,14 @@ const books = data.docs.map((item) => ({
   };
   const fetchDescription = async (workKey) => {
     try {
+
+      if (selectedBook?.isLocal) {
+      setBookDescription(
+        selectedBook.description ||
+        "No description available."
+      );
+      return;
+    }
 
       const res = await fetch(
         `https://openlibrary.org${workKey}.json`
@@ -514,7 +560,11 @@ const books = data.docs.map((item) => ({
   {selectedBook?.cover ? (
 
     <img
-      src={`https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
+      src={
+        selectedBook?.isLocal
+          ? selectedBook.cover_url
+          : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`
+      }
       alt={selectedBook?.title}
       className="w-full h-full object-cover"
       onError={(e) => {
@@ -857,7 +907,10 @@ const books = data.docs.map((item) => ({
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
 
-          {(activeCategory ? genreBooks : rekomendasi).map((book, i) => (<div
+          {[
+              ...localBooks,
+              ...(activeCategory ? genreBooks : rekomendasi),
+            ].map((book, i) => (<div
             key={i}
             className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
           >
@@ -866,7 +919,11 @@ const books = data.docs.map((item) => ({
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
               {book.cover ? (
                 <img
-                  src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+                  src={
+                    book.isLocal
+                      ? book.cover_url
+                      : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
+                  }
                   alt={book.title}
                   className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
                 />

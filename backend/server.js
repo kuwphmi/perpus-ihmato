@@ -12,6 +12,7 @@ import "./src/config/passport.js";
 import bukuRoutes from "./src/routes/bukuRoutes.js";
 import paymentRoutes from "./src/routes/paymentRoutes.js";
 import aiRoutes from "./src/routes/aiRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 import reportRoutes from "./src/routes/reportRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
@@ -403,6 +404,7 @@ app.delete("/api/address/:id", async (req, res) => {
 
 });
 
+app.use("/api/admin", adminRoutes);
 app.use("/api/buku", bukuRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/ai", aiRoutes);

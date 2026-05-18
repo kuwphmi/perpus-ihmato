@@ -1,4 +1,4 @@
-import supabase from "../src/config/supabase.js";
+import supabase from "../config/supabase.js";
 
 /* ================= DASHBOARD ================= */
 export const getDashboard = async (req, res) => {
@@ -33,12 +33,93 @@ export const getDashboard = async (req, res) => {
   }
 };
 
+/* ================= MANAGE BOOKS ================= */
+
+/* GET ALL BOOKS */
+export const getBooks = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("books") // sesuaikan nama tabel kamu (bisa "books" kalau beda)
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* ADD BOOK */
+export const addBooks = async (req, res) => {
+  try {
+    const {
+      title,
+      author,
+      cover,
+      stock,
+      category,
+      price,
+      description,
+    } = req.body;
+
+    if (!title || !author) {
+      return res.status(400).json({
+        status: false,
+        message: "Title dan author wajib diisi",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("books")
+      .insert([
+        {
+          title,
+          author,
+          cover,
+          stock: stock || 0,
+          category: category || "Umum",
+          price: price || 0,
+          description: description || "",
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Buku berhasil ditambahkan",
+      data,
+    });
+
+  } catch (err) {
+
+  console.error("ADD BOOK ERROR:", err);
+
+  res.status(500).json({
+    status: false,
+    message: err.message,
+    full_error: err,
+  });
+  }
+};
+
 /* ================= LOANS ================= */
 export const getLoans = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("loans")
-      .select("id, title, loan_date, due_date, status, users(name)")
+      .select(`
+        id,
+        title,
+        loan_date,
+        due_date,
+        status,
+        users(name, member_code)
+      `)
       .eq("status", "borrowed");
 
     if (error) throw error;
@@ -46,15 +127,19 @@ export const getLoans = async (req, res) => {
     res.json(
       data.map((item) => ({
         id: item.id,
-        member_name: item.users?.name,
+        member_code: item.users?.member_code || "-",
+        member_name: item.users?.name || "-",
         book_title: item.title,
         loan_date: item.loan_date,
         due_date: item.due_date,
         status: item.status,
       }))
     );
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -241,13 +326,23 @@ export const getMembers = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id, name, email");
+      .select(`
+        id,
+        member_code,
+        name,
+        email,
+        nik,
+        phone
+      `);
 
     if (error) throw error;
 
     res.json(data);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -304,7 +399,11 @@ export const getExtensions = async (req, res) => {
         id,
         new_due_date,
         status,
-        loans(title, due_date, users(name))
+        loans( 
+          title,
+          due_date,
+          users(name, member_code)
+        )
       `);
 
     if (error) throw error;
@@ -313,6 +412,7 @@ export const getExtensions = async (req, res) => {
       data.map((item) => ({
         id: item.id,
         member_name: item.loans?.users?.name,
+        member_code: item.loans?.users?.member_code,
         book_title: item.loans?.title,
         old_due_date: item.loans?.due_date,
         new_due_date: item.new_due_date,
