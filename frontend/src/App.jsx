@@ -21,7 +21,7 @@ import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
 import ResetPassword from "./pages/ResetPassword";
 import Trackingbuku from "./pages/trackingbuku";
-import HelpCenter from "./pages/helpcenter";
+import ChooseGenre from "./pages/ChooseGenre";
 import Checkout from "./pages/checkout";
 import DetailRiwayat from "./pages/detailriwayat";
 import Address from "./pages/address";
@@ -70,13 +70,13 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
         <Route
-          path="/helpcenter"
-          element={
-            <ProtectedRoute>
-              <HelpCenter />
-            </ProtectedRoute>
-          }
-        />
+  path="/ChooseGenre"
+  element={
+    <ProtectedRoute>
+      <ChooseGenre />
+    </ProtectedRoute>
+  }
+/>
 
         <Route
           path="/koleksi"

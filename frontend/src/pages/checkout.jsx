@@ -522,7 +522,7 @@ export default function Checkout() {
           <div>
 
             <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BukuIn
+              BookIn
             </h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">

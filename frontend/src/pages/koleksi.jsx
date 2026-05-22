@@ -682,14 +682,13 @@ export default function HalamanUtama() {
       font-semibold
       shadow-lg
       hover:scale-105
-      hover:shadow-blue-400/40
       transition-all duration-300
       border-2 border-white
     "
               >
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
 
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+                
               </button>
 
               {/* DROPDOWN */}
@@ -893,7 +892,7 @@ export default function HalamanUtama() {
         <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
           {/* BRAND */}
           <div>
-            <h2 className="text-2xl font-bold text-blue-400 mb-3">BukuIn</h2>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">BookIn</h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">Discover thousands of books, explore new worlds, and enjoy a modern digital library experience.</p>
           </div>

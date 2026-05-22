@@ -340,7 +340,7 @@ export default function Trackingbuku() {
         <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
           {/* BRAND */}
           <div>
-            <h2 className="text-2xl font-bold text-blue-400 mb-3">BukuIn</h2>
+            <h2 className="text-2xl font-bold text-blue-400 mb-3">BookIn</h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">Discover thousands of books, explore new worlds, and enjoy a modern digital library experience.</p>
           </div>

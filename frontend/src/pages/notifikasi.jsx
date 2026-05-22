@@ -140,14 +140,13 @@ export default function Notifikasi() {
       font-semibold
       shadow-lg
       hover:scale-105
-      hover:shadow-blue-400/40
       transition-all duration-300
       border-2 border-white
     "
   >
     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
 
-    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+    
   </button>
 
   {/* DROPDOWN */}
@@ -347,7 +346,7 @@ export default function Notifikasi() {
           {/* BRAND */}
           <div>
             <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BukuIn
+              BookIn
             </h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">

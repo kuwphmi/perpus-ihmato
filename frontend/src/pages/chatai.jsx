@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import mascot from "../assets/mascot.png";
 import {
@@ -15,6 +15,13 @@ const [messages, setMessages] = useState([
 ]);
 
   const [input, setInput] = useState("");
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+  chatEndRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, [messages]);
 
   // =========================
   // KIRIM PESAN
@@ -66,7 +73,7 @@ const [messages, setMessages] = useState([
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100">
+    <div className="h-screen flex flex-col bg-[#f5f7fb]">
 
       {/* HEADER */}
 <div className="
@@ -156,9 +163,9 @@ shadow-md
                 max-w-[75%] px-4 py-3 text-sm shadow-sm
                 rounded-2xl
                 ${msg.role === "user"
-                  ? "bg-blue-600 text-white rounded-br-sm"
-                  : "bg-white text-gray-700 border rounded-bl-sm"
-                }
+  ? "bg-blue-500 text-white rounded-br-sm"
+  : "bg-white text-gray-700 rounded-bl-sm"
+}
               `}
             >
               {msg.text}
@@ -167,9 +174,11 @@ shadow-md
           </div>
         ))}
 
-      </div>
+     <div ref={chatEndRef}></div>
 
-      {/* INPUT */}
+</div>
+
+{/* INPUT */}
       <div className="bg-white border-t px-4 py-3 flex items-center gap-2">
 
         <input

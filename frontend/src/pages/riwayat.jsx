@@ -153,7 +153,7 @@ export default function Riwayat() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100">
+   <div className="h-screen flex flex-col bg-gray-100">
 
       {/* HEADER BIRU */}
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
@@ -387,7 +387,6 @@ export default function Riwayat() {
               >
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
             
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
               </button>
             
               {/* DROPDOWN */}
@@ -517,7 +516,7 @@ export default function Riwayat() {
       )}
 
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
+      <div className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-8 md:py-10">
 
         <h1 className="
 text-2xl
@@ -675,15 +674,19 @@ gap-3 md:gap-4
           {/* semua isi halaman */}
         </main>
 
-        {/* FOOTER */}
-        <footer className="bg-gray-900 text-white">
+
+        {/* MASCOT */}
+        <Floating />
+      </div>
+      {/* FOOTER */}
+        <footer className="mt-auto bg-gray-900 text-white">
 
           <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
 
             {/* BRAND */}
             <div>
               <h2 className="text-2xl font-bold text-blue-400 mb-3">
-                BukuIn
+                BookIn
               </h2>
 
               <p className="text-gray-400 text-sm leading-relaxed">
@@ -729,14 +732,10 @@ gap-3 md:gap-4
 
           {/* BOTTOM */}
           <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-            © 2026 BukuIn. All rights reserved.
+            © 2026 BookIn. All rights reserved.
           </div>
 
         </footer>
-
-        {/* MASCOT */}
-        <Floating />
-      </div>
     </div>
   );
 }
