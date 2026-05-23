@@ -338,65 +338,6 @@ export default function Notifikasi() {
 
       </div>
 
-      {/* FOOTER */}
-      <footer className="mt-20 bg-gray-900 text-white">
-
-        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
-
-          {/* BRAND */}
-          <div>
-            <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BookIn
-            </h2>
-
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Discover thousands of books, explore new worlds,
-              and enjoy a modern digital library experience.
-            </p>
-          </div>
-
-          {/* MENU */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">
-              Navigation
-            </h3>
-
-            <div className="flex flex-col gap-2 text-gray-400 text-sm">
-
-              <Link to="/koleksi" className="hover:text-white">
-                Home
-              </Link>
-
-              <Link to="/belanja" className="hover:text-white">
-                Shop
-              </Link>
-
-              <Link to="/riwayat" className="hover:text-white">
-                History
-              </Link>
-
-            </div>
-          </div>
-
-          {/* ABOUT */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">
-              About
-            </h3>
-
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Built for book lovers who want a simple,
-              elegant, and interactive reading platform.
-            </p>
-          </div>
-
-        </div>
-
-        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-          © 2026 BukuIn. All rights reserved.
-        </div>
-
-      </footer>
 
       {/* MASCOT */}
       <Floating />

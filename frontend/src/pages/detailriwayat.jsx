@@ -6,6 +6,16 @@ export default function DetailRiwayat() {
   const { id } = useParams();
 
   const [book, setBook] = useState(null);
+  const [showReceipt, setShowReceipt] =
+  useState(false);
+
+const storedUser =
+  localStorage.getItem("user");
+
+const user =
+  storedUser
+    ? JSON.parse(storedUser)
+    : null;
 
   const API_BASE =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
@@ -172,35 +182,68 @@ export default function DetailRiwayat() {
             </div>
 
             {/* STATUS */}
-            <div>
+<div>
 
-              <p className="text-sm text-gray-400 mb-2">
-                Status
-              </p>
+  <p className="text-sm text-gray-400 mb-2">
+    Status
+  </p>
 
-              <span
-                className={`
-                  inline-flex
-                  items-center
-                  px-4
-                  py-2
-                  rounded-full
-                  text-sm
-                  font-semibold
+  <div className="
+    flex
+    items-center
+    gap-3
+    flex-wrap
+  ">
 
-                  ${
-                    book.status === "returned"
-                      ? "bg-green-100 text-green-700"
-                      : book.status === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-blue-100 text-blue-700"
-                  }
-                `}
-              >
-                {book.status}
-              </span>
+    {/* STATUS BADGE */}
+    <span
+      className={`
+        inline-flex
+        items-center
+        px-4
+        py-2
+        rounded-full
+        text-sm
+        font-semibold
 
-            </div>
+        ${
+          book.status === "returned"
+            ? "bg-green-100 text-green-700"
+            : book.status === "pending"
+            ? "bg-yellow-100 text-yellow-700"
+            : "bg-blue-100 text-blue-700"
+        }
+      `}
+    >
+      {book.status}
+    </span>
+
+    {/* RECEIPT BUTTON */}
+    <button
+      onClick={() =>
+        setShowReceipt(true)
+      }
+      className="
+        px-4
+        py-2
+        rounded-full
+        bg-blue-600
+        hover:bg-blue-700
+        text-white
+        text-sm
+        font-medium
+        transition
+        shadow-md
+      "
+    >
+
+      Receipt
+
+    </button>
+
+  </div>
+
+</div>
 
             {/* INFO CARD */}
             <div className="grid gap-4">
@@ -254,6 +297,285 @@ export default function DetailRiwayat() {
       </div>
 
     </div>
+    {/* RECEIPT MODAL */}
+{showReceipt && (
+
+  <div
+  onClick={() =>
+    setShowReceipt(false)
+  }
+  className="
+    fixed
+    inset-0
+    z-[999]
+    bg-black/50
+    backdrop-blur-sm
+    flex
+    items-center
+    justify-center
+    p-4
+  "
+>
+
+    <div className="
+      bg-white
+      w-[340px]
+      max-w-full
+      shadow-2xl
+      rounded-2xl
+      overflow-hidden
+      animate-[fadeIn_.2s_ease]
+      font-mono
+    ">
+
+      {/* TOP */}
+      <div className="
+        px-6
+        pt-6
+        text-center
+      ">
+
+        <h1 className="
+          text-2xl
+          font-bold
+          tracking-widest
+          text-black
+        ">
+
+          BOOKIN
+
+        </h1>
+
+        <p className="
+          text-[11px]
+          text-gray-500
+          mt-1
+        ">
+
+          DIGITAL LIBRARY RECEIPT
+
+        </p>
+
+      </div>
+
+      {/* DASH */}
+      <div className="
+        border-t
+        border-dashed
+        my-5
+      " />
+
+      {/* CONTENT */}
+      <div className="
+        px-6
+        space-y-4
+        text-[13px]
+      ">
+
+        {/* NAME */}
+        <div className="
+          flex
+          justify-between
+          gap-4
+        ">
+
+          <span className="text-gray-500">
+            NAME
+          </span>
+
+          <span className="
+            text-right
+            font-semibold
+            text-black
+          ">
+
+            {user?.name || "-"}
+
+          </span>
+
+        </div>
+
+        {/* BOOK */}
+        <div className="
+          flex
+          justify-between
+          gap-4
+        ">
+
+          <span className="text-gray-500">
+            BOOK
+          </span>
+
+          <span className="
+            text-right
+            font-semibold
+            text-black
+          ">
+
+            {book.title}
+
+          </span>
+
+        </div>
+
+        {/* STATUS */}
+        <div className="
+          flex
+          justify-between
+        ">
+
+          <span className="text-gray-500">
+            STATUS
+          </span>
+
+          <span className="
+            font-bold
+            uppercase
+            text-black
+          ">
+
+            {book.status}
+
+          </span>
+
+        </div>
+
+        {/* BORROW */}
+        <div className="
+          flex
+          justify-between
+        ">
+
+          <span className="text-gray-500">
+            BORROW
+          </span>
+
+          <span className="font-semibold">
+
+            {book.loan_date
+              ? new Date(
+                  book.loan_date
+                ).toLocaleDateString("id-ID")
+              : "-"}
+
+          </span>
+
+        </div>
+
+        {/* RETURN */}
+        <div className="
+          flex
+          justify-between
+        ">
+
+          <span className="text-gray-500">
+            RETURN
+          </span>
+
+          <span className="font-semibold">
+
+            {book.due_date
+              ? new Date(
+                  book.due_date
+                ).toLocaleDateString("id-ID")
+              : "-"}
+
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* DASH */}
+      <div className="
+        border-t
+        border-dashed
+        my-5
+      " />
+
+      {/* THANKYOU */}
+      <div className="
+        px-6
+        text-center
+      ">
+
+        <p className="
+          text-[12px]
+          text-gray-500
+        ">
+
+          Thank you for borrowing books 
+
+        </p>
+
+        <p className="
+          text-[11px]
+          text-gray-400
+          mt-1
+        ">
+
+          www.bookin-library.com
+
+        </p>
+
+      </div>
+
+
+      {/* FOOTER */}
+      <div className="
+        border-t
+        px-5
+        py-4
+        flex
+        gap-3
+      ">
+
+        <button
+          onClick={() =>
+            setShowReceipt(false)
+          }
+          className="
+            flex-1
+            h-11
+            border
+            rounded-xl
+            text-sm
+            font-semibold
+            hover:bg-gray-50
+          "
+        >
+
+          Close
+
+        </button>
+
+        <button
+          onClick={() =>
+            window.print()
+          }
+          className="
+            flex-1
+            h-11
+            rounded-xl
+            bg-black
+            text-white
+            text-sm
+            font-semibold
+            hover:opacity-90
+          "
+        >
+
+          Print
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 
   </div>
 ); }
