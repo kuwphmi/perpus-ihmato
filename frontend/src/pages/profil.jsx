@@ -10,6 +10,7 @@ export default function Profil() {
   const location = useLocation();
   const message = location.state?.message;
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [user, setUser] = useState({
@@ -24,6 +25,19 @@ export default function Profil() {
   });
 
   const [addresses, setAddresses] = useState([]);
+  const [notif, setNotif] = useState("");
+
+const showNotif = (message) => {
+
+  setNotif(message);
+
+  setTimeout(() => {
+
+    setNotif("");
+
+  }, 5000);
+
+};
 
   const [addressForm, setAddressForm] = useState({
     label: "",
@@ -94,10 +108,25 @@ export default function Profil() {
   const handleSave = async () => {
     try {
       if (user.nik && user.nik.length !== 16) {
-        alert("NIK harus 16 digit");
+        showNotif("NIK must contain 16 digits");
         return;
       }
 
+      if (!user.birth) {
+
+  showNotif("Please enter your date of birth");
+
+  return;
+
+}
+
+if (!user.gender) {
+
+  showNotif("Please select gender");
+
+  return;
+
+}
       const res = await axios.put("http://localhost:3000/api/update-profile", {
         id: user.id,
         name: user.name,
@@ -112,14 +141,14 @@ export default function Profil() {
 
         setUser(res.data.user || user);
 
-        alert("Profil berhasil disimpan!");
+        showNotif("Profile updated successfully!");
         setIsEdit(false);
       } else {
-        alert(res.data.message);
+        showNotif(res.data.message);
       }
     } catch (err) {
       console.log(err);
-      alert("Gagal menyimpan profil");
+      showNotif("Failed to save profile");
     }
   };
 
@@ -150,6 +179,39 @@ export default function Profil() {
   };
 
   return (
+
+  <>
+
+    {notif && (
+
+      <div className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[99999]
+      ">
+
+        <div className="
+          bg-blue-600
+          text-white
+          px-6
+          py-3
+          rounded-full
+          shadow-2xl
+          text-sm
+          font-medium
+          animate-[fadeIn_.3s_ease]
+        ">
+
+          {notif}
+
+        </div>
+
+      </div>
+
+    )}
+
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex gap-6">
@@ -505,10 +567,117 @@ export default function Profil() {
 
         {/* LOGOUT */}
         <div className="mt-8 mb-16">
-          <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold shadow transition">
+          <button onClick={() => setShowLogoutConfirm(true)} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold shadow transition">
             Logout
           </button>
         </div>
+        {showLogoutConfirm && (
+
+  <div className="
+    fixed
+    inset-0
+    z-50
+    flex
+    items-center
+    justify-center
+    bg-black/40
+    backdrop-blur-sm
+    p-4
+  ">
+
+    <div className="
+      bg-white
+      rounded-3xl
+      shadow-2xl
+      w-full
+      max-w-sm
+      p-6
+      text-center
+    ">
+
+      <div className="
+        w-16
+        h-16
+        rounded-full
+        bg-red-50
+        flex
+        items-center
+        justify-center
+        mx-auto
+        mb-4
+      ">
+
+        <span className="text-2xl">
+          ↩
+        </span>
+
+      </div>
+
+      <h2 className="
+        text-xl
+        font-bold
+        text-gray-800
+        mb-2
+      ">
+
+        Logout Confirmation
+
+      </h2>
+
+      <p className="
+        text-sm
+        text-gray-500
+        mb-6
+      ">
+
+        Are you sure you want to log out?
+
+      </p>
+
+      <div className="flex gap-3">
+
+        <button
+          onClick={() => setShowLogoutConfirm(false)}
+          className="
+            flex-1
+            py-3
+            rounded-2xl
+            border
+            font-medium
+            hover:bg-gray-50
+            transition
+          "
+        >
+
+          Cancel
+
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="
+            flex-1
+            py-3
+            rounded-2xl
+            bg-red-500
+            text-white
+            font-medium
+            hover:bg-red-600
+            transition
+          "
+        >
+
+          Logout
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
       </div>
 
       {/* FOOTER */}
@@ -519,7 +688,7 @@ export default function Profil() {
           {/* BRAND */}
           <div>
             <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BukuIn
+              BookIn
             </h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">
@@ -570,6 +739,9 @@ export default function Profil() {
 
       </footer>
 
-    </div>
-  );
+</div>
+
+</>
+
+);
 }

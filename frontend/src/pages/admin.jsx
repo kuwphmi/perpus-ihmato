@@ -454,7 +454,17 @@ export default function AdminPerpustakaan() {
         key: "action",
         label: "Action",
         render: (r) => (
-          <button type="button" onClick={() => setSelectedOrder(r)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
+          <button type="button" onClick={() => setSelectedOrder(r)} className="
+  rounded-xl
+ bg-blue-600
+  hover:bg-blue-700
+  px-3
+  py-2
+  text-[11px]
+  md:text-xs
+  font-semibold
+  text-white
+  transition-colors"isek >
             Manage
           </button>
         ),
@@ -478,7 +488,15 @@ export default function AdminPerpustakaan() {
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div className="
+  bg-white
+  rounded-2xl
+  shadow-2xl
+  w-full
+  max-w-lg
+  max-h-[90vh]
+  overflow-y-auto
+">
           <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
             <div>
               <h3 className="font-bold text-slate-900 text-lg">Order Details</h3>
@@ -515,7 +533,7 @@ export default function AdminPerpustakaan() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Order Tracking</p>
                 <div className="relative">
                   <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-slate-100" />
-                  <div className="space-y-3">
+                  <div className="space-y-2 md:space-y-3">
                     {orderSteps.map((step, idx) => {
                       const done = idx <= currentStep;
                       const active = idx === currentStep;
@@ -530,8 +548,8 @@ export default function AdminPerpustakaan() {
                             {done ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                           </div>
                           <div className={`pt-1 ${done ? "opacity-100" : "opacity-40"}`}>
-                            <p className={`text-sm font-semibold ${active ? "text-blue-700" : "text-slate-700"}`}>{step.label}</p>
-                            <p className="text-xs text-slate-400">{step.desc}</p>
+                            <p className={`text-xs md:text-sm font-semibold ${active ? "text-blue-700" : "text-slate-700"}`}>{step.label}</p>
+                            <p className="text-[11px] md:text-xs text-slate-400">{step.desc}</p>
                           </div>
                         </div>
                       );
@@ -544,7 +562,15 @@ export default function AdminPerpustakaan() {
             {isCancelled && <div className="rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700 font-medium text-center">This order has been cancelled</div>}
           </div>
 
-          <div className="border-t border-slate-100 px-6 py-4 flex gap-2 flex-wrap">
+          <div className="
+  border-t
+  border-slate-100
+  px-4 md:px-6
+  py-4
+  flex
+  flex-col md:flex-row
+  gap-2
+">
             {nextStatus && !isCancelled && (
               <button
                 type="button"
@@ -611,7 +637,7 @@ export default function AdminPerpustakaan() {
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-white/85 backdrop-blur-xl">
-        <div className="flex items-center gap-3 px-5 py-3">
+        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-5 py-3">
           <button type="button" onClick={() => setSidebarOpen((p) => !p)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 transition-colors lg:hidden">
             <Menu className="w-5 h-5" />
           </button>
@@ -698,11 +724,43 @@ export default function AdminPerpustakaan() {
         </div>
       </header>
 
-      <div className="flex">
+      <>
+  {sidebarOpen && (
+    <div
+      onClick={() => setSidebarOpen(false)}
+      className="
+        fixed inset-0
+        bg-black/40
+        backdrop-blur-sm
+        z-40
+        md:hidden
+      "
+    />
+  )}
+
+  <div className="flex">
         {/* ── SIDEBAR ── */}
         <aside
-          className={`${sidebarOpen ? "w-64" : "w-18"} shrink-0 transition-all duration-300 ease-in-out h-[calc(100vh-53px)] sticky top-13.25 border-r border-slate-200/60 bg-white/95 backdrop-blur-xl flex flex-col select-none overflow-hidden`}
-        >
+  className={`
+    fixed md:sticky
+    top-0 left-0
+    z-50
+    h-screen md:h-[calc(100vh-53px)]
+
+    ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+
+    w-[270px] md:w-64
+
+    bg-white
+    border-r border-slate-200/60
+    shadow-2xl md:shadow-none
+
+    transition-all duration-300 ease-in-out
+
+    flex flex-col
+    overflow-hidden
+  `}
+>
           {/* Nav items */}
           <div className="flex-1 overflow-y-auto py-4 px-2.5 space-y-1">
             {sidebarOpen && <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Navigation</p>}
@@ -711,7 +769,14 @@ export default function AdminPerpustakaan() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => {
+  setActiveTab(tab.key);
+
+  // auto close sidebar di mobile
+  if (window.innerWidth < 768) {
+    setSidebarOpen(false);
+  }
+}}
                 title={!sidebarOpen ? tab.label : undefined}
                 className={`sidebar-item w-full flex items-center rounded-2xl px-3 py-2.5 text-sm font-semibold text-left
                   ${activeTab === tab.key ? "active" : "text-slate-600"}
@@ -764,15 +829,15 @@ export default function AdminPerpustakaan() {
         </aside>
 
         {/* ── MAIN ── */}
-        <main className="flex-1 min-w-0 p-6">
+        <main className="flex-1 min-w-0 p-4 md:p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-black tracking-tight text-slate-900">{activeTabInfo?.label}</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Manage all library data · Auto-refresh every 60s</p>
+            <p className="text-xs md:text-sm text-slate-400 mt-0.5">Manage all library data · Auto-refresh every 60s</p>
           </div>
 
           {/* Stats cards */}
           {activeTab !== "pesanan" && (
-            <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="mb-6 grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
               {[
                 { label: "Total Loans", value: data.summary.total_loans, icon: "📚", color: "blue" },
                 { label: "Total Members", value: data.summary.total_members, icon: "👥", color: "indigo" },
@@ -793,7 +858,14 @@ export default function AdminPerpustakaan() {
 
           {activeTab === "pesanan" && (
             <>
-              <div className="mb-5 grid gap-3 grid-cols-2 lg:grid-cols-5">
+              <div className="
+  mb-5
+  grid
+  gap-2 md:gap-3
+  grid-cols-2
+  md:grid-cols-3
+  lg:grid-cols-5
+">
                 {[
                   { label: "Total", value: orderStats.total, icon: "🛒", bg: "bg-slate-50", text: "text-slate-700" },
                   { label: "Waiting", value: orderStats.pending, icon: "🕐", bg: "bg-amber-50", text: "text-amber-700" },
@@ -801,9 +873,16 @@ export default function AdminPerpustakaan() {
                   { label: "Shipping", value: orderStats.shipping, icon: "🚚", bg: "bg-indigo-50", text: "text-indigo-700" },
                   { label: "Completed", value: orderStats.completed, icon: "✅", bg: "bg-emerald-50", text: "text-emerald-700" },
                 ].map((stat) => (
-                  <div key={stat.label} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                  <div key={stat.label} className="
+  rounded-2xl
+  border
+  border-white
+  bg-white
+  p-3 md:p-4
+  shadow-sm
+">
                     <div className={`inline-flex w-9 h-9 rounded-xl ${stat.bg} text-lg items-center justify-center mb-2`}>{stat.icon}</div>
-                    <div className={`text-xl font-black ${stat.text}`}>{stat.value}</div>
+                    <div className={`text-lg md:text-xl font-black ${stat.text}`}>{stat.value}</div>
                     <div className="text-xs text-slate-400 mt-0.5">{stat.label}</div>
                   </div>
                 ))}
@@ -848,9 +927,9 @@ export default function AdminPerpustakaan() {
 
           {/* Table */}
           <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-thin">
               <div className="max-h-[60vh] overflow-y-auto">
-                <table className="min-w-full text-left text-sm">
+                <table className="min-w-full text-left text-xs md:text-sm">
                   <thead className="bg-slate-50 border-b border-slate-100">
                     <tr>
                       {columnsByTab[activeTab].map((col) => (
@@ -895,6 +974,7 @@ export default function AdminPerpustakaan() {
           </div>
         </main>
       </div>
+      </>
 
       {/* Order Modal */}
       {selectedOrder && <OrderModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}

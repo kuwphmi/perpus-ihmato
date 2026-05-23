@@ -78,6 +78,18 @@ function LoginForm({ onSwitch, onForgot }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [notif, setNotif] = useState("");
+  const showNotif = (message) => {
+
+  setNotif(message);
+
+  setTimeout(() => {
+
+    setNotif("");
+
+  }, 10000);
+
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +104,7 @@ function LoginForm({ onSwitch, onForgot }) {
       );
 
       if (!res.data.status) {
-        alert(res.data.message);
+        showNotif(res.data.message);
         return;
       }
 
@@ -100,6 +112,7 @@ function LoginForm({ onSwitch, onForgot }) {
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
+      
 
       // CEK ROLE
       if (user.role === "admin") {
@@ -122,6 +135,37 @@ function LoginForm({ onSwitch, onForgot }) {
 
 
   return (
+  <>
+
+    {notif && (
+
+      <div className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[99999]
+      ">
+
+        <div className="
+          bg-blue-600
+          text-white
+          px-6
+          py-3
+          rounded-full
+          shadow-2xl
+          text-sm
+          font-medium
+        ">
+
+          {notif}
+
+        </div>
+
+      </div>
+
+    )}
+
     <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Sign in to your account</h1>
@@ -165,12 +209,28 @@ function LoginForm({ onSwitch, onForgot }) {
         Login with Google
       </button>
     </div>
-  );
+
+</>
+
+);
 }
 
   // ─── REGISTER FORM ────────────────────────────────────────────────────────
   function RegisterForm({ onSwitch }) {
     const navigate = useNavigate();
+    const [notif, setNotif] = useState("");
+
+const showNotif = (message) => {
+
+  setNotif(message);
+
+  setTimeout(() => {
+
+    setNotif("");
+
+  }, 2500);
+
+};
     const [form, setForm] = useState({
       firstName: "",
       lastName: "",
@@ -193,20 +253,52 @@ function LoginForm({ onSwitch, onForgot }) {
           phone: form.phone,
         });
         if (res.data.status) {
-          alert("Register berhasil, silakan lengkapi profil");
+          showNotif("Account created successfully!");
           localStorage.setItem("user", JSON.stringify(res.data.data));
           navigate("/profil");
         } else {
-          alert(res.data.message);
+          showNotif(res.data.message);
         }
       } catch (error) {
         console.log(error);
-        alert("Register gagal");
+        showNotif("Register failed");
       }
     };
 
     return (
-      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+
+  <>
+
+    {notif && (
+
+      <div className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[99999]
+      ">
+
+        <div className="
+          bg-blue-600
+          text-white
+          px-6
+          py-3
+          rounded-full
+          shadow-2xl
+          text-sm
+          font-medium
+        ">
+
+          {notif}
+
+        </div>
+
+      </div>
+
+    )}
+
+    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Create a new account</h1>
           <p className="text-sm text-gray-500">
@@ -261,8 +353,11 @@ function LoginForm({ onSwitch, onForgot }) {
             Create Account
           </button>
         </form>
-      </div>
-    );
+     </div>
+
+</>
+
+);
   }
 
   // ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
