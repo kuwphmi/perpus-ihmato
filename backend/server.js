@@ -18,6 +18,8 @@ import authRoutes from "./src/routes/authRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
 import addressRoutes from "./src/routes/addressRoutes.js";
 import notificationRoutes from "./src/routes/notificationRoutes.js";
+import historyRoutes from "./src/routes/historyRoutes.js";
+
 const app = express();
 
 app.use(
@@ -26,8 +28,9 @@ app.use(
   }),
 );
 
-app.use(express.json());
-app.use(
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(
   session({
     secret: "keyboard cat",
     resave: false,
@@ -231,45 +234,7 @@ app.post("/api/loan-requests", async (req, res) => {
 /* =======================
    UPDATE PROFILE
 ======================= */
-app.put("/api/update-profile", async (req, res) => {
-  try {
-    const { id, name, nik, birth, gender } = req.body;
 
-    if (!id) {
-      return res.json({
-        status: false,
-        message: "ID user tidak ditemukan",
-      });
-    }
-
-    const { error } = await supabase
-      .from("users")
-      .update({
-        name,
-        nik,
-        birth,
-        gender,
-      })
-      .eq("id", id);
-
-    if (error) {
-      return res.json({
-        status: false,
-        message: error.message,
-      });
-    }
-
-    return res.json({
-      status: true,
-      message: "Profil berhasil diupdate",
-    });
-  } catch (err) {
-    return res.json({
-      status: false,
-      message: err.message,
-    });
-  }
-});
 
 /* =======================
    TAMBAH CART
@@ -405,6 +370,8 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api", historyRoutes);
+
 
 /* =======================
    ADMIN DASHBOARD
@@ -480,15 +447,30 @@ app.get("/api/admin/loans", async (req, res) => {
     const formatted = loans.map((loan) => {
       const user = users.find((u) => u.id === loan.user_id);
 
-      return {
-        loan_id: loan.id, // ini unik
-        member_code: user?.member_code || "-",
-        member_name: user?.name || "-",
-        book_title: loan.title,
-        loan_date: loan.loan_date,
-        due_date: loan.due_date,
-        status: loan.status,
-      };
+return {
+  loan_id: loan.id,
+
+  receipt_code:
+    loan.receipt_code,
+
+  member_code:
+    user?.member_code || "-",
+
+  member_name:
+    user?.name || "-",
+
+  book_title:
+    loan.title,
+
+  loan_date:
+    loan.loan_date,
+
+  due_date:
+    loan.due_date,
+
+  status:
+    loan.status,
+};
     });
 
     return res.json(formatted);
@@ -627,17 +609,45 @@ app.post("/api/admin/loan-requests/:id/approve", async (req, res) => {
       });
     }
 
-    // insert ke loans
-    const { error: loanError } = await supabase.from("loans").insert([
+// generate receipt
+const receiptCode =
+  `BK-${Date.now()}`;
+
+// insert ke loans
+const { error: loanError } =
+  await supabase
+    .from("loans")
+    .insert([
       {
-        user_id: requestData.user_id,
-        book_key: requestData.book_key,
-        title: requestData.book_title,
-        author: requestData.author,
-        cover: requestData.cover,
-        loan_date: new Date().toISOString(),
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "borrowed",
+        user_id:
+          requestData.user_id,
+
+        book_key:
+          requestData.book_key,
+
+        title:
+          requestData.book_title,
+
+        author:
+          requestData.author,
+
+        cover:
+          requestData.cover,
+
+        loan_date:
+          new Date().toISOString(),
+
+        due_date:
+          new Date(
+            Date.now() +
+            7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+
+        status:
+          "borrowed",
+
+        receipt_code:
+          receiptCode,
       },
     ]);
 
@@ -649,6 +659,7 @@ app.post("/api/admin/loan-requests/:id/approve", async (req, res) => {
     }
 
     // update request jadi approved
+<<<<<<< HEAD
     // update request jadi approved
     await supabase
       .from("loan_requests")
@@ -656,6 +667,14 @@ app.post("/api/admin/loan-requests/:id/approve", async (req, res) => {
         status: "approved",
       })
       .eq("id", id);
+=======
+await supabase
+  .from("loan_requests")
+  .update({
+    status: "approved",
+  })
+  .eq("id", id);
+>>>>>>> c7e4283 (profile dll)
 
     // kirim notifikasi
     await supabase.from("notifications").insert([

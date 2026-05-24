@@ -87,7 +87,6 @@ export default function Trackingbuku() {
   ).length;
 
   const shippingCount = orders.filter((o) => o.order_status === "shipping").length;
-
   const completedCount = orders.filter((o) => o.order_status === "completed").length;
   const filteredOrders =
   activeFilter === "all"
@@ -96,6 +95,28 @@ export default function Trackingbuku() {
         (o) =>
           o.order_status === activeFilter
       );
+
+      const cancelOrder =
+    async (id) => {
+
+      try {
+
+        await axios.delete(
+          `http://localhost:3000/api/payment/${id}`
+        );
+
+        fetchOrders();
+
+        setSelectedOrder(null);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
   return (
     <div className="min-h-screen bg-[#f7faff]">
       {/* TOP NAVBAR */}
@@ -820,6 +841,184 @@ py-10
             <button onClick={() => setSelectedOrder(null)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">
               ✕
             </button>
+
+            {/* COVER */}
+            <img
+              src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+              alt={selectedOrder.title}
+              className="w-32 h-44 object-cover rounded-2xl mx-auto shadow"
+            />
+
+            {/* TITLE */}
+            <h2 className="text-2xl font-bold text-center mt-5">
+              {selectedOrder.title}
+            </h2>
+
+            {/* STATUS */}
+            <div className="flex justify-center mt-3">
+
+              <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
+
+                {selectedOrder.order_status === "waiting_payment" &&
+                  "Waiting Payment"}
+
+                {selectedOrder.order_status === "processing" &&
+                  "Processing"}
+
+                {selectedOrder.order_status === "shipping" &&
+                  "Shipping"}
+
+                {selectedOrder.order_status === "completed" &&
+                  "Completed"}
+
+              </span>
+
+            </div>
+
+            {/* DETAIL */}
+            <div className="mt-6 space-y-4 text-sm">
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Order ID
+                </span>
+
+                <span className="font-medium">
+                  {selectedOrder.order_id}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Payment
+                </span>
+
+                <span className="font-medium">
+                  Midtrans
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Total
+                </span>
+
+                <span className="font-bold text-blue-600">
+                  Rp {selectedOrder.amount?.toLocaleString("id-ID")}
+                </span>
+              </div>
+
+            </div>
+
+            {/* PAYMENT ACTION */}
+            {selectedOrder.order_status ===
+              "waiting_payment" && (
+
+                <div className="flex gap-3 mt-6">
+
+                  <button
+                    onClick={() => {
+
+                      window.snap.pay(
+                        selectedOrder.snap_token,
+
+                        {
+
+                          onSuccess: function (result) {
+
+                            alert(
+                              "Payment successful!"
+                            );
+
+                            console.log(result);
+
+                            fetchOrders();
+
+                          },
+
+                          onPending: function (result) {
+
+                            alert(
+                              "Waiting for your payment!"
+                            );
+
+                            console.log(result);
+
+                          },
+
+                          onError: function (result) {
+
+                            alert(
+                              "Payment failed!"
+                            );
+
+                            console.log(result);
+
+                          },
+
+                          onClose: function () {
+
+                            alert(
+                              "You closed the payment popup"
+                            );
+
+                          },
+
+                        }
+
+                      );
+
+                    }}
+                    className="
+        flex-1
+        bg-blue-600
+        hover:bg-blue-700
+        text-white
+        py-3
+        rounded-2xl
+        font-semibold
+        transition
+      "
+                  >
+                    Continue Payment
+                  </button>
+
+                  <button
+                    onClick={() => {
+
+                      const confirmCancel =
+                        window.confirm(
+                          "Are you sure you want to cancel this order?"
+                        );
+
+                      if (confirmCancel) {
+
+                        cancelOrder(
+                          selectedOrder.id
+                        );
+
+                      }
+
+                    }}
+                    className="
+    flex-1
+    border
+    border-red-500
+    text-red-500
+    hover:bg-red-50
+    py-3
+    rounded-2xl
+    font-semibold
+    transition
+  "
+                  >
+                    Cancel
+                  </button>
+
+                </div>
+
+              )}
+
 
             {/* COMPLETED */}
            {selectedOrder.order_status ===

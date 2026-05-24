@@ -5,6 +5,9 @@ import {
   midtransNotification,
   getPayments,
 } from "../controllers/paymentController.js";
+import {
+  cancelOrder,
+} from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -21,9 +24,8 @@ router.post(
 );
 
 // GET USER PAYMENT
-router.get(
-  "/:user_id",
-  getPayments
-);
+router.get("/:user_id", getPayments);
+
+router.delete("/:id", cancelOrder);
 
 export default router;

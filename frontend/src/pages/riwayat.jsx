@@ -332,7 +332,7 @@ export default function Riwayat() {
 
                           </div>
 
-           
+
                         ))
 
                     )}
@@ -362,7 +362,7 @@ export default function Riwayat() {
 
             {/* ================= PROFILE ================= */}
             <div className="relative">
-            
+
               {/* PROFILE BUTTON */}
               <button
                 onClick={(e) => {
@@ -386,9 +386,9 @@ export default function Riwayat() {
                 "
               >
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-            
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
               </button>
-            
+
               {/* DROPDOWN */}
               {isProfileOpen && (
                 <>
@@ -397,7 +397,7 @@ export default function Riwayat() {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsProfileOpen(false)}
                   ></div>
-            
+
                   {/* POPUP */}
                   <div
                     className="
@@ -412,7 +412,7 @@ export default function Riwayat() {
                       z-50
                     "
                   >
-            
+
                     {/* HEADER */}
                     <div className="
                       h-28
@@ -422,14 +422,14 @@ export default function Riwayat() {
                       to-cyan-400
                       relative
                     ">
-            
+
                       <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-            
+
                       <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
-            
+
                       {/* AVATAR */}
                       <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
-            
+
                         <div className="
                           w-20 h-20
                           rounded-full
@@ -437,7 +437,7 @@ export default function Riwayat() {
                           p-[3px]
                           shadow-2xl
                         ">
-            
+
                           <div className="
                             w-full h-full
                             rounded-full
@@ -449,26 +449,26 @@ export default function Riwayat() {
                           ">
                             {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                           </div>
-            
+
                         </div>
-            
+
                       </div>
-            
+
                     </div>
-            
+
                     {/* CONTENT */}
                     <div className="pt-14 pb-6 px-6 text-center">
-            
+
                       <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
                         {user.name || "Unknown User"}
                       </h3>
-            
+
                       <p className="text-sm text-gray-500 mt-1 break-all">
                         {user.email || "No email available"}
                       </p>
-            
+
                       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
-            
+
                       <Link to="/profil">
                         <button
                           className="
@@ -490,13 +490,13 @@ export default function Riwayat() {
                           View Profile
                         </button>
                       </Link>
-            
+
                     </div>
-            
+
                   </div>
                 </>
               )}
-            
+
             </div>
 
           </div>
@@ -631,18 +631,21 @@ gap-3 md:gap-4
                 </div>
 
                 {/* ACTION BUTTON */}
+                {console.log("BOOK:", book)}
+
                 <div className="flex flex-col gap-2 w-[110px] ml-auto">
 
                   <Link to={`/detail-riwayat/${book.id}`}>
-                    <button className="
-      w-full h-10 rounded-xl bg-blue-50 text-blue-700
-      text-[12px] md:text-sm font-medium hover:bg-blue-100 transition
-    ">
+                    <button
+                      className="
+        w-full h-10 rounded-xl bg-blue-50 text-blue-700
+        text-[12px] md:text-sm font-medium hover:bg-blue-100 transition
+      "
+                    >
                       Detail
                     </button>
                   </Link>
 
-                  {/* extension hanya kalau belum returned */}
                   {book.status !== "returned" && (
                     <button
                       onClick={() => handleExtension(book)}
@@ -654,6 +657,7 @@ gap-3 md:gap-4
                       Extend Book
                     </button>
                   )}
+
                 </div>
               </div>
             </div>

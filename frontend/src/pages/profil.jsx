@@ -12,7 +12,6 @@ export default function Profil() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
   const [user, setUser] = useState({
     id: "",
     name: "",
@@ -22,22 +21,23 @@ export default function Profil() {
     birth: "",
     gender: "",
     member_code: "",
+    profile_image: "",
   });
 
   const [addresses, setAddresses] = useState([]);
   const [notif, setNotif] = useState("");
 
-const showNotif = (message) => {
+  const showNotif = (message) => {
 
-  setNotif(message);
+    setNotif(message);
 
-  setTimeout(() => {
+    setTimeout(() => {
 
-    setNotif("");
+      setNotif("");
 
-  }, 5000);
+    }, 5000);
 
-};
+  };
 
   const [addressForm, setAddressForm] = useState({
     label: "",
@@ -48,10 +48,26 @@ const showNotif = (message) => {
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
 
-    if (stored) {
-      const data = JSON.parse(stored);
+    const stored =
+      localStorage.getItem("user");
+
+    // kalau kosong
+    if (
+      !stored ||
+      stored === "undefined"
+    ) {
+
+      navigate("/login");
+
+      return;
+
+    }
+
+    try {
+
+      const data =
+        JSON.parse(stored);
 
       setUser({
         id: data.id ?? "",
@@ -61,11 +77,24 @@ const showNotif = (message) => {
         nik: data.nik ?? "",
         birth: data.birth ?? "",
         gender: data.gender ?? "",
-        member_code: data.member_code ?? "",
+        member_code:
+          data.member_code ?? "",
+        profile_image:
+          data.profile_image ?? "",
       });
-    } else {
+
+    } catch (err) {
+
+      console.log(err);
+
+      localStorage.removeItem(
+        "user"
+      );
+
       navigate("/login");
+
     }
+
   }, []);
 
   useEffect(() => {
@@ -78,13 +107,24 @@ const showNotif = (message) => {
 
     try {
 
-      const userData = JSON.parse(localStorage.getItem("user"));
+      const stored =
+        localStorage.getItem("user");
 
-      const res = await axios.get(
-        `http://localhost:3000/api/address/${userData.id}`
-      );
+      if (
+        !stored ||
+        stored === "undefined"
+      ) return;
 
-      console.log(res.data)
+      const userData =
+        JSON.parse(stored);
+
+      if (!userData?.id) return;
+
+      const res =
+        await axios.get(
+          `http://localhost:3000/api/address/${userData.id}`
+        );
+
       setAddresses(res.data);
 
     } catch (err) {
@@ -96,14 +136,86 @@ const showNotif = (message) => {
   };
 
   // upload foto
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
+
     const file = e.target.files[0];
 
-    if (file) {
-      setProfileImage(URL.createObjectURL(file));
-    }
-  };
+    if (!file) return;
 
+    try {
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "profile_image",
+        file
+      );
+
+      formData.append(
+        "id",
+        user.id
+      );
+
+      formData.append(
+        "name",
+        user.name
+      );
+
+      formData.append(
+        "phone",
+        user.phone
+      );
+
+      formData.append(
+        "nik",
+        user.nik
+      );
+
+      formData.append(
+        "birth",
+        user.birth
+      );
+
+      formData.append(
+        "gender",
+        user.gender
+      );
+
+      const res =
+        await axios.put(
+          "http://localhost:3000/api/update-profile",
+          formData
+        );
+
+      if (res.data.status) {
+
+        setUser(res.data.user);
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(
+            res.data.user
+          )
+        );
+
+        alert(
+          "Photo updated!"
+        );
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert(
+        "Failed upload image"
+      );
+
+    }
+
+  };
   // ← SIMPAN KE DATABASE
   const handleSave = async () => {
     try {
@@ -114,19 +226,19 @@ const showNotif = (message) => {
 
       if (!user.birth) {
 
-  showNotif("Please enter your date of birth");
+        showNotif("Please enter your date of birth");
 
-  return;
+        return;
 
-}
+      }
 
-if (!user.gender) {
+      if (!user.gender) {
 
-  showNotif("Please select gender");
+        showNotif("Please select gender");
 
-  return;
+        return;
 
-}
+      }
       const res = await axios.put("http://localhost:3000/api/update-profile", {
         id: user.id,
         name: user.name,
@@ -134,51 +246,75 @@ if (!user.gender) {
         nik: user.nik,
         birth: user.birth,
         gender: user.gender,
+        profile_image: user?.profile_image,
       });
 
       if (res.data.status) {
-        localStorage.setItem("user", JSON.stringify(res.data.user || user));
 
-        setUser(res.data.user || user);
+        // ambil user terbaru dari backend
+        const updatedUser =
+          res.data.user;
+        // update state
+        setUser(updatedUser);
 
-        showNotif("Profile updated successfully!");
+        // update localstorage
+        localStorage.setItem(
+          "user",
+          JSON.stringify(updatedUser)
+        );
+
+        showNotif(
+          "Profile updated successfully!"
+        );
+
         setIsEdit(false);
+
       } else {
-        showNotif(res.data.message);
+
+        showNotif(
+          res.data.message
+        );
+
       }
+
     } catch (err) {
+
       console.log(err);
-      showNotif("Failed to save profile");
-    }
-  };
 
-  const setPrimaryAddress = async (id) => {
-
-    try {
-
-      await axios.put(
-        `http://localhost:3000/api/address/primary/${id}`
+      showNotif(
+        "Failed to save profile"
       );
 
-      fetchAddresses();
-
-    } catch (err) {
-
-      console.log(err);
-
     }
+  }
 
-  };
+const setPrimaryAddress = async (id) => {
 
-  //logout
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+  try {
 
-    navigate("/login");
-  };
+    await axios.put(
+      `http://localhost:3000/api/address/primary/${id}`
+    );
 
-  return (
+    fetchAddresses();
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
+
+//logout
+const handleLogout = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
+
+  navigate("/login");
+};
+
+return (
 
   <>
 
@@ -239,7 +375,7 @@ if (!user.gender) {
           {/* FOTO */}
           <label className="cursor-pointer relative">
             <div className="w-32 h-32 rounded-xl overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
-              {profileImage ? <img src={profileImage} className="w-full h-full object-cover" /> : <span className="text-4xl font-bold text-white">{user.name?.charAt(0).toUpperCase() ?? "?"}</span>}
+              {user?.profile_image ? <img src={user?.profile_image} className="w-full h-full object-cover" /> : <span className="text-4xl font-bold text-white">{user.name?.charAt(0).toUpperCase() ?? "?"}</span>}
             </div>
 
             <div className="absolute bottom-2 right-2 bg-blue-600 p-2 rounded-full text-white">
@@ -490,70 +626,70 @@ if (!user.gender) {
                 )}
 
                 {Array.isArray(addresses) &&
-  addresses
-    .filter((item) => item.is_primary)
-    .map((item) => (
-                    <div
-                      key={item.id}
-                      className="border rounded-xl p-4"
-                    >
+                  addresses
+                    .filter((item) => item.is_primary)
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="border rounded-xl p-4"
+                      >
 
-                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex justify-between items-start gap-4">
 
-                        <div>
+                          <div>
 
-                          {/* LABEL */}
-                          <div className="flex items-center gap-2">
+                            {/* LABEL */}
+                            <div className="flex items-center gap-2">
 
-                            <h4 className="font-semibold text-gray-800">
-                              {item.label}
-                            </h4>
+                              <h4 className="font-semibold text-gray-800">
+                                {item.label}
+                              </h4>
 
-                            {item.is_primary && (
-                              <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
-                                Main
-                              </span>
-                            )}
+                              {item.is_primary && (
+                                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+                                  Main
+                                </span>
+                              )}
+
+                            </div>
+
+                            {/* RECEIVER */}
+                            <p className="mt-2 font-medium text-gray-700">
+                              {item.receiver_name}
+                            </p>
+
+                            {/* PHONE */}
+                            <p className="text-sm text-gray-500">
+                              {item.phone}
+                            </p>
+
+                            {/* ADDRESS */}
+                            <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                              {item.full_address}
+                            </p>
+
+                            {/* POSTAL */}
+                            <p className="text-sm text-gray-400 mt-1">
+                              Postal Code: {item.postal_code}
+                            </p>
 
                           </div>
 
-                          {/* RECEIVER */}
-                          <p className="mt-2 font-medium text-gray-700">
-                            {item.receiver_name}
-                          </p>
-
-                          {/* PHONE */}
-                          <p className="text-sm text-gray-500">
-                            {item.phone}
-                          </p>
-
-                          {/* ADDRESS */}
-                          <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                            {item.full_address}
-                          </p>
-
-                          {/* POSTAL */}
-                          <p className="text-sm text-gray-400 mt-1">
-                            Postal Code: {item.postal_code}
-                          </p>
+                          {/* BUTTON */}
+                          {!item.is_primary && (
+                            <button
+                              onClick={() => setPrimaryAddress(item.id)}
+                              className="text-blue-600 text-sm hover:underline"
+                            >
+                              Set Main
+                            </button>
+                          )}
 
                         </div>
 
-                        {/* BUTTON */}
-                        {!item.is_primary && (
-                          <button
-                            onClick={() => setPrimaryAddress(item.id)}
-                            className="text-blue-600 text-sm hover:underline"
-                          >
-                            Set Main
-                          </button>
-                        )}
-
                       </div>
 
-                    </div>
-
-                  ))}
+                    ))}
 
               </div>
 
@@ -573,7 +709,7 @@ if (!user.gender) {
         </div>
         {showLogoutConfirm && (
 
-  <div className="
+          <div className="
     fixed
     inset-0
     z-50
@@ -585,7 +721,7 @@ if (!user.gender) {
     p-4
   ">
 
-    <div className="
+            <div className="
       bg-white
       rounded-3xl
       shadow-2xl
@@ -595,7 +731,7 @@ if (!user.gender) {
       text-center
     ">
 
-      <div className="
+              <div className="
         w-16
         h-16
         rounded-full
@@ -607,38 +743,38 @@ if (!user.gender) {
         mb-4
       ">
 
-        <span className="text-2xl">
-          ↩
-        </span>
+                <span className="text-2xl">
+                  ↩
+                </span>
 
-      </div>
+              </div>
 
-      <h2 className="
+              <h2 className="
         text-xl
         font-bold
         text-gray-800
         mb-2
       ">
 
-        Logout Confirmation
+                Logout Confirmation
 
-      </h2>
+              </h2>
 
-      <p className="
+              <p className="
         text-sm
         text-gray-500
         mb-6
       ">
 
-        Are you sure you want to log out?
+                Are you sure you want to log out?
 
-      </p>
+              </p>
 
-      <div className="flex gap-3">
+              <div className="flex gap-3">
 
-        <button
-          onClick={() => setShowLogoutConfirm(false)}
-          className="
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="
             flex-1
             py-3
             rounded-2xl
@@ -647,15 +783,15 @@ if (!user.gender) {
             hover:bg-gray-50
             transition
           "
-        >
+                >
 
-          Cancel
+                  Cancel
 
-        </button>
+                </button>
 
-        <button
-          onClick={handleLogout}
-          className="
+                <button
+                  onClick={handleLogout}
+                  className="
             flex-1
             py-3
             rounded-2xl
@@ -665,19 +801,19 @@ if (!user.gender) {
             hover:bg-red-600
             transition
           "
-        >
+                >
 
-          Logout
+                  Logout
 
-        </button>
+                </button>
 
-      </div>
+              </div>
 
-    </div>
+            </div>
 
-  </div>
+          </div>
 
-)}
+        )}
       </div>
 
       {/* FOOTER */}
@@ -739,9 +875,9 @@ if (!user.gender) {
 
       </footer>
 
-</div>
+    </div>
 
-</>
+  </>
 
 );
 }

@@ -143,13 +143,13 @@ export const addBooks = async (req, res) => {
 
   } catch (err) {
 
-  console.error("ADD BOOK ERROR:", err);
+    console.error("ADD BOOK ERROR:", err);
 
-  res.status(500).json({
-    status: false,
-    message: err.message,
-    full_error: err,
-  });
+    res.status(500).json({
+      status: false,
+      message: err.message,
+      full_error: err,
+    });
   }
 };
 
@@ -159,13 +159,14 @@ export const getLoans = async (req, res) => {
     const { data, error } = await supabase
       .from("loans")
       .select(`
-        id,
-        title,
-        loan_date,
-        due_date,
-        status,
-        users(name, member_code)
-      `)
+  id,
+  title,
+  receipt_code,
+  loan_date,
+  due_date,
+  status,
+  users(name, member_code)
+`)
       .eq("status", "borrowed");
 
     if (error) throw error;
@@ -179,6 +180,7 @@ export const getLoans = async (req, res) => {
         loan_date: item.loan_date,
         due_date: item.due_date,
         status: item.status,
+        receipt_code: item.receipt_code,
       }))
     );
   } catch (err) {
@@ -213,6 +215,9 @@ export const getLoanRequests =
         data.map((item) => ({
 
           id: item.id,
+
+          receipt_code:
+            item.receipt_code,
 
           member_code:
             item.users?.member_code || "-",
@@ -262,6 +267,8 @@ export const approveLoanRequest =
 
       if (requestError)
         throw requestError;
+      const receiptCode =
+        `BK-${Date.now()}`;
 
       const { error: loanError } =
         await supabase
@@ -294,6 +301,8 @@ export const approveLoanRequest =
 
               status:
                 "borrowed",
+              receipt_code:
+                receiptCode,
             },
           ]);
 
@@ -615,12 +624,24 @@ export const getExtensions = async (req, res) => {
     res.json(
       data.map((item) => ({
         id: item.id,
-        member_name: item.loans?.users?.name || "-",
-        member_code: item.loans?.users?.member_code || "-",
-        book_title: item.loans?.title,
-        old_due_date: item.loans?.due_date,
-        new_due_date: item.new_due_date,
-        status: item.status,
+
+        member_code:
+          item.users?.member_code || "-",
+
+        member_name:
+          item.users?.name || "-",
+
+        book_title:
+          item.title,
+
+        loan_date:
+          item.loan_date,
+
+        due_date:
+          item.due_date,
+
+        status:
+          item.status,
       }))
     );
   } catch (err) {
@@ -677,7 +698,7 @@ export const approveExtension =
               "Extension Approved",
 
             message:
-              "Your borrowing extension has been approved.",
+              "Your borrowing extension has been approvedc.",
           },
         ]);
       res.json({

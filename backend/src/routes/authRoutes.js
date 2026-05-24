@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+import upload from "../middleware/upload.js";
 
 import {
   register,
@@ -12,8 +13,11 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.put("/update-profile", updateProfile);
-
+router.put(
+  "/update-profile",
+  upload.single("profile_image"),
+  updateProfile
+);
 /* =======================
    GOOGLE LOGIN
 ======================= */

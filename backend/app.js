@@ -17,8 +17,18 @@ const app = express();
    MIDDLEWARE
 ====================== */
 app.use(cors()); // biar frontend bisa akses backend
-app.use(express.json()); // parsing JSON body
+app.use(
+  express.json({
+    limit: "50mb",
+  })
+);
 
+app.use(
+  express.urlencoded({
+    limit: "50mb",
+    extended: true,
+  })
+);
 /* ======================
    ROUTES
 ====================== */
