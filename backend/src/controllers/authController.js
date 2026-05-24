@@ -105,4 +105,4 @@ export const googleCallback = async (req, res) => {
       "http://localhost:5173/login"
     );
   }
-};
+}; 

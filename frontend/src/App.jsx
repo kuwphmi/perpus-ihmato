@@ -10,6 +10,7 @@ import Riwayat from "./pages/riwayat";
 import Profil from "./pages/profil";
 import AdminPerpustakaan from "./pages/admin";
 import ManageBooks from "./pages/ManageBooks";
+import ManageOrder from "./pages/ManageOrder";
 import Genre from "./pages/Genre";
 import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
@@ -149,7 +150,15 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-        <Route path="/admin/books/manage" element={<ManageBooks />} />
+        <Route
+          path="/admin/books/borrow/add"
+          element={<ManageBooks />}
+        />
+
+        <Route
+          path="/admin/books/shop/:id"
+          element={<ManageOrder />}
+        />
 
         <Route path="/search" element={<SearchPage />} />
 

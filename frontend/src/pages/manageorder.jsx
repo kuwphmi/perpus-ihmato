@@ -1,13 +1,17 @@
+// ================= MANAGEORDER.JSX =================
+
 import { useEffect, useState } from "react";
 import { Trash2, Pencil, ArrowLeft } from "lucide-react";
-import supabase from "../config/supabase";
 import { useNavigate } from "react-router-dom";
+import supabase from "../config/supabase";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
   "http://localhost:3000/api";
 
-export default function ManageBooks() {
+export default function ManageOrder() {
+
+  const navigate = useNavigate();
 
   const [books, setBooks] =
     useState([]);
@@ -30,13 +34,12 @@ export default function ManageBooks() {
       author: "",
       category: "",
       stock: "",
+      price: "",
       description: "",
       cover: "",
     });
 
-  const navigate = useNavigate();
-
-  // ================= FETCH =================
+  // ================= FETCH SHOP BOOKS =================
   const fetchBooks = async () => {
 
     try {
@@ -44,16 +47,19 @@ export default function ManageBooks() {
       setLoading(true);
 
       const res = await fetch(
-        `${API_BASE}/admin/borrow-books`
+        `${API_BASE}/admin/books`
       );
 
       if (!res.ok) {
+
         throw new Error(
-          "Failed fetch books"
+          "Failed to fetch books"
         );
+
       }
 
-      const data = await res.json();
+      const data =
+        await res.json();
 
       setBooks(
         Array.isArray(data)
@@ -81,17 +87,18 @@ export default function ManageBooks() {
 
   }, []);
 
-  // ================= CHANGE =================
- const handleChange = (e) => {
+  // ================= INPUT CHANGE =================
+  const handleChange = (e) => {
 
-  setBookForm({
-    ...bookForm,
-    [e.target.name]:
-      e.target.value,
-  });
-};
+    setBookForm({
+      ...bookForm,
+      [e.target.name]:
+        e.target.value,
+    });
 
-  // ================= RESET =================
+  };
+
+  // ================= RESET FORM =================
   const resetForm = () => {
 
     setBookForm({
@@ -99,25 +106,26 @@ export default function ManageBooks() {
       author: "",
       category: "",
       stock: "",
+      price: "",
       description: "",
       cover: "",
     });
+
+    setPreviewCover("");
 
     setIsEdit(false);
 
     setSelectedId(null);
 
-    setPreviewCover("");
-
   };
 
-  // ================= ADD =================
+  // ================= ADD SHOP BOOK =================
   const handleAdd = async () => {
 
     try {
 
       const res = await fetch(
-        `${API_BASE}/admin/borrow-books`,
+        `${API_BASE}/admin/books`,
         {
           method: "POST",
 
@@ -137,7 +145,14 @@ export default function ManageBooks() {
               bookForm.category,
 
             stock:
-              Number(bookForm.stock),
+              Number(
+                bookForm.stock
+              ),
+
+            price:
+              Number(
+                bookForm.price
+              ),
 
             description:
               bookForm.description,
@@ -155,16 +170,16 @@ export default function ManageBooks() {
 
         throw new Error(
           result.message ||
-          "Failed add book"
+          "Failed to add book"
         );
 
       }
 
       alert(
-        "Borrow book added"
+        "Shop book added successfully"
       );
 
-      fetchBooks();
+      await fetchBooks();
 
       resetForm();
 
@@ -178,7 +193,7 @@ export default function ManageBooks() {
 
   };
 
-  // ================= EDIT =================
+  // ================= EDIT BUTTON =================
   const handleEditClick = (book) => {
 
     setBookForm({
@@ -193,6 +208,9 @@ export default function ManageBooks() {
 
       stock:
         book.stock || "",
+
+      price:
+        book.price || "",
 
       description:
         book.description || "",
@@ -216,13 +234,13 @@ export default function ManageBooks() {
 
   };
 
-  // ================= UPDATE =================
+  // ================= UPDATE SHOP BOOK =================
   const handleUpdate = async () => {
 
     try {
 
       const res = await fetch(
-        `${API_BASE}/admin/borrow-books/${selectedId}`,
+        `${API_BASE}/admin/books/${selectedId}`,
         {
           method: "PUT",
 
@@ -242,7 +260,14 @@ export default function ManageBooks() {
               bookForm.category,
 
             stock:
-              Number(bookForm.stock),
+              Number(
+                bookForm.stock
+              ),
+
+            price:
+              Number(
+                bookForm.price
+              ),
 
             description:
               bookForm.description,
@@ -256,16 +281,16 @@ export default function ManageBooks() {
       if (!res.ok) {
 
         throw new Error(
-          "Failed update"
+          "Failed to update book"
         );
 
       }
 
       alert(
-        "Book updated"
+        "Book updated successfully"
       );
 
-      fetchBooks();
+      await fetchBooks();
 
       resetForm();
 
@@ -274,26 +299,26 @@ export default function ManageBooks() {
       console.error(err);
 
       alert(
-        "Failed update"
+        "Failed to update book"
       );
 
     }
 
   };
 
-  // ================= DELETE =================
+  // ================= DELETE SHOP BOOK =================
   const handleDelete = async (id) => {
 
     if (
       !confirm(
-        "Delete this book?"
+        "Yakin hapus buku ini?"
       )
     ) return;
 
     try {
 
       const res = await fetch(
-        `${API_BASE}/admin/borrow-books/${id}`,
+        `${API_BASE}/admin/books/${id}`,
         {
           method: "DELETE",
         }
@@ -302,19 +327,19 @@ export default function ManageBooks() {
       if (!res.ok) {
 
         throw new Error(
-          "Failed delete"
+          "Failed to delete book"
         );
 
       }
 
-      fetchBooks();
+      await fetchBooks();
 
     } catch (err) {
 
       console.error(err);
 
       alert(
-        "Failed delete"
+        "Failed to delete book"
       );
 
     }
@@ -324,42 +349,42 @@ export default function ManageBooks() {
   return (
     <div className="min-h-screen bg-[#f4f7ff]">
 
-    {/* HEADER */}
-    <div className="bg-blue-600 px-8 py-8 shadow-md">
+      {/* HEADER */}
+<div className="bg-emerald-600 px-8 py-8 shadow-md">
 
-      <div className="flex items-center gap-4">
+  <div className="flex items-center gap-4">
 
-        {/* BUTTON KEMBALI */}
-        <button
-          onClick={() => navigate("/admin")}
-          className="
-            bg-white/20
-            hover:bg-white/30
-            transition
-            p-3
-            rounded-xl
-            text-white
-          "
-        >
-          <ArrowLeft size={24} />
-        </button>
+    {/* BUTTON KEMBALI */}
+    <button
+      onClick={() => navigate("/admin")}
+      className="
+        bg-white/20
+        hover:bg-white/30
+        transition
+        p-3
+        rounded-xl
+        text-white
+      "
+    >
+      <ArrowLeft size={24} />
+    </button>
 
-        {/* TITLE */}
-        <div>
+    {/* TITLE */}
+    <div>
 
-          <h1 className="text-4xl font-bold text-white">
-            Manage Borrow Books
-          </h1>
+      <h1 className="text-4xl font-bold text-white">
+        Manage Shop Books
+      </h1>
 
-          <p className="text-blue-100 mt-2">
-            Add and manage borrow books
-          </p>
-
-        </div>
-
-      </div>
+      <p className="text-emerald-100 mt-2">
+        Add and manage all shop books
+      </p>
 
     </div>
+
+  </div>
+
+</div>
 
       {/* CONTENT */}
       <div className="p-8">
@@ -370,13 +395,14 @@ export default function ManageBooks() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
 
             {isEdit
-              ? "Edit Borrow Book"
-              : "Add Borrow Book"}
+              ? "Edit Shop Book"
+              : "Add Shop Book"}
 
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
+            {/* TITLE */}
             <input
               name="title"
               value={bookForm.title}
@@ -385,6 +411,7 @@ export default function ManageBooks() {
               className="border p-3 rounded-xl"
             />
 
+            {/* AUTHOR */}
             <input
               name="author"
               value={bookForm.author}
@@ -393,6 +420,7 @@ export default function ManageBooks() {
               className="border p-3 rounded-xl"
             />
 
+            {/* CATEGORY */}
             <input
               name="category"
               value={bookForm.category}
@@ -401,6 +429,7 @@ export default function ManageBooks() {
               className="border p-3 rounded-xl"
             />
 
+            {/* STOCK */}
             <input
               type="number"
               name="stock"
@@ -410,10 +439,24 @@ export default function ManageBooks() {
               className="border p-3 rounded-xl"
             />
 
+            {/* PRICE */}
+            <input
+              type="number"
+              name="price"
+              value={bookForm.price}
+              onChange={handleChange}
+              placeholder="Book price"
+              className="border p-3 rounded-xl"
+            />
+
           </div>
 
           {/* COVER */}
           <div className="mt-5">
+
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Book Cover
+            </label>
 
             <input
               type="file"
@@ -425,56 +468,74 @@ export default function ManageBooks() {
 
                 if (!file) return;
 
-            
-              const fileName =
-                `${Date.now()}-${file.name}`;
 
-              const { error } =
-                await supabase.storage
-                  .from("book-covers")
-                  .upload(
-                    fileName,
-                    file
+                const fileName =
+                  `${Date.now()}-${file.name}`;
+
+                const { error } =
+                  await supabase.storage
+                    .from(
+                      "book-covers"
+                    )
+                    .upload(
+                      fileName,
+                      file
+                    );
+
+                if (error) {
+
+                  alert(
+                    "Upload gagal"
                   );
 
-              if (error) {
+                  return;
 
-                alert(
-                  "Upload failed"
-                );
+                }
 
-                return;
+                const { data } =
+                  supabase.storage
+                    .from(
+                      "book-covers"
+                    )
+                    .getPublicUrl(
+                      fileName
+                    );
 
-              }
-
-              const { data } =
-                supabase.storage
-                  .from("book-covers")
-                  .getPublicUrl(
-                    fileName
-                  );
-
-              setBookForm((prev) => ({
+               setBookForm((prev) => ({
                 ...prev,
                 cover: data.publicUrl,
               }));
 
               setPreviewCover(
-                data.publicUrl
-              );
+              data.publicUrl
+            );
+
               }}
             />
 
+            {/* URL */}
+            <input
+              name="cover"
+              value={bookForm.cover}
+              onChange={handleChange}
+              placeholder="Paste image URL"
+              className="border p-3 rounded-xl w-full mt-4"
+            />
+
+            {/* PREVIEW */}
             {previewCover && (
+
               <img
                 src={previewCover}
-                alt="preview"
-                className="w-32 h-44 object-cover rounded-xl mt-4"
+                alt="Preview"
+                className="w-28 h-40 object-cover rounded-xl border mt-4"
               />
+
             )}
 
           </div>
 
+          {/* DESCRIPTION */}
           <textarea
             name="description"
             value={bookForm.description}
@@ -483,6 +544,7 @@ export default function ManageBooks() {
             className="w-full border p-3 rounded-xl mt-5 h-36"
           />
 
+          {/* BUTTON */}
           <div className="flex gap-3 mt-6">
 
             <button
@@ -491,45 +553,54 @@ export default function ManageBooks() {
                   ? handleUpdate
                   : handleAdd
               }
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold"
             >
 
               {isEdit
-                ? "Update"
+                ? "Update Book"
                 : "Submit"}
 
             </button>
 
             {isEdit && (
+
               <button
                 onClick={resetForm}
-                className="bg-gray-200 px-6 py-3 rounded-xl"
+                className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-xl font-semibold"
               >
                 Cancel
               </button>
+
             )}
 
           </div>
 
         </div>
 
-        {/* LIST */}
+        {/* BOOK LIST */}
         <div>
 
-          <h2 className="text-3xl font-bold mb-6">
-            Borrow Book List
+          <h2 className="text-3xl font-bold text-gray-800 mb-6">
+            Shop Books
           </h2>
 
           {loading ? (
+
             <p>Loading...</p>
+
+          ) : books.length === 0 ? (
+
+            <p>No books available.</p>
+
           ) : (
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {books.map((book) => (
 
                 <div
                   key={book.id}
-                  className="bg-white rounded-2xl shadow-md overflow-hidden"
+                  className="bg-white rounded-2xl overflow-hidden shadow-md"
                 >
 
                   <img
@@ -540,18 +611,46 @@ export default function ManageBooks() {
 
                   <div className="p-5">
 
-                    <h3 className="text-2xl font-bold">
+                    <h3 className="text-2xl font-bold text-gray-800">
                       {book.title}
                     </h3>
 
-                    <p className="text-gray-500">
+                    <p className="text-gray-500 mt-1">
                       {book.author}
                     </p>
 
-                    <p className="mt-2">
-                      Stock:
-                      {" "}
-                      {book.stock}
+                    <div className="mt-4 text-sm text-gray-700">
+
+                      <p>
+                        <span className="font-semibold">
+                          Category:
+                        </span>{" "}
+                        {book.category}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">
+                          Stock:
+                        </span>{" "}
+                        {book.stock}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">
+                          Price:
+                        </span>{" "}
+                        Rp{" "}
+                        {Number(
+                          book.price || 0
+                        ).toLocaleString(
+                          "id-ID"
+                        )}
+                      </p>
+
+                    </div>
+
+                    <p className="text-gray-600 text-sm mt-4">
+                      {book.description}
                     </p>
 
                     <div className="flex gap-3 mt-5">
@@ -560,7 +659,7 @@ export default function ManageBooks() {
                         onClick={() =>
                           handleEditClick(book)
                         }
-                        className="bg-yellow-400 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+                        className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
                       >
                         <Pencil size={15} />
                         Edit
@@ -570,7 +669,7 @@ export default function ManageBooks() {
                         onClick={() =>
                           handleDelete(book.id)
                         }
-                        className="bg-red-500 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+                        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
                       >
                         <Trash2 size={15} />
                         Delete
@@ -585,6 +684,7 @@ export default function ManageBooks() {
               ))}
 
             </div>
+
           )}
 
         </div>

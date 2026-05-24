@@ -79,27 +79,167 @@ export const getDashboard = async (req, res) => {
 
 };
 
-/* ================= MANAGE BOOKS ================= */
-
-/* GET ALL BOOKS */
-export const getBooks = async (req, res) => {
+// ================= BORROW BOOKS =================
+export const getBorrowBooks = async (req, res) => {
   try {
+
     const { data, error } = await supabase
-      .from("books") // sesuaikan nama tabel kamu (bisa "books" kalau beda)
+      .from("borrow_books")
       .select("*")
       .order("id", { ascending: false });
 
     if (error) throw error;
 
     res.json(data);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to fetch borrow books",
+    });
   }
 };
 
-/* ADD BOOK */
-export const addBooks = async (req, res) => {
+// ================= ADD BORROW BOOK =================
+export const addBorrowBook = async (req, res) => {
   try {
+
+    const {
+      title,
+      author,
+      category,
+      stock,
+      description,
+      cover,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("borrow_books")
+      .insert([
+        {
+          title,
+          author,
+          category,
+          stock,
+          description,
+          cover,
+        },
+      ])
+      .select();
+
+    if (error) throw error;
+
+    res.json(data);
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Failed to add borrow book",
+    });
+  }
+};
+
+/* ================= UPDATE BORROW BOOK ================= */
+
+export const updateBorrowBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      title,
+      author,
+      category,
+      stock,
+      description,
+      cover,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("borrow_books")
+      .update({
+        title,
+        author,
+        category,
+        stock,
+        description,
+        cover,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Borrow book updated",
+      data,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+/* ================= DELETE BORROW BOOK ================= */
+
+export const deleteBorrowBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("borrow_books")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Borrow book deleted",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+
+/* ================= SHOP BOOKS ================= */
+
+/* GET ALL SHOP BOOKS */
+export const getShopBooks = async (req, res) => {
+  try {
+
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message,
+    });
+
+  }
+};
+
+/* ADD SHOP BOOK */
+export const addShopBook = async (req, res) => {
+  try {
+
     const {
       title,
       author,
@@ -110,13 +250,6 @@ export const addBooks = async (req, res) => {
       description,
     } = req.body;
 
-    if (!title || !author) {
-      return res.status(400).json({
-        status: false,
-        message: "Title dan author wajib diisi",
-      });
-    }
-
     const { data, error } = await supabase
       .from("books")
       .insert([
@@ -124,10 +257,10 @@ export const addBooks = async (req, res) => {
           title,
           author,
           cover,
-          stock: stock || 0,
-          category: category || "Umum",
-          price: price || 0,
-          description: description || "",
+          stock,
+          category,
+          price,
+          description,
         },
       ])
       .select()
@@ -137,19 +270,96 @@ export const addBooks = async (req, res) => {
 
     res.json({
       status: true,
-      message: "Buku berhasil ditambahkan",
+      message: "Shop book added",
       data,
     });
 
   } catch (err) {
 
-  console.error("ADD BOOK ERROR:", err);
+    console.error(err);
 
-  res.status(500).json({
-    status: false,
-    message: err.message,
-    full_error: err,
-  });
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+
+  }
+};
+
+/* UPDATE SHOP BOOK */
+export const updateShopBook = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const {
+      title,
+      author,
+      cover,
+      stock,
+      category,
+      price,
+      description,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("books")
+      .update({
+        title,
+        author,
+        cover,
+        stock,
+        category,
+        price,
+        description,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Shop book updated",
+      data,
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+
+  }
+};
+
+/* DELETE SHOP BOOK */
+export const deleteShopBook = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("books")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Shop book deleted",
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+
   }
 };
 

@@ -197,50 +197,53 @@ export default function HalamanUtama() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = async (e) => {
-    if (e.key === "Enter") {
+ const handleSearch = async (e) => {
+  if (e.key !== "Enter") return;
+  if (!search.trim()) return;
 
-      if (!search.trim()) return;
+  try {
+    // 1. SEARCH LOCAL BOOKS
+    const localResults = localBooks.filter((book) =>
+      book.title.toLowerCase().includes(search.toLowerCase()) ||
+      book.author.toLowerCase().includes(search.toLowerCase())
+    );
 
-      try {
+    // 2. SEARCH OPENLIBRARY
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${search}&limit=12`
+    );
 
-        const res = await fetch(
-          `https://openlibrary.org/search.json?q=${search}&limit=12`
-        );
+    const data = await res.json();
 
-        const data = await res.json();
+    const apiResults = data.docs.map((item) => ({
+      workKey: item.key,
+      title: item.title ?? "-",
+      author: item.author_name?.[0] ?? "-",
+      cover: item.cover_i ?? null,
+      firstSentence:
+        item.first_sentence?.[0] ||
+        item.first_sentence ||
+        "",
+      subjects: item.subject?.slice(0, 5) || [],
+      isLocal: false,
+    }));
 
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
+    // 3. GABUNGKAN HASIL
+    const combined = [...localResults, ...apiResults];
 
-          firstSentence:
-            item.first_sentence?.[0] ||
-            item.first_sentence ||
-            "",
+    setGenreBooks(combined);
+    setActiveCategory(`Search Results: ${search}`);
 
-          subjects: item.subject?.slice(0, 5) || [],
-        }));
+    setTimeout(() => {
+      bookSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
 
-        setGenreBooks(books);
-
-        // supaya judul berubah
-        setActiveCategory(`Search Results: ${search}`);
-
-        setTimeout(() => {
-          bookSectionRef.current?.scrollIntoView({
-            behavior: "smooth",
-          });
-        }, 100);
-
-
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  };
+  } catch (err) {
+    console.log(err);
+  }
+};
   useEffect(() => {
     const fetchRekomendasi = async () => {
       try {
@@ -278,26 +281,19 @@ export default function HalamanUtama() {
   const fetchLocalBooks = async () => {
     try {
       const res = await fetch(
-        "http://localhost:3000/api/admin/books"
+        "http://localhost:3000/api/admin/borrow-books"
       );
 
       const data = await res.json();
 
       const books = data.map((item) => ({
         id: item.id,
-
         workKey: "local_" + item.id,
-
         title: item.title,
         author: item.author,
-
         cover_url: item.cover,
-
         description: item.description,
-
         stock: item.stock,
-        price: item.price,
-
         isLocal: true,
       }));
 
@@ -1182,19 +1178,22 @@ export default function HalamanUtama() {
 
             <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
-              {book.cover ? (
-                <img
-                  src={
-                    book.isLocal
-                      ? book.cover_url
-                      : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
-                  }
-                  alt={book.title}
-                  className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-                />
-              ) : (
-                "No Cover"
-              )}
+              {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
+              <img
+                src={
+                  book.isLocal
+                    ? book.cover_url
+                    : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
+                }
+                alt={book.title}
+                className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : (
+              <p>No Cover</p>
+            )}
             </div>
 
 

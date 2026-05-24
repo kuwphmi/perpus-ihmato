@@ -6,9 +6,17 @@ const router = express.Router();
 /* ================= DASHBOARD ================= */
 router.get("/dashboard", admin.getDashboard);
 
-/* ================= MANAGE BOOKS ================= */
-router.get("/books", admin.getBooks);
-router.post("/books", admin.addBooks);
+/* ================= SHOP BOOKS ================= */
+router.get("/books", admin.getShopBooks);
+router.post("/books", admin.addShopBook);
+router.put("/books/:id", admin.updateShopBook);
+router.delete("/books/:id", admin.deleteShopBook);
+
+/* ================= BORROW BOOKS ================= */
+router.get("/borrow-books", admin.getBorrowBooks);
+router.post("/borrow-books", admin.addBorrowBook);
+router.put("/borrow-books/:id", admin.updateBorrowBook);
+router.delete("/borrow-books/:id", admin.deleteBorrowBook);
 
 /* ================= LOANS ================= */
 router.get("/loans", admin.getLoans);

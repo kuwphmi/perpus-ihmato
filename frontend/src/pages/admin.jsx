@@ -57,15 +57,21 @@ const statColorMap = {
 
 const getCurrentMonth = () => String(new Date().getMonth() + 1);
 const getCurrentYear = () => String(new Date().getFullYear());
+const getTabKey = (tab, bookView) => {
+  if (tab === "buku") {
+    return bookView === "loan"
+      ? "borrowBooks"
+      : "shopBooks";
+  }
 
-const tabToKey = {
-  buku: "books",
-  pinjaman: "loans",
-  anggota: "members",
-  pengembalian: "returns",
-  ajukan: "loanRequests",
-  perpanjangan: "extensionRequests",
-  pesanan: "orders",
+  return {
+    pinjaman: "loans",
+    anggota: "members",
+    pengembalian: "returns",
+    ajukan: "loanRequests",
+    perpanjangan: "extensionRequests",
+    pesanan: "orders",
+  }[tab];
 };
 
 export default function AdminPerpustakaan() {
@@ -79,7 +85,8 @@ export default function AdminPerpustakaan() {
   const [selectedMonth] = useState(getCurrentMonth());
   const [selectedYear] = useState(getCurrentYear());
   const [loadedTabs, setLoadedTabs] = useState({
-    books: false,
+    borrowBooks: false,
+    shopBooks: false,
     loans: false,
     members: false,
     returns: false,
@@ -88,7 +95,18 @@ export default function AdminPerpustakaan() {
     orders: false,
   });
 
-  const [bookForm, setBookForm] = useState({
+  const [bookView, setBookView] = useState("loan");
+
+  const [borrowForm, setBorrowForm] = useState({
+    title: "",
+    author: "",
+    category: "",
+    stock: "",
+    description: "",
+    cover: "",
+  });
+
+  const [shopForm, setShopForm] = useState({
     title: "",
     author: "",
     category: "",
@@ -99,7 +117,8 @@ export default function AdminPerpustakaan() {
   });
 
   const [data, setData] = useState({
-    books: [],
+    borrowBooks: [],
+    shopBooks: [],
     loans: [],
     members: [],
     returns: [],
@@ -118,30 +137,55 @@ export default function AdminPerpustakaan() {
 
   const navigate = useNavigate();
 
-  const addBook = async () => {
+  const addBorrowBook = async () => {
   try {
-    await fetchJson(`${API_BASE}/admin/books`, {
+    await fetchJson(`${API_BASE}/admin/borrow-books`, {
       method: "POST",
-      body: JSON.stringify(bookForm),
+      body: JSON.stringify(borrowForm),
     });
 
-    alert("Book added successfully");
+    alert("Borrow book added");
+
+
 
     loadTabData("buku");
 
-    setBookForm({
+    setBorrowForm({
       title: "",
       author: "",
       category: "",
       stock: "",
-      price: "",
       description: "",
       cover: "",
     });
   } catch {
-    alert("Failed to add book");
+    alert("Failed to add borrow book");
   }
 };
+
+  const addShopBook = async () => {
+    try {
+      await fetchJson(`${API_BASE}/admin/books`, {
+        method: "POST",
+        body: JSON.stringify(shopForm),
+      });
+
+      alert("Shop book added");
+      loadTabData("buku");
+
+      setShopForm({
+        title: "",
+        author: "",
+        category: "",
+        stock: "",
+        price: "",
+        description: "",
+        cover: "",
+      });
+    } catch {
+      alert("Failed to add shop book");
+    }
+  };
 
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(url, {
@@ -181,7 +225,7 @@ export default function AdminPerpustakaan() {
   }, []);
 
   const loadTabData = useCallback(async (tabKey) => {
-    const dataKey = tabToKey[tabKey];
+    const dataKey = getTabKey(tabKey, bookView);
     if (!dataKey) return;
 
     setLoadingTabs((prev) => ({ ...prev, [dataKey]: true }));
@@ -190,9 +234,36 @@ export default function AdminPerpustakaan() {
       let result = [];
 
       switch (tabKey) {
-        case "buku":
-          result = await fetchJson(`${API_BASE}/admin/books`);
-          break;
+       case "buku":
+        if (bookView === "loan") {
+
+          result = await fetchJson(
+            `${API_BASE}/admin/borrow-books`
+          );
+
+          setData((prev) => ({
+            ...prev,
+            borrowBooks: Array.isArray(result)
+              ? result
+              : [],
+          }));
+
+        } else {
+
+          result = await fetchJson(
+            `${API_BASE}/admin/books`
+          );
+
+          setData((prev) => ({
+            ...prev,
+            shopBooks: Array.isArray(result)
+              ? result
+              : [],
+          }));
+
+        }
+
+        break;
         case "pinjaman":
           result = await fetchJson(`${API_BASE}/admin/loans`);
           break;
@@ -215,11 +286,6 @@ export default function AdminPerpustakaan() {
           result = [];
       }
 
-      setData((prev) => ({
-        ...prev,
-        [dataKey]: Array.isArray(result) ? result : [],
-      }));
-
       setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
     } catch (err) {
       console.error(err);
@@ -227,32 +293,32 @@ export default function AdminPerpustakaan() {
     } finally {
       setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
     }
-  }, []);
+  }, [bookView]);
 
   const refreshCurrentView = useCallback(async () => {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
   }, [activeTab, loadDashboard, loadTabData]);
 
   useEffect(() => {
-
     loadDashboard();
-
-    if (!loadedTabs[tabToKey[activeTab]]) {
-
+    if (!loadedTabs[getTabKey(activeTab, bookView)]) {
       loadTabData(activeTab);
-
     }
 
     const interval = setInterval(() => {
-
       loadDashboard();
       loadTabData(activeTab);
-
     }, 60000); // 1 menit
-
     return () => clearInterval(interval);
+  }, [activeTab, bookView]);
 
-  }, [activeTab]);
+
+  useEffect(() => {
+  if (activeTab === "buku") {
+    loadTabData("buku");
+  }
+}, [bookView]);
+
 
   const rejectLoanRequest = async (id) => {
     try {
@@ -397,9 +463,15 @@ export default function AdminPerpustakaan() {
         .map((x) => ({ ...x, _type: "extension_request" }))
         .filter(match);
 
-    if (activeTab === "buku") {
-      return data.books.filter(match);
-    }
+     if (activeTab === "buku") {
+        const books =
+          bookView === "loan"
+            ? data.borrowBooks
+            : data.shopBooks;
+
+        return books.filter(match);
+      }
+
 
     if (activeTab === "pesanan") {
       let orders = data.orders;
@@ -415,35 +487,57 @@ export default function AdminPerpustakaan() {
   }, [activeTab, data, query, orderStatusFilter]);
 
   const getId = (row) => row.loan_id || row.id;
+  const columnsByTab = useMemo(() => ({
+  buku:
+  bookView === "loan"
+    ? [
+        { key: "no", label: "No", render: (_, index) => index + 1 },
+        { key: "title", label: "Title" },
+        { key: "author", label: "Author" },
+        { key: "category", label: "Category" },
+        { key: "stock", label: "Stock" },
 
-  const columnsByTab = {
-    buku: [
-      {
-        key: "no",
-        label: "No",
-        render: (_, index) => index + 1,
-      },
-      { key: "title", label: "Title" },
-      { key: "author", label: "Author" },
-      { key: "category", label: "Category" },
-      { key: "stock", label: "Stock" },
-      {
-        key: "price",
-        label: "Price",
-        render: (row) =>
-          row.price
-            ? `Rp ${Number(row.price).toLocaleString("id-ID")}`
-            : "-"
-      },
-    ],
+        {
+          key: "type",
+          label: "Type",
+          render: () => (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+              Loan Book
+            </span>
+          ),
+        },
+      ]
+    : [
+        { key: "no", label: "No", render: (_, index) => index + 1 },
+        { key: "title", label: "Title" },
+        { key: "author", label: "Author" },
+        { key: "category", label: "Category" },
+        { key: "stock", label: "Stock" },
+
+        {
+          key: "price",
+          label: "Price",
+          render: (row) =>
+            `Rp ${Number(
+              row.price || 0
+            ).toLocaleString("id-ID")}`,
+        },
+
+        {
+          key: "type",
+          label: "Type",
+          render: () => (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+              Shop Book
+            </span>
+          ),
+        },
+      ],
+
     pinjaman: [
-
       { key: "member_code", label: "ID" },
-
       { key: "member_name", label: "Member" },
-
       { key: "book_title", label: "Book" },
-
       {
         key: "loan_date",
         label: "Loan Date",
@@ -719,7 +813,7 @@ export default function AdminPerpustakaan() {
       },
 
     ],
-  };
+  }), [bookView]);
 
   const orderSteps = [
 
@@ -883,7 +977,7 @@ export default function AdminPerpustakaan() {
   }, [data.orders]);
 
   const activeTabInfo = tabs.find((t) => t.key === activeTab);
-  const currentLoadingKey = tabToKey[activeTab];
+  const currentLoadingKey = getTabKey(activeTab, bookView);
   const isTabLoading = !!loadingTabs[currentLoadingKey];
 
   return (
@@ -1081,20 +1175,56 @@ export default function AdminPerpustakaan() {
 
           {activeTab === "buku" && (
   <div className="mb-6">
-    {/* HEADER */}
+
     <h2 className="text-xl font-bold mb-3">
-      Add New Book
+      Manage Books
     </h2>
 
-    {/* BUTTON ADD BOOK */}
-    <button
-      onClick={() => navigate("/admin/books/manage")}
-      className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition"
-    >
-      + Add Book
-    </button>
+    {/* SWITCH TAB */}
+    <div className="flex gap-3 mb-4">
 
-   </div>
+      <button
+        onClick={() => setBookView("loan")}
+        className={`px-4 py-2 rounded-xl font-semibold ${
+          bookView === "loan"
+            ? "bg-blue-600 text-white"
+            : "bg-white border"
+        }`}
+      >
+        Borrow Books
+      </button>
+
+      <button
+        onClick={() => setBookView("shop")}
+        className={`px-4 py-2 rounded-xl font-semibold ${
+          bookView === "shop"
+            ? "bg-emerald-600 text-white"
+            : "bg-white border"
+        }`}
+      >
+        Shop Books
+      </button>
+
+    </div>
+
+    {/* ADD BUTTON */}
+    {bookView === "loan" ? (
+      <button
+        onClick={() => navigate("/admin/books/borrow/add")}
+        className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+      >
+        + Add Borrow Book
+      </button>
+    ) : (
+      <button
+        onClick={() => navigate("/admin/books/shop/add")}
+        className="bg-emerald-600 text-white px-4 py-2 rounded-xl"
+      >
+        + Add Shop Book
+      </button>
+    )}
+
+  </div>
 )}
 
           <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/40">
