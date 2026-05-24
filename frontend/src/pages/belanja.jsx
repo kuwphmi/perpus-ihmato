@@ -299,44 +299,87 @@ export default function Belanja() {
   }, [isNotifOpen]);
 
   /* ================= SEARCH ================= */
-  const handleSearch = async () => {
-    if (!search.trim()) return;
+const handleSearch = async () => {
 
-    try {
-      setIsSearching(true);
-      setIsSearchActive(true);
+  if (!search.trim()) return;
 
-      const res = await fetch(
-        `https://openlibrary.org/search.json?q=${search}&limit=12`
-      );
+  try {
 
-      const data = await res.json();
-
-      const books = data.docs.map((item) => ({
-        workKey: item.key,
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price: ((item.cover_i || 1) * 137) % 100000 + 50000,
-        stock: ((item.cover_i || 1) % 15) + 5,
-      }));
-
-    setSearchResults(books);
-    setActiveCategory(`Search Results: ${search}`);
+    setIsSearching(true);
     setIsSearchActive(true);
 
-      setTimeout(() => {
-        genreSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 100);
+    // SAVE SEARCH HISTORY // 
 
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
+    const user = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    await axios.post(
+      "http://localhost:3000/api/search-history",
+      {
+        user_id: user.id,
+        keyword: search,
+        source: "belanja",
+      }
+    );
+
+    // FETCH BOOKS // 
+
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${search}&limit=12`
+    );
+
+    const data = await res.json();
+
+    const books = data.docs.map((item) => ({
+
+      workKey: item.key,
+
+      title: item.title ?? "-",
+
+      author:
+        item.author_name?.[0] ?? "-",
+
+      cover:
+        item.cover_i ?? null,
+
+      price:
+        ((item.cover_i || 1) * 137)
+        % 100000 + 50000,
+
+      stock:
+        ((item.cover_i || 1) % 15) + 5,
+
+    }));
+
+    setSearchResults(books);
+
+    setActiveCategory(
+      `Search Results: ${search}`
+    );
+
+    setIsSearchActive(true);
+
+    setTimeout(() => {
+
+      genreSectionRef.current
+      ?.scrollIntoView({
+        behavior: "smooth",
+      });
+
+    }, 100);
+
+  } catch (err) {
+
+    console.log(err);
+
+  } finally {
+
+    setIsSearching(false);
+
+  }
+
+};
 
   const categories = [
     {

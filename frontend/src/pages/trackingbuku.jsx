@@ -15,12 +15,12 @@ export default function Trackingbuku() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
+  const [cart, setCart] = useState([]);
   const popupRef = useRef();
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeFilter, setActiveFilter] =
-  useState("all");
+    useState("all");
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -37,17 +37,18 @@ export default function Trackingbuku() {
   }, []);
 
   useEffect(() => {
+  fetchOrders();
+  fetchNotifications();
+  fetchCart();
+
+  const interval = setInterval(() => {
     fetchOrders();
-
     fetchNotifications();
+    fetchCart();
+  }, 5000);
 
-    const interval = setInterval(() => {
-      fetchOrders();
-
-      fetchNotifications();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  return () => clearInterval(interval);
+}, []);
 
   const fetchNotifications = async () => {
     try {
@@ -62,6 +63,25 @@ export default function Trackingbuku() {
       setUnreadCount(unread);
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const fetchCart = async () => {
+    try {
+
+      const user =
+        JSON.parse(localStorage.getItem("user"));
+
+      const res = await axios.get(
+        `http://localhost:3000/api/cart/${user.id}`
+      );
+
+      setCart(res.data.data || []);
+
+    } catch (err) {
+
+      console.log(err);
+
     }
   };
 
@@ -81,22 +101,22 @@ export default function Trackingbuku() {
 
   const unpaidCount = orders.filter((o) => o.order_status === "waiting_payment").length;
   const processingCount =
-  orders.filter(
-    (o) =>
-      o.order_status === "processing"
-  ).length;
+    orders.filter(
+      (o) =>
+        o.order_status === "processing"
+    ).length;
 
   const shippingCount = orders.filter((o) => o.order_status === "shipping").length;
   const completedCount = orders.filter((o) => o.order_status === "completed").length;
   const filteredOrders =
-  activeFilter === "all"
-    ? orders
-    : orders.filter(
+    activeFilter === "all"
+      ? orders
+      : orders.filter(
         (o) =>
           o.order_status === activeFilter
       );
 
-      const cancelOrder =
+  const cancelOrder =
     async (id) => {
 
       try {
@@ -147,8 +167,16 @@ export default function Trackingbuku() {
           {/* ICON */}
           <div className="flex items-center gap-3 ml-4 relative z-50">
             {/* CART */}
-            <Link to="/keranjang">
-              <FiShoppingCart className="text-2xl text-gray-600 hover:text-blue-600 transition cursor-pointer" />
+            <Link to="/keranjang" className="relative">
+
+              <FiShoppingCart className="text-2xl text-gray-600 hover:text-yellow-500 transition cursor-pointer" />
+
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                  {cart.length}
+                </span>
+              )}
+
             </Link>
 
             {/* NOTIFICATION */}
@@ -191,9 +219,7 @@ export default function Trackingbuku() {
           rounded-full
           flex
           items-center
-justify-center
-overflow-y-auto
-py-10
+          justify-center
           font-semibold
         "
                   >
@@ -211,7 +237,7 @@ py-10
         w-80
         bg-white
         rounded-2xl
-        shadow-none
+        shadow-2xl
         border
         z-50
         overflow-hidden
@@ -223,13 +249,10 @@ py-10
                     {notifications.length === 0 ? (
                       <div className="p-6 text-sm text-gray-400 text-center">No notifications yet</div>
                     ) : (
-                      notifications
-                        .filter((n) => !n.is_read)
-                        .slice(0, 2)
-                        .map((notif) => (
-                          <div
-                            key={notif.id}
-                            className={`
+                      notifications.slice(0, 2).map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`
                   p-4
                   border-b
                   hover:bg-gray-50
@@ -237,12 +260,12 @@ py-10
 
                   ${!notif.is_read ? "bg-blue-50" : ""}
                 `}
-                          >
-                            <p className="font-medium text-sm text-gray-800">{notif.title}</p>
+                        >
+                          <p className="font-medium text-sm text-gray-800">{notif.title}</p>
 
-                            <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
-                          </div>
-                        ))
+                          <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
+                        </div>
+                      ))
                     )}
                   </div>
 
@@ -280,9 +303,9 @@ py-10
       </section>
 
       {/* STATUS CARDS */}
-<section className="px-6 md:px-12 mt-8">
+      <section className="px-6 md:px-12 mt-8">
 
-  <div className="
+        <div className="
     max-w-7xl
     mx-auto
     grid
@@ -290,14 +313,14 @@ py-10
     gap-6
   ">
 
-    {/* UNPAID */}
-    <div
-      onClick={() =>
-        setActiveFilter(
-          "waiting_payment"
-        )
-      }
-      className={`
+          {/* UNPAID */}
+          <div
+            onClick={() =>
+              setActiveFilter(
+                "waiting_payment"
+              )
+            }
+            className={`
         flex
         items-center
         gap-4
@@ -310,16 +333,15 @@ py-10
         transition-all
         hover:shadow-lg
 
-        ${
-          activeFilter ===
-          "waiting_payment"
-            ? "border-yellow-400 ring-2 ring-yellow-100"
-            : "border-gray-100"
-        }
+        ${activeFilter ===
+                "waiting_payment"
+                ? "border-yellow-400 ring-2 ring-yellow-100"
+                : "border-gray-100"
+              }
       `}
-    >
+          >
 
-      <div className="
+            <div className="
         w-14
         h-14
         rounded-2xl
@@ -330,41 +352,41 @@ py-10
         text-yellow-600
       ">
 
-        <FiClock className="text-2xl" />
+              <FiClock className="text-2xl" />
 
-      </div>
+            </div>
 
-      <div>
+            <div>
 
-        <p className="
+              <p className="
           text-sm
           text-gray-400
         ">
 
-          Unpaid
+                Unpaid
 
-        </p>
+              </p>
 
-        <h2 className="
+              <h2 className="
           text-2xl
           font-black
           text-yellow-600
         ">
 
-          {unpaidCount}
+                {unpaidCount}
 
-        </h2>
+              </h2>
 
-      </div>
+            </div>
 
-    </div>
+          </div>
 
-    {/* PROCESSING */}
-<div
-  onClick={() =>
-    setActiveFilter("processing")
-  }
-  className={`
+          {/* PROCESSING */}
+          <div
+            onClick={() =>
+              setActiveFilter("processing")
+            }
+            className={`
     flex
     items-center
     gap-4
@@ -377,15 +399,14 @@ py-10
     transition-all
     hover:shadow-lg
 
-    ${
-      activeFilter === "processing"
-        ? "border-indigo-400 ring-2 ring-indigo-100"
-        : "border-gray-100"
-    }
+    ${activeFilter === "processing"
+                ? "border-indigo-400 ring-2 ring-indigo-100"
+                : "border-gray-100"
+              }
   `}
->
+          >
 
-  <div className="
+            <div className="
     w-14
     h-14
     rounded-2xl
@@ -396,41 +417,41 @@ py-10
     text-indigo-600
   ">
 
-    <FiPackage className="text-2xl" />
+              <FiPackage className="text-2xl" />
 
-  </div>
+            </div>
 
-  <div>
+            <div>
 
-    <p className="
+              <p className="
       text-sm
       text-gray-400
     ">
 
-      Processing
+                Processing
 
-    </p>
+              </p>
 
-    <h2 className="
+              <h2 className="
       text-2xl
       font-black
       text-indigo-600
     ">
 
-      {processingCount}
+                {processingCount}
 
-    </h2>
+              </h2>
 
-  </div>
+            </div>
 
-</div>
+          </div>
 
-    {/* SHIPPING */}
-    <div
-      onClick={() =>
-        setActiveFilter("shipping")
-      }
-      className={`
+          {/* SHIPPING */}
+          <div
+            onClick={() =>
+              setActiveFilter("shipping")
+            }
+            className={`
         flex
         items-center
         gap-4
@@ -443,15 +464,14 @@ py-10
         transition-all
         hover:shadow-lg
 
-        ${
-          activeFilter === "shipping"
-            ? "border-blue-400 ring-2 ring-blue-100"
-            : "border-gray-100"
-        }
+        ${activeFilter === "shipping"
+                ? "border-blue-400 ring-2 ring-blue-100"
+                : "border-gray-100"
+              }
       `}
-    >
+          >
 
-      <div className="
+            <div className="
         w-14
         h-14
         rounded-2xl
@@ -462,43 +482,43 @@ py-10
         text-blue-600
       ">
 
-        <FiTruck className="text-2xl" />
+              <FiTruck className="text-2xl" />
 
-      </div>
+            </div>
 
-      <div>
+            <div>
 
-        <p className="
+              <p className="
           text-sm
           text-gray-400
         ">
 
-          Shipping
+                Shipping
 
-        </p>
+              </p>
 
-        <h2 className="
+              <h2 className="
           text-2xl
           font-black
           text-blue-600
         ">
 
-          {shippingCount}
+                {shippingCount}
 
-        </h2>
+              </h2>
 
-      </div>
+            </div>
 
-    </div>
+          </div>
 
-    {/* COMPLETED */}
-    <div
-      onClick={() =>
-        setActiveFilter(
-          "completed"
-        )
-      }
-      className={`
+          {/* COMPLETED */}
+          <div
+            onClick={() =>
+              setActiveFilter(
+                "completed"
+              )
+            }
+            className={`
         flex
         items-center
         gap-4
@@ -511,16 +531,15 @@ py-10
         transition-all
         hover:shadow-lg
 
-        ${
-          activeFilter ===
-          "completed"
-            ? "border-green-400 ring-2 ring-green-100"
-            : "border-gray-100"
-        }
+        ${activeFilter ===
+                "completed"
+                ? "border-green-400 ring-2 ring-green-100"
+                : "border-gray-100"
+              }
       `}
-    >
+          >
 
-      <div className="
+            <div className="
         w-14
         h-14
         rounded-2xl
@@ -531,39 +550,39 @@ py-10
         text-green-600
       ">
 
-        <FiCheckCircle className="text-2xl" />
+              <FiCheckCircle className="text-2xl" />
 
-      </div>
+            </div>
 
-      <div>
+            <div>
 
-        <p className="
+              <p className="
           text-sm
           text-gray-400
         ">
 
-          Completed
+                Completed
 
-        </p>
+              </p>
 
-        <h2 className="
+              <h2 className="
           text-2xl
           font-black
           text-green-600
         ">
 
-          {completedCount}
+                {completedCount}
 
-        </h2>
+              </h2>
 
-      </div>
+            </div>
 
-    </div>
+          </div>
 
-  </div>
+        </div>
 
-</section>
-        
+      </section>
+
       {/* ORDER LIST */}
       <section className="px-6 md:px-12 py-10">
         <div className="max-w-7xl mx-auto bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden">
@@ -589,8 +608,8 @@ py-10
           <div className="p-8 space-y-6">
             {filteredOrders.map((order) => (
               <div
-  key={order.id}
-  className="
+                key={order.id}
+                className="
     flex
     flex-col
     md:flex-row
@@ -605,7 +624,7 @@ py-10
     hover:shadow-md
     transition
   "
->
+              >
                 <div className="flex items-center gap-5">
                   <img src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`} alt={order.title} className="w-24 h-32 rounded-2xl object-cover" />
 
@@ -631,9 +650,9 @@ py-10
                   )}
 
                   {order.order_status === "processing" && (
-  <>
+                    <>
 
-    <span className="
+                      <span className="
       bg-indigo-100
       text-indigo-600
       px-4
@@ -643,15 +662,15 @@ py-10
       font-medium
     ">
 
-      Processing
+                        Processing
 
-    </span>
+                      </span>
 
-    <button
-      onClick={() =>
-        setSelectedOrder(order)
-      }
-      className="
+                      <button
+                        onClick={() =>
+                          setSelectedOrder(order)
+                        }
+                        className="
         border
         border-indigo-500
         text-indigo-600
@@ -662,21 +681,21 @@ py-10
         hover:bg-indigo-50
         transition
       "
-    >
+                      >
 
-      View Receipt
+                        View Receipt
 
-    </button>
+                      </button>
 
-  </>
-)}
+                    </>
+                  )}
 
                   {order.order_status ===
-  "shipping" && (
+                    "shipping" && (
 
-  <>
+                      <>
 
-    <span className="
+                        <span className="
       bg-blue-100
       text-blue-600
       px-4
@@ -686,15 +705,15 @@ py-10
       font-medium
     ">
 
-      Shipping
+                          Shipping
 
-    </span>
+                        </span>
 
-    <button
-      onClick={() =>
-        setSelectedOrder(order)
-      }
-      className="
+                        <button
+                          onClick={() =>
+                            setSelectedOrder(order)
+                          }
+                          className="
         border
         border-blue-500
         text-blue-600
@@ -705,22 +724,22 @@ py-10
         hover:bg-blue-50
         transition
       "
-    >
+                        >
 
-      View Receipt
+                          View Receipt
 
-    </button>
+                        </button>
 
-  </>
+                      </>
 
-)}
+                    )}
 
                   {order.order_status ===
-  "completed" && (
+                    "completed" && (
 
-  <>
+                      <>
 
-    <span className="
+                        <span className="
       bg-green-100
       text-green-600
       px-4
@@ -730,15 +749,15 @@ py-10
       font-medium
     ">
 
-      Completed
+                          Completed
 
-    </span>
+                        </span>
 
-    <button
-      onClick={() =>
-        setSelectedOrder(order)
-      }
-      className="
+                        <button
+                          onClick={() =>
+                            setSelectedOrder(order)
+                          }
+                          className="
         border
         border-green-500
         text-green-600
@@ -749,15 +768,15 @@ py-10
         hover:bg-green-50
         transition
       "
-    >
+                        >
 
-      View Receipt
+                          View Receipt
 
-    </button>
+                        </button>
 
-  </>
+                      </>
 
-)}
+                    )}
                 </div>
               </div>
             ))}
@@ -807,10 +826,10 @@ py-10
 
       {selectedOrder && (
         <div
-  onClick={() =>
-    setSelectedOrder(null)
-  }
-  className="
+          onClick={() =>
+            setSelectedOrder(null)
+          }
+          className="
     fixed
     inset-0
    bg-black/50 backdrop-blur-sm
@@ -820,12 +839,12 @@ py-10
     z-50
     px-4
   "
->
+        >
           <div
-  onClick={(e) =>
-    e.stopPropagation()
-  }
-  className="
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+            className="
   bg-white/95
   backdrop-blur-md
   w-fit
@@ -836,7 +855,7 @@ py-10
   shadow-[0_20px_60px_rgba(0,0,0,0.25)]
   scale-[0.72]
 "
->
+          >
             {/* CLOSE */}
             <button onClick={() => setSelectedOrder(null)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">
               ✕
@@ -1021,10 +1040,10 @@ py-10
 
 
             {/* COMPLETED */}
-           {selectedOrder.order_status ===
-  "processing" && (
+            {selectedOrder.order_status ===
+              "processing" && (
 
-  <div className="
+                <div className="
     mt-2
     w-full
     w-[290px]
@@ -1038,43 +1057,43 @@ py-10
     font-mono
   ">
 
-    {/* TOP */}
-    <div className="
+                  {/* TOP */}
+                  <div className="
       text-center
       py-4
       border-b
       border-dashed
     ">
 
-      <img
-        src={logo}
-        alt="logo"
-        className="
+                    <img
+                      src={logo}
+                      alt="logo"
+                      className="
           w-16
           h-16
           mx-auto
           mb-2
         "
-      />
+                    />
 
-      <h2 className="
+                    <h2 className="
         text-2xl
         font-black
         tracking-widest
       ">
 
-        BOOKIN
+                      BOOKIN
 
-      </h2>
+                    </h2>
 
-      <p className="text-xs mt-1">
-        PROCESSING RECEIPT
-      </p>
+                    <p className="text-xs mt-1">
+                      PROCESSING RECEIPT
+                    </p>
 
-    </div>
+                  </div>
 
-    {/* COVER */}
-    <div className="
+                  {/* COVER */}
+                  <div className="
       flex
       justify-center
       py-5
@@ -1082,96 +1101,96 @@ py-10
       border-dashed
     ">
 
-      <img
-        src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-        alt={selectedOrder.title}
-        className="
+                    <img
+                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+                      alt={selectedOrder.title}
+                      className="
           w-24
           h-36
           object-cover
           shadow-md
         "
-      />
+                    />
 
-    </div>
+                  </div>
 
-    {/* CONTENT */}
-    <div className="
+                  {/* CONTENT */}
+                  <div className="
       p-4
       text-[12px]
       space-y-3
     ">
 
-      <div className="flex justify-between">
-        <span>ORDER ID</span>
-        <span>{selectedOrder.order_id}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>ORDER ID</span>
+                      <span>{selectedOrder.order_id}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>CUSTOMER</span>
-        <span>{user?.name}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>CUSTOMER</span>
+                      <span>{user?.name}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="
+                    <div className="
   flex
   justify-between
   gap-5
 ">
 
-        <span>BOOK</span>
+                      <span>BOOK</span>
 
-        <span className="text-right">
-          {selectedOrder.title}
-        </span>
+                      <span className="text-right">
+                        {selectedOrder.title}
+                      </span>
 
-      </div>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>STATUS</span>
+                    <div className="flex justify-between">
+                      <span>STATUS</span>
 
-        <span className="font-bold text-indigo-600">
-          PROCESSING
-        </span>
-      </div>
+                      <span className="font-bold text-indigo-600">
+                        PROCESSING
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>PAYMENT</span>
+                    <div className="flex justify-between">
+                      <span>PAYMENT</span>
 
-        <span className="font-bold">
-          SUCCESS
-        </span>
-      </div>
+                      <span className="font-bold">
+                        SUCCESS
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="
+                    <div className="
         flex
         justify-between
         text-lg
         font-black
       ">
 
-        <span>TOTAL</span>
+                      <span>TOTAL</span>
 
-        <span>
-          Rp
-          {selectedOrder.amount?.toLocaleString("id-ID")}
-        </span>
+                      <span>
+                        Rp
+                        {selectedOrder.amount?.toLocaleString("id-ID")}
+                      </span>
 
-      </div>
+                    </div>
 
-    </div>
+                  </div>
 
-    {/* FOOTER */}
-    <div className="
+                  {/* FOOTER */}
+                  <div className="
       text-center
       py-5
       border-t
@@ -1179,19 +1198,19 @@ py-10
       text-xs
     ">
 
-      <p>
-        Your order is being processed
-      </p>
+                    <p>
+                      Your order is being processed
+                    </p>
 
-      <p className="mt-1">
-        Thank you for shopping at BOOKIN
-      </p>
+                    <p className="mt-1">
+                      Thank you for shopping at BOOKIN
+                    </p>
 
-      <button
-        onClick={() =>
-          window.print()
-        }
-        className="
+                    <button
+                      onClick={() =>
+                        window.print()
+                      }
+                      className="
           mt-4
           border
           border-black
@@ -1202,23 +1221,23 @@ py-10
           hover:text-white
           transition
         "
-      >
+                    >
 
-        PRINT RECEIPT
+                      PRINT RECEIPT
 
-      </button>
+                    </button>
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
-)}
+              )}
 
-{/* SHIPPING RECEIPT */}
-{selectedOrder.order_status ===
-  "shipping" && (
+            {/* SHIPPING RECEIPT */}
+            {selectedOrder.order_status ===
+              "shipping" && (
 
-  <div className="
+                <div className="
   mt-4
   w-full
   w-[290px]
@@ -1232,43 +1251,43 @@ py-10
   font-mono
 ">
 
-    {/* TOP */}
-    <div className="
+                  {/* TOP */}
+                  <div className="
       text-center
       py-6
       border-b
       border-dashed
     ">
 
-      <img
-        src={logo}
-        alt="logo"
-        className="
+                    <img
+                      src={logo}
+                      alt="logo"
+                      className="
           w-16
           h-16
           mx-auto
           mb-2
         "
-      />
+                    />
 
-      <h2 className="
+                    <h2 className="
         text-2xl
         font-black
         tracking-widest
       ">
 
-        BOOKIN
+                      BOOKIN
 
-      </h2>
+                    </h2>
 
-      <p className="text-xs mt-1">
-        SHIPPING RECEIPT
-      </p>
+                    <p className="text-xs mt-1">
+                      SHIPPING RECEIPT
+                    </p>
 
-    </div>
+                  </div>
 
-    {/* COVER */}
-    <div className="
+                  {/* COVER */}
+                  <div className="
       flex
       justify-center
       py-5
@@ -1276,109 +1295,109 @@ py-10
       border-dashed
     ">
 
-      <img
-        src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-        alt={selectedOrder.title}
-        className="
+                    <img
+                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+                      alt={selectedOrder.title}
+                      className="
           w-24
           h-36
           object-cover
           shadow-md
         "
-      />
+                    />
 
-    </div>
+                  </div>
 
-    {/* CONTENT */}
-    <div className="
+                  {/* CONTENT */}
+                  <div className="
   p-4
   text-[12px]
   space-y-3
 ">
 
-      <div className="flex justify-between">
-        <span>ORDER ID</span>
-        <span>{selectedOrder.order_id}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>ORDER ID</span>
+                      <span>{selectedOrder.order_id}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>CUSTOMER</span>
-        <span>{user?.name}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>CUSTOMER</span>
+                      <span>{user?.name}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between gap-5">
-        <span>BOOK</span>
+                    <div className="flex justify-between gap-5">
+                      <span>BOOK</span>
 
-        <span className="text-right">
-          {selectedOrder.title}
-        </span>
-      </div>
+                      <span className="text-right">
+                        {selectedOrder.title}
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>STATUS</span>
+                    <div className="flex justify-between">
+                      <span>STATUS</span>
 
-        <span className="font-bold">
-          SHIPPING
-        </span>
-      </div>
+                      <span className="font-bold">
+                        SHIPPING
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>PAYMENT</span>
+                    <div className="flex justify-between">
+                      <span>PAYMENT</span>
 
-        <span className="font-bold">
-          SUCCESS
-        </span>
-      </div>
+                      <span className="font-bold">
+                        SUCCESS
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>COURIER</span>
+                    <div className="flex justify-between">
+                      <span>COURIER</span>
 
-        <span>BOOKIN EXPRESS</span>
-      </div>
+                      <span>BOOKIN EXPRESS</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>TRACKING</span>
+                    <div className="flex justify-between">
+                      <span>TRACKING</span>
 
-        <span>
-          BK-
-          {selectedOrder.id}
-        </span>
-      </div>
+                      <span>
+                        BK-
+                        {selectedOrder.id}
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="
+                    <div className="
         flex
         justify-between
         text-lg
         font-black
       ">
 
-        <span>TOTAL</span>
+                      <span>TOTAL</span>
 
-        <span>
-          Rp
-          {selectedOrder.amount?.toLocaleString("id-ID")}
-        </span>
+                      <span>
+                        Rp
+                        {selectedOrder.amount?.toLocaleString("id-ID")}
+                      </span>
 
-      </div>
+                    </div>
 
-    </div>
+                  </div>
 
-    {/* FOOTER */}
-    <div className="
+                  {/* FOOTER */}
+                  <div className="
       text-center
       py-5
       border-t
@@ -1386,19 +1405,19 @@ py-10
       text-xs
     ">
 
-      <p>
-        Your package is on delivery
-      </p>
+                    <p>
+                      Your package is on delivery
+                    </p>
 
-      <p className="mt-1">
-        Thank you for shopping
-      </p>
+                    <p className="mt-1">
+                      Thank you for shopping
+                    </p>
 
-      <button
-        onClick={() =>
-          window.print()
-        }
-        className="
+                    <button
+                      onClick={() =>
+                        window.print()
+                      }
+                      className="
           mt-2
           border
           border-black
@@ -1409,23 +1428,23 @@ py-10
           hover:text-white
           transition
         "
-      >
+                    >
 
-        PRINT RECEIPT
+                      PRINT RECEIPT
 
-      </button>
+                    </button>
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
-)}
+              )}
 
-{/* COMPLETED RECEIPT */}
-{selectedOrder.order_status ===
-  "completed" && (
+            {/* COMPLETED RECEIPT */}
+            {selectedOrder.order_status ===
+              "completed" && (
 
-  <div className="
+                <div className="
     mt-2
     w-full
     w-[290px]
@@ -1439,43 +1458,43 @@ overflow-hidden
 font-mono
   ">
 
-    {/* TOP */}
-    <div className="
+                  {/* TOP */}
+                  <div className="
       text-center
       py-4
       border-b
       border-dashed
     ">
 
-      <img
-        src={logo}
-        alt="logo"
-        className="
+                    <img
+                      src={logo}
+                      alt="logo"
+                      className="
           w-16
           h-16
           mx-auto
           mb-2
         "
-      />
+                    />
 
-      <h2 className="
+                    <h2 className="
         text-2xl
         font-black
         tracking-widest
       ">
 
-        BOOKIN
+                      BOOKIN
 
-      </h2>
+                    </h2>
 
-      <p className="text-xs mt-1">
-        COMPLETED RECEIPT
-      </p>
+                    <p className="text-xs mt-1">
+                      COMPLETED RECEIPT
+                    </p>
 
-    </div>
+                  </div>
 
-    {/* COVER */}
-    <div className="
+                  {/* COVER */}
+                  <div className="
       flex
       justify-center
       py-5
@@ -1483,84 +1502,84 @@ font-mono
       border-dashed
     ">
 
-      <img
-        src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-        alt={selectedOrder.title}
-        className="
+                    <img
+                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+                      alt={selectedOrder.title}
+                      className="
           w-24
           h-36
           object-cover
           shadow-md
         "
-      />
+                    />
 
-    </div>
+                  </div>
 
-    {/* CONTENT */}
-    <div className="
+                  {/* CONTENT */}
+                  <div className="
   p-4
   text-[12px]
   space-y-3
 ">
 
-      <div className="flex justify-between">
-        <span>ORDER ID</span>
-        <span>{selectedOrder.order_id}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>ORDER ID</span>
+                      <span>{selectedOrder.order_id}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>CUSTOMER</span>
-        <span>{user?.name}</span>
-      </div>
+                    <div className="flex justify-between">
+                      <span>CUSTOMER</span>
+                      <span>{user?.name}</span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="
+                    <div className="
   flex
   justify-between
   gap-5
 ">
-        <span>BOOK</span>
+                      <span>BOOK</span>
 
-<span className="text-right">
-          {selectedOrder.title}
-        </span>
-      </div>
+                      <span className="text-right">
+                        {selectedOrder.title}
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="flex justify-between">
-        <span>STATUS</span>
+                    <div className="flex justify-between">
+                      <span>STATUS</span>
 
-        <span className="font-bold">
-          COMPLETED
-        </span>
-      </div>
+                      <span className="font-bold">
+                        COMPLETED
+                      </span>
+                    </div>
 
-      <div className="border-b border-dashed"></div>
+                    <div className="border-b border-dashed"></div>
 
-      <div className="
+                    <div className="
         flex
         justify-between
         text-lg
         font-black
       ">
 
-        <span>TOTAL</span>
+                      <span>TOTAL</span>
 
-        <span>
-          Rp
-          {selectedOrder.amount?.toLocaleString("id-ID")}
-        </span>
+                      <span>
+                        Rp
+                        {selectedOrder.amount?.toLocaleString("id-ID")}
+                      </span>
 
-      </div>
+                    </div>
 
-    </div>
+                  </div>
 
-    {/* FOOTER */}
-    <div className="
+                  {/* FOOTER */}
+                  <div className="
       text-center
       py-5
       border-t
@@ -1568,19 +1587,19 @@ font-mono
       text-xs
     ">
 
-      <p>
-        Order completed successfully
-      </p>
+                    <p>
+                      Order completed successfully
+                    </p>
 
-      <p className="mt-1">
-        Thank you for shopping at BOOKIN
-      </p>
+                    <p className="mt-1">
+                      Thank you for shopping at BOOKIN
+                    </p>
 
-      <button
-        onClick={() =>
-          window.print()
-        }
-        className="
+                    <button
+                      onClick={() =>
+                        window.print()
+                      }
+                      className="
           mt-4
           border
           border-black
@@ -1591,17 +1610,17 @@ font-mono
           hover:text-white
           transition
         "
-      >
+                    >
 
-        PRINT RECEIPT
+                      PRINT RECEIPT
 
-      </button>
+                    </button>
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
-)}
+              )}
 
           </div>
         </div>

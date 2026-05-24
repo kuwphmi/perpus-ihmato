@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import axios from "axios";
 import {
   FiArrowRight,
   FiCheck,
@@ -8,15 +8,10 @@ import {
   FiClock,
   FiSearch,
 } from "react-icons/fi";
-
 import { GiSpellBook } from "react-icons/gi";
-
 import { MdOutlinePalette } from "react-icons/md";
-
 import { LuChefHat } from "react-icons/lu";
-
 import { FaRegHeart } from "react-icons/fa";
-
 import { FaUserDoctor } from "react-icons/fa6";
 
 export default function ChooseGenre() {
@@ -109,17 +104,47 @@ export default function ChooseGenre() {
     }
   };
 
-  const handleContinue = () => {
-    if (selectedGenres.length < 3) {
-      alert(
-        "Please select at least 3 genres"
+  const handleContinue = async () => {
+
+  if (selectedGenres.length < 3) {
+
+    alert(
+      "Please select at least 3 genres"
+    );
+
+    return;
+
+  }
+
+  try {
+
+    const user =
+      JSON.parse(
+        localStorage.getItem("user")
       );
 
-      return;
-    }
+    // save genre baru
+await axios.post(
+  "http://localhost:3000/api/fav-genres",
+  {
+    user_id: user.id,
+    genres: selectedGenres,
+  }
+);
 
     navigate("/koleksi");
-  };
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert(
+      "Failed save favorite genres"
+    );
+
+  }
+
+};
 
   return (
     <div
@@ -243,10 +268,9 @@ export default function ChooseGenre() {
                 duration-500
               "
                 style={{
-                  width: `${
-                    (selectedGenres.length / 3) *
+                  width: `${(selectedGenres.length / 3) *
                     100
-                  }%`,
+                    }%`,
                 }}
               />
             </div>
@@ -412,14 +436,13 @@ export default function ChooseGenre() {
                   transition-all
                   duration-300
 
-                  ${
-                    isSelected
-                      ? `
+                  ${isSelected
+                    ? `
                         scale-[1.03]
                         shadow-2xl
                         ${genre.glow}
                       `
-                      : `
+                    : `
                         hover:-translate-y-2
                       `
                   }
@@ -439,8 +462,7 @@ export default function ChooseGenre() {
                   duration-300
                   border
 
-                  ${
-                    isSelected
+                  ${isSelected
                       ? `
                         bg-gradient-to-br
                         ${genre.color}
@@ -454,7 +476,7 @@ export default function ChooseGenre() {
                        text-blue-600
                         hover:bg-white
                       `
-                  }
+                    }
                 `}
                 >
                   {/* BG LIGHT */}
@@ -500,11 +522,10 @@ export default function ChooseGenre() {
                     transition-all
                     duration-300
 
-                    ${
-                      isSelected
+                    ${isSelected
                         ? "scale-110"
                         : "group-hover:scale-110"
-                    }
+                      }
                   `}
                   >
                     {genre.icon}
@@ -526,11 +547,10 @@ export default function ChooseGenre() {
                       text-sm
                       mt-1
 
-                      ${
-                        isSelected
+                      ${isSelected
                           ? "text-white/80"
                           : "text-gray-500"
-                      }
+                        }
                     `}
                     >
                       Explore collection
@@ -602,16 +622,15 @@ export default function ChooseGenre() {
               duration-300
               shadow-xl
 
-              ${
-                selectedGenres.length >= 3
-                  ? `
+              ${selectedGenres.length >= 3
+                ? `
                     bg-gradient-to-r
                     from-blue-600
                     to-cyan-500
                     hover:scale-105
                     hover:shadow-blue-400/40
                   `
-                  : `
+                : `
                     bg-gray-300
                     cursor-not-allowed
                     shadow-none

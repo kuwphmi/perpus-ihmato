@@ -267,8 +267,9 @@ export default function Profil() {
           "Profile updated successfully!"
         );
 
-        setIsEdit(false);
+setIsEdit(false);
 
+navigate("/choosegenre");
       } else {
 
         showNotif(

@@ -8,7 +8,7 @@ import { MdOutlinePalette } from "react-icons/md";
 import { GiSpellBook } from "react-icons/gi";
 import { LuChefHat } from "react-icons/lu";
 import { FaRegHeart } from "react-icons/fa";
-
+import axios from "axios";
 import logo from "../assets/logo.png";
 
 export default function HalamanUtama() {
@@ -145,40 +145,74 @@ export default function HalamanUtama() {
   }, []);
 
   const handleSearch = async (e) => {
-    if (e.key === "Enter") {
-      if (!search.trim()) return;
 
-      try {
-        const res = await fetch(`https://openlibrary.org/search.json?q=${search}&limit=12`);
+  if (e.key === "Enter") {
 
-        const data = await res.json();
+    if (!search.trim()) return;
 
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
+    try {
 
-          firstSentence: item.first_sentence?.[0] || item.first_sentence || "",
+      // SAVE SEARCH HISTORY // 
 
-          subjects: item.subject?.slice(0, 5) || [],
-        }));
+      const user = JSON.parse(
+        localStorage.getItem("user")
+      );
 
-        setGenreBooks(books);
+      await axios.post(
+        "http://localhost:3000/api/search-history",
+        {
+          user_id: user.id,
+          keyword: search,
+          source: "koleksi",
+        }
+      );
 
-        // supaya judul berubah
-        setActiveCategory(`Search Results: ${search}`);
+      // FETCH BOOKS // 
 
-        setTimeout(() => {
-          bookSectionRef.current?.scrollIntoView({
-            behavior: "smooth",
-          });
-        }, 100);
-      } catch (err) {
-        console.log(err);
-      }
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${search}&limit=12`
+      );
+
+      const data = await res.json();
+
+      const books = data.docs.map((item) => ({
+
+        workKey: item.key,
+
+        title: item.title ?? "-",
+
+        author:
+          item.author_name?.[0] ?? "-",
+
+        cover:
+          item.cover_i ?? null,
+
+        firstSentence:
+          item.first_sentence?.[0] ||
+          item.first_sentence ||
+          "",
+
+        subjects:
+          item.subject?.slice(0, 5) || [],
+      }));
+
+      setGenreBooks(books);
+
+      setActiveCategory(
+        `Search Results: ${search}`
+      );
+
+      setTimeout(() => {
+        bookSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
+    } catch (err) {
+      console.log(err);
     }
-  };
+  }
+};
+
   useEffect(() => {
     const fetchRekomendasi = async () => {
       try {
