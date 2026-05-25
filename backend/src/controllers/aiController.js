@@ -6,11 +6,11 @@ export const chatAI = async (req, res) => {
 
     if (!prompt) {
       return res.json({
-        message: "Tanya apa nih? Aku siap bantu cari buku 📚"
+        message: "Tanya apa nih? Aku siap bantu cari buku 📚",
       });
     }
 
-const systemPrompt = `
+    const systemPrompt = `
 ### PERSONA
 Kamu adalah Liby, asisten AI dari perpustakaan digital BukuIn.
 Gaya bicara: Friendly, santai (Gen Z style), informatif, dan "mirroring" (ikutin bahasa user: Indo/English/Campuran).
@@ -48,12 +48,11 @@ Liby's Response:
     const text = response.text();
 
     return res.json({ message: text });
+  } catch (error) {
+    console.log("GEMINI ERROR:", error);
 
-} catch (error) {
-  console.log("GEMINI ERROR:", error);
-
-  return res.status(500).json({
-    message: error.message,
-  });
-}
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 };

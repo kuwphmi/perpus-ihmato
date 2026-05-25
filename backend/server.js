@@ -32,7 +32,7 @@ app.use(
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  app.use(
+app.use(
   session({
     secret: "keyboard cat",
     resave: false,
@@ -329,20 +329,14 @@ app.delete("/api/cart/:id", async (req, res) => {
   }
 });
 
-
 /* =======================
    DELETE ADDRESS
 ======================= */
 app.delete("/api/address/:id", async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from("addresses")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("addresses").delete().eq("id", id);
 
     if (error) {
       return res.json({
@@ -355,16 +349,12 @@ app.delete("/api/address/:id", async (req, res) => {
       status: true,
       message: "Address deleted",
     });
-
   } catch (err) {
-
     return res.json({
       status: false,
       message: err.message,
     });
-
   }
-
 });
 
 app.use("/api/admin", adminRoutes);
@@ -379,37 +369,28 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", historyRoutes);
 app.use("/api/fav-genres", favGenreRoutes);
-app.use(
-  "/api/search-history",
-  searchHistoryRoutes
-);
+app.use("/api/search-history", searchHistoryRoutes);
 /* =======================
    ADMIN DASHBOARD
 ======================= */
 app.get("/api/admin/dashboard", async (req, res) => {
   try {
-    const { count: totalMembers } = await supabase.from("users").select("*", { count: "exact", head: true });
-
-    const { count: totalLoans } = await supabase.from("loans").select("*", { count: "exact", head: true });
-
-    const { count: totalReturns } = await supabase.from("loans").select("*", { count: "exact", head: true }).eq("status", "returned");
-
-    const { count: totalLoanRequests } = await supabase.from("loan_requests").select("*", { count: "exact", head: true });
-
-    const { count: totalExtensionRequests } = await supabase.from("extensions").select("*", { count: "exact", head: true });
-
-    const totalRequests = (totalLoanRequests || 0) + (totalExtensionRequests || 0);
+    const [{ count: totalMembers }, { count: totalLoans }, { count: totalReturns }, { count: totalLoanRequests }, { count: totalExtensionRequests }] = await Promise.all([
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase.from("loans").select("*", { count: "exact", head: true }),
+      supabase.from("loans").select("*", { count: "exact", head: true }).eq("status", "returned"),
+      supabase.from("loan_requests").select("*", { count: "exact", head: true }),
+      supabase.from("extensions").select("*", { count: "exact", head: true }),
+    ]);
 
     return res.json({
       total_loans: totalLoans || 0,
       total_members: totalMembers || 0,
       total_returns: totalReturns || 0,
-      total_requests: totalRequests || 0,
+      total_requests: (totalLoanRequests || 0) + (totalExtensionRequests || 0),
     });
   } catch (err) {
-    return res.status(500).json({
-      message: err.message,
-    });
+    return res.status(500).json({ message: err.message });
   }
 });
 
@@ -545,8 +526,6 @@ app.get("/api/admin/loan-requests", async (req, res) => {
   }
 });
 
-
-
 /* =======================
    REJECT LOAN REQUEST
 ======================= */
@@ -555,11 +534,7 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: requestData } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data: requestData } = await supabase.from("loan_requests").select("*").eq("id", id).single();
 
     const { error } = await supabase
       .from("loan_requests")
@@ -593,14 +568,7 @@ app.post("/api/admin/loan-requests/:id/reject", async (req, res) => {
 
 app.post("/api/extensions/request", async (req, res) => {
   try {
-    const {
-      user_id,
-      loan_id,
-      book_title,
-      old_due_date,
-      new_due_date,
-      status,
-    } = req.body;
+    const { user_id, loan_id, book_title, old_due_date, new_due_date, status } = req.body;
 
     const { data, error } = await supabase
       .from("extensions")
@@ -638,16 +606,12 @@ app.post("/api/extensions/request", async (req, res) => {
   }
 });
 
-
 /* =======================
    ADMIN EXTENSION REQUESTS
 ======================= */
 app.get("/api/admin/extension-requests", async (req, res) => {
   try {
-    const { data: extensions, error } = await supabase
-      .from("extensions")
-      .select("*")
-      .order("id", { ascending: false });
+    const { data: extensions, error } = await supabase.from("extensions").select("*").order("id", { ascending: false });
 
     if (error) {
       return res.json({
@@ -658,10 +622,7 @@ app.get("/api/admin/extension-requests", async (req, res) => {
 
     const userIds = extensions.map((item) => item.user_id);
 
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, name, member_code")
-      .in("id", userIds);
+    const { data: users } = await supabase.from("users").select("id, name, member_code").in("id", userIds);
 
     const formatted = extensions.map((item) => {
       const user = users.find((u) => u.id === item.user_id);
@@ -681,7 +642,6 @@ app.get("/api/admin/extension-requests", async (req, res) => {
     });
 
     return res.json(formatted);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -689,7 +649,6 @@ app.get("/api/admin/extension-requests", async (req, res) => {
     });
   }
 });
-
 
 /* =======================
    APPROVE EXTENSION
@@ -882,22 +841,15 @@ app.get("/api/history/:user_id", async (req, res) => {
     const { user_id } = req.params;
 
     // ambil loans
-    const { data: loans, error: loansError } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("user_id", user_id);
+    const { data: loans, error: loansError } = await supabase.from("loans").select("*").eq("user_id", user_id);
 
     // ambil loan requests
-    const { data: requests, error: requestsError } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("user_id", user_id);
+    const { data: requests, error: requestsError } = await supabase.from("loan_requests").select("*").eq("user_id", user_id);
 
     if (loansError || requestsError) {
       return res.json({
         status: false,
-        message:
-          loansError?.message || requestsError?.message,
+        message: loansError?.message || requestsError?.message,
       });
     }
 
@@ -909,32 +861,25 @@ app.get("/api/history/:user_id", async (req, res) => {
 
     // format requests
     const formattedRequests = (requests || [])
-    .filter((item) => item.status === "pending")
-    .map((item) => ({
-      id: `request-${item.id}`,
-      title: item.book_title,
-      author: item.author,
-      cover: item.cover,
-      loan_date: item.request_date,
-      due_date: null,
-      status: item.status,
-      history_type: "request",
-    }));
+      .filter((item) => item.status === "pending")
+      .map((item) => ({
+        id: `request-${item.id}`,
+        title: item.book_title,
+        author: item.author,
+        cover: item.cover,
+        loan_date: item.request_date,
+        due_date: null,
+        status: item.status,
+        history_type: "request",
+      }));
 
     // gabung
-    const combined = [
-      ...formattedLoans,
-      ...formattedRequests,
-    ];
+    const combined = [...formattedLoans, ...formattedRequests];
 
     // urut terbaru
-    combined.sort(
-      (a, b) =>
-        new Date(b.loan_date) - new Date(a.loan_date)
-    );
+    combined.sort((a, b) => new Date(b.loan_date) - new Date(a.loan_date));
 
     return res.json(combined);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -943,21 +888,15 @@ app.get("/api/history/:user_id", async (req, res) => {
   }
 });
 
-
 /* =======================
    GET NOTIFICATIONS
 ======================= */
 
 app.get("/api/notifications/:userId", async (req, res) => {
   try {
-
     const { userId } = req.params;
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false });
 
     if (error) {
       return res.json({
@@ -967,7 +906,6 @@ app.get("/api/notifications/:userId", async (req, res) => {
     }
 
     return res.json(data);
-
   } catch (err) {
     return res.json({
       status: false,
@@ -1057,14 +995,9 @@ app.post("/api/forgot-password", async (req, res) => {
 
 app.get("/api/history/detail/:id", async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    const { data, error } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data, error } = await supabase.from("loans").select("*").eq("id", id).single();
 
     if (error) {
       return res.status(404).json({
@@ -1074,7 +1007,6 @@ app.get("/api/history/detail/:id", async (req, res) => {
     }
 
     return res.json(data);
-
   } catch (err) {
     return res.status(500).json({
       status: false,
