@@ -80,28 +80,21 @@ function LoginForm({ onSwitch, onForgot }) {
   const navigate = useNavigate();
   const [notif, setNotif] = useState("");
   const showNotif = (message) => {
+    setNotif(message);
 
-  setNotif(message);
-
-  setTimeout(() => {
-
-    setNotif("");
-
-  }, 10000);
-
-};
+    setTimeout(() => {
+      setNotif("");
+    }, 10000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/login",
-        {
-          email,
-          password,
-        }
-      );
+      const res = await axios.post("http://localhost:3000/api/login", {
+        email,
+        password,
+      });
 
       if (!res.data.status) {
         showNotif(res.data.message);
@@ -112,7 +105,6 @@ function LoginForm({ onSwitch, onForgot }) {
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
-      
 
       // CEK ROLE
       if (user.role === "admin") {
@@ -120,10 +112,8 @@ function LoginForm({ onSwitch, onForgot }) {
         return;
       }
       if (user.role === "kurir") {
-
         navigate("/courier");
         return;
-
       }
 
       // CEK PROFIL MEMBER
@@ -132,28 +122,26 @@ function LoginForm({ onSwitch, onForgot }) {
       } else {
         navigate("/koleksi");
       }
-
     } catch (error) {
       console.log(error);
       alert("Server error");
     }
   };
 
-
   return (
-  <>
-
-    {notif && (
-
-      <div className="
+    <>
+      {notif && (
+        <div
+          className="
         fixed
         top-6
         left-1/2
         -translate-x-1/2
-        z-[99999]
-      ">
-
-        <div className="
+        z-99999
+      "
+        >
+          <div
+            className="
           bg-blue-600
           text-white
           px-6
@@ -162,201 +150,139 @@ function LoginForm({ onSwitch, onForgot }) {
           shadow-2xl
           text-sm
           font-medium
-        ">
-
-          {notif}
-
-        </div>
-
-      </div>
-
-    )}
-
-    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-      <div className="mb-7">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Sign in to your account</h1>
-        <p className="text-sm text-gray-500">
-          Don't have an account?{" "}
-          <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-            Create one now
-          </button>
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Email Address" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <div className="flex flex-col gap-1.5">
-          <Field label="Password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <div className="text-right">
-            {/* ← Tombol lupa kata sandi dihubungkan ke onForgot */}
-            <button type="button" onClick={onForgot} className="text-xs text-blue-700 hover:underline">
-              Forgot password?
-            </button>
+        "
+          >
+            {notif}
           </div>
         </div>
-        <button type="submit" className="mt-1 h-11 bg-gradient-to-br from-blue-700 to-blue-900 bg-blue-900 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-          Sign In
+      )}
+
+      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+        <div className="mb-7">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Sign in to your account</h1>
+          <p className="text-sm text-gray-500">
+            Don't have an account?{" "}
+            <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
+              Create one now
+            </button>
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field label="Email Address" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <div className="flex flex-col gap-1.5">
+            <Field label="Password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="text-right">
+              {/* ← Tombol lupa kata sandi dihubungkan ke onForgot */}
+              <button type="button" onClick={onForgot} className="text-xs text-blue-700 hover:underline">
+                Forgot password?
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="mt-1 h-11 bg-linear-to-br from-blue-700 to-blue-900 bg-blue-900 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
+            Sign In
+          </button>
+        </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-xs text-gray-400">or continue with</span>
+          <div className="flex-1 h-px bg-gray-100" />
+        </div>
+
+        <button
+          onClick={() => {
+            window.location.href = "http://localhost:3000/api/auth/google";
+          }}
+          className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+        >
+          <GoogleIcon />
+          Login with Google
         </button>
-      </form>
-
-      <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-xs text-gray-400">or continue with</span>
-        <div className="flex-1 h-px bg-gray-100" />
       </div>
-
-      <button
-        onClick={() => {
-          window.location.href = "http://localhost:3000/api/auth/google";
-        }}
-        className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
-      >
-        <GoogleIcon />
-        Login with Google
-      </button>
-    </div>
-
-</>
-
-);
+    </>
+  );
 }
 // ─── REGISTER FORM ────────────────────────────────────────────────────────
 function RegisterForm({ onSwitch }) {
-
   const navigate = useNavigate();
 
-  const [notif, setNotif] =
-    useState("");
+  const [notif, setNotif] = useState("");
 
-  const showNotif = (
-    message
-  ) => {
-
+  const showNotif = (message) => {
     setNotif(message);
 
     setTimeout(() => {
-
       setNotif("");
-
     }, 2500);
-
   };
 
-  const [form, setForm] =
-    useState({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-      agree: false,
-    });
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    agree: false,
+  });
 
-  const strength =
-    getStrength(
-      form.password
-    );
+  const strength = getStrength(form.password);
 
   const set = (key) => (e) =>
     setForm((prev) => ({
       ...prev,
 
-      [key]:
-        e.target.type ===
-        "checkbox"
-
-          ? e.target.checked
-
-          : e.target.value,
+      [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value,
     }));
 
-  const handleSubmit =
-    async (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      e.preventDefault();
+    if (!form.agree) {
+      return showNotif("Setujui syarat dulu");
+    }
 
-      if (!form.agree) {
+    try {
+      const res = await axios.post("http://localhost:3000/api/register", {
+        name: form.firstName + " " + form.lastName,
 
-        return showNotif(
-          "Setujui syarat dulu"
-        );
+        email: form.email,
 
+        password: form.password,
+
+        phone: form.phone,
+      });
+
+      if (res.data.status) {
+        showNotif("Account created successfully!");
+
+        localStorage.setItem("user", JSON.stringify(res.data.data));
+
+        navigate("/profil");
+      } else {
+        showNotif(res.data.message);
       }
+    } catch (error) {
+      console.log(error);
 
-      try {
+      showNotif("Register failed");
+    }
+  };
 
-        const res =
-          await axios.post(
-            "http://localhost:3000/api/register",
-            {
-              name:
-                form.firstName +
-                " " +
-                form.lastName,
-
-              email:
-                form.email,
-
-              password:
-                form.password,
-
-              phone:
-                form.phone,
-            }
-          );
-
-        if (
-          res.data.status
-        ) {
-
-          showNotif(
-            "Account created successfully!"
-          );
-
-          localStorage.setItem(
-            "user",
-            JSON.stringify(
-              res.data.data
-            )
-          );
-
-          navigate("/profil");
-
-        } else {
-
-          showNotif(
-            res.data.message
-          );
-
-        }
-
-      } catch (error) {
-
-        console.log(error);
-
-        showNotif(
-          "Register failed"
-        );
-
-      }
-
-    };
-
-return (
-
-  <>
-
-    {notif && (
-
-      <div className="
+  return (
+    <>
+      {notif && (
+        <div
+          className="
         fixed
         top-6
         left-1/2
         -translate-x-1/2
-        z-[99999]
-      ">
-
-        <div className="
+        z-99999
+      "
+        >
+          <div
+            className="
           bg-blue-600
           text-white
           px-6
@@ -365,171 +291,82 @@ return (
           shadow-2xl
           text-sm
           font-medium
-        ">
-
-          {notif}
-
-        </div>
-
-      </div>
-
-    )}
-
-    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-
-      <div className="mb-6">
-
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">
-          Create a new account
-        </h1>
-
-        <p className="text-sm text-gray-500">
-
-          Already have an account?{" "}
-
-          <button
-            onClick={onSwitch}
-            className="text-blue-700 font-medium hover:underline"
+        "
           >
-            Sign in here
-          </button>
+            {notif}
+          </div>
+        </div>
+      )}
 
-        </p>
+      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Create a new account</h1>
 
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4"
-      >
-
-        <div className="grid grid-cols-2 gap-3">
-
-          <Field
-            label="First Name"
-            placeholder="Budi"
-            value={form.firstName}
-            onChange={set("firstName")}
-          />
-
-          <Field
-            label="Last Name"
-            placeholder="Santoso"
-            value={form.lastName}
-            onChange={set("lastName")}
-          />
-
+          <p className="text-sm text-gray-500">
+            Already have an account?{" "}
+            <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
+              Sign in here
+            </button>
+          </p>
         </div>
 
-        <Field
-          label="Email Address"
-          type="email"
-          placeholder="nama@email.com"
-          value={form.email}
-          onChange={set("email")}
-        />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="First Name" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
 
-        <Field
-          label="Phone Number"
-          type="tel"
-          placeholder="+62 812 3456 7890"
-          value={form.phone}
-          onChange={set("phone")}
-        />
+            <Field label="Last Name" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
+          </div>
 
-        <div className="flex flex-col gap-1.5">
+          <Field label="Email Address" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
 
-          <label className="text-sm font-medium text-gray-600">
-            Password
+          <Field label="Phone Number" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-gray-600">Password</label>
+
+            <input
+              type="password"
+              placeholder="Minimum 8 characters"
+              value={form.password}
+              onChange={set("password")}
+              className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+            />
+
+            {form.password && (
+              <div className="flex flex-col gap-1">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength ? strengthColors[strength - 1] : "bg-gray-100"}`} />
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-400">{strengthLabels[strength - 1]}</p>
+              </div>
+            )}
+          </div>
+
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={form.agree} onChange={set("agree")} className="mt-0.5 accent-blue-700" />
+
+            <span className="text-sm text-gray-500 leading-relaxed">
+              I agree to the{" "}
+              <a href="#" className="text-blue-700 hover:underline">
+                Terms & Conditions
+              </a>{" "}
+              and{" "}
+              <a href="#" className="text-blue-700 hover:underline">
+                Privacy Policy
+              </a>
+            </span>
           </label>
 
-          <input
-            type="password"
-            placeholder="Minimum 8 characters"
-            value={form.password}
-            onChange={set("password")}
-            className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-          />
-
-          {form.password && (
-
-            <div className="flex flex-col gap-1">
-
-              <div className="flex gap-1">
-
-                {[1, 2, 3, 4].map((i) => (
-
-                  <div
-                    key={i}
-                    className={`flex-1 h-1 rounded-full transition-all ${
-                      i <= strength
-                        ? strengthColors[strength - 1]
-                        : "bg-gray-100"
-                    }`}
-                  />
-
-                ))}
-
-              </div>
-
-              <p className="text-xs text-gray-400">
-                {strengthLabels[strength - 1]}
-              </p>
-
-            </div>
-
-          )}
-
-        </div>
-
-        <label className="flex items-start gap-2.5 cursor-pointer">
-
-          <input
-            type="checkbox"
-            checked={form.agree}
-            onChange={set("agree")}
-            className="mt-0.5 accent-blue-700"
-          />
-
-          <span className="text-sm text-gray-500 leading-relaxed">
-
-            I agree to the{" "}
-
-            <a
-              href="#"
-              className="text-blue-700 hover:underline"
-            >
-              Terms & Conditions
-            </a>{" "}
-
-            and{" "}
-
-            <a
-              href="#"
-              className="text-blue-700 hover:underline"
-            >
-              Privacy Policy
-            </a>
-
-          </span>
-
-        </label>
-
-        <button
-          type="submit"
-          className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all"
-        >
-          Create Account
-        </button>
-
-      </form>
-
-    </div>
-
-  </>
-
-);
-
+          <button type="submit" className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
+            Create Account
+          </button>
+        </form>
+      </div>
+    </>
+  );
 }
 
 // ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
@@ -624,20 +461,21 @@ export default function AuthPage() {
   const isForgot = mode === "forgot";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 flex items-center justify-center p-4 overflow-hidden relative">
-      <div className="
+    <div className="min-h-screen bg-linear-to-br from-blue-100 via-white to-blue-200 flex items-center justify-center p-4 overflow-hidden relative">
+      <div
+        className="
 w-full
 max-w-5xl
 animate-[fadeIn_.5s_ease]
 bg-white/80
 backdrop-blur-xl
-rounded-[32px]
+rounded-4xl
 overflow-hidden
 shadow-2xl
 border
 border-white/40
 flex
-min-h-[720px]
+min-h-180
 relative
 z-10
 "
@@ -657,5 +495,3 @@ z-10
     </div>
   );
 }
-
-

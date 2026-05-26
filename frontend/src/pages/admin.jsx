@@ -1,6 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Users, RotateCcw, ClipboardList, RefreshCcw, ShoppingCart, Search, Printer, ChevronLeft, ChevronRight, Menu, CheckCircle2, Clock3, Truck, PackageCheck, LibraryBig } from "lucide-react";
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  RotateCcw,
+  ClipboardList,
+  RefreshCcw,
+  ShoppingCart,
+  Search,
+  Printer,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  CheckCircle2,
+  Clock3,
+  Truck,
+  PackageCheck,
+  LibraryBig,
+  LogOut,
+  AlertCircle,
+  TrendingUp,
+  UserCheck,
+  RotateCw,
+  ClipboardCheck,
+} from "lucide-react";
 import printReceipt from "../utils/printReceipt";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
@@ -16,7 +40,6 @@ const tabs = [
 ];
 
 const ORDER_STATUSES = [
-
   {
     key: "waiting_payment",
     label: "Waiting Payment",
@@ -46,7 +69,6 @@ const ORDER_STATUSES = [
     label: "Cancelled",
     color: "rose",
   },
-
 ];
 
 const statColorMap = {
@@ -75,6 +97,39 @@ const getTabKey = (tab, bookView) => {
   }[tab];
 };
 
+const CACHE_TTL = 30_000;
+const cacheStore = {
+  dashboard: { expires: 0, value: null },
+  tabs: {},
+};
+
+const getCachedDashboard = () => {
+  if (Date.now() < cacheStore.dashboard.expires) {
+    return cacheStore.dashboard.value;
+  }
+  return null;
+};
+
+const setCachedDashboard = (value) => {
+  cacheStore.dashboard.value = value;
+  cacheStore.dashboard.expires = Date.now() + CACHE_TTL;
+};
+
+const getCachedTab = (key) => {
+  const entry = cacheStore.tabs[key];
+  if (entry && Date.now() < entry.expires) {
+    return entry.value;
+  }
+  return null;
+};
+
+const setCachedTab = (key, value) => {
+  cacheStore.tabs[key] = {
+    value,
+    expires: Date.now() + CACHE_TTL,
+  };
+};
+
 export default function AdminPerpustakaan() {
   const [activeTab, setActiveTab] = useState("pinjaman");
   const [loadingDashboard, setLoadingDashboard] = useState(false);
@@ -85,6 +140,10 @@ export default function AdminPerpustakaan() {
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [selectedMonth] = useState(getCurrentMonth());
   const [selectedYear] = useState(getCurrentYear());
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const profileMenuRef = useRef(null);
+  const [adminName, setAdminName] = useState("A");
   const [loadedTabs, setLoadedTabs] = useState({
     borrowBooks: false,
     shopBooks: false,
@@ -137,6 +196,66 @@ export default function AdminPerpustakaan() {
   });
 
   const navigate = useNavigate();
+
+  // Get admin name from localStorage on mount
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user?.name) {
+      setAdminName(user.name.charAt(0).toUpperCase());
+    }
+  }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [profileMenuOpen]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setProfileMenuOpen(false);
+    setShowLogoutConfirm(false);
+    navigate("/login");
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const addBook = async () => {
+    try {
+      await fetchJson(`${API_BASE}/admin/books`, {
+        method: "POST",
+        body: JSON.stringify(bookForm),
+      });
+
+      alert("Book added successfully");
+
+      loadTabData("buku");
+
+      setBookForm({
+        title: "",
+        author: "",
+        category: "",
+        stock: "",
+        price: "",
+        description: "",
+        cover: "",
+      });
+    } catch {
+      alert("Failed to add book");
+    }
+  };
+
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(url, {
       headers: {
@@ -208,7 +327,21 @@ export default function AdminPerpustakaan() {
   const loadDashboard = useCallback(async () => {
     setLoadingDashboard(true);
     try {
+      const cachedDashboard = getCachedDashboard();
+      if (cachedDashboard) {
+        setData((prev) => ({
+          ...prev,
+          summary: {
+            ...cachedDashboard,
+            total_orders: cachedDashboard.total_orders || 0,
+            pending_orders: cachedDashboard.pending_orders || 0,
+          },
+        }));
+        return cachedDashboard;
+      }
+
       const dashboard = await fetchJson(`${API_BASE}/admin/dashboard`);
+      setCachedDashboard(dashboard);
       setData((prev) => ({
         ...prev,
         summary: {
@@ -217,9 +350,11 @@ export default function AdminPerpustakaan() {
           pending_orders: dashboard.pending_orders || 0,
         },
       }));
+      return dashboard;
     } catch (err) {
       console.error(err);
       alert("Failed to fetch dashboard data.");
+      return null;
     } finally {
       setLoadingDashboard(false);
     }
@@ -227,7 +362,6 @@ export default function AdminPerpustakaan() {
 
   const loadTabData = useCallback(async (tabKey) => {
   const dataKey = getTabKey(tabKey, bookView);
-
   if (!dataKey) return;
 
   setLoadingTabs((prev) => ({
@@ -235,50 +369,65 @@ export default function AdminPerpustakaan() {
     [dataKey]: true,
   }));
 
+  const cachedTab = getCachedTab(dataKey);
+  if (cachedTab) {
+    setData((prev) => ({
+      ...prev,
+      [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
+    }));
+    setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
+    setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
+    return cachedTab;
+  }
+
   try {
     let result = [];
 
     switch (tabKey) {
       case "buku":
-        if (bookView === "loan") {
-          result = await fetchJson(`${API_BASE}/admin/borrow-books`);
-        } else {
-          result = await fetchJson(`${API_BASE}/admin/books`); }
+        result =
+          bookView === "loan"
+            ? await fetchJson(`${API_BASE}/admin/borrow-books`)
+            : await fetchJson(`${API_BASE}/admin/books`);
         break;
+
       case "pinjaman":
-        result = await fetchJson(`${API_BASE}/admin/loans`);  
+        result = await fetchJson(`${API_BASE}/admin/loans`);
         break;
+
       case "anggota":
         result = await fetchJson(`${API_BASE}/admin/members`);
         break;
+
       case "pengembalian":
         result = await fetchJson(`${API_BASE}/admin/returns`);
         break;
+
       case "ajukan":
         result = await fetchJson(`${API_BASE}/admin/loan-requests`);
-         break;  
+        break;
+
       case "perpanjangan":
         result = await fetchJson(`${API_BASE}/admin/extension-requests`);
-        break;  
+        break;
+
       case "pesanan":
         result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
         break;
+
       default:
         result = [];
     }
 
     setData((prev) => ({
       ...prev,
-      [dataKey]: Array.isArray(result)
-        ? result
-        : [],
+      [dataKey]: Array.isArray(result) ? result : [],
     }));
 
     setLoadedTabs((prev) => ({
       ...prev,
       [dataKey]: true,
     }));
-
   } catch (err) {
     console.error(err);
     alert("Failed to fetch tab data.");
@@ -296,17 +445,16 @@ export default function AdminPerpustakaan() {
   }, [activeTab, loadDashboard, loadTabData]);
 
   useEffect(() => {
-    loadDashboard();
-    const interval = setInterval(loadDashboard, 60000);
-    return () => clearInterval(interval);
-  }, [loadDashboard]);
+  // initial load
+  refreshCurrentView();
 
-  useEffect(() => {
-    loadTabData(activeTab);
-    const interval = setInterval(() => loadTabData(activeTab), 60000);
-    return () => clearInterval(interval);
-  }, [activeTab, bookView, loadTabData]);
+  // auto refresh setiap 60 detik
+  const interval = setInterval(() => {
+    refreshCurrentView();
+  }, 60000);
 
+  return () => clearInterval(interval);
+}, [activeTab, bookView, refreshCurrentView]);
 
 
   const rejectLoanRequest = async (id) => {
@@ -485,9 +633,7 @@ export default function AdminPerpustakaan() {
     if (activeTab === "pesanan") {
       let orders = data.orders;
       if (orderStatusFilter !== "all") {
-        orders = orders.filter(
-          (x) =>
-            x.order_status?.toLowerCase() === orderStatusFilter);
+        orders = orders.filter((x) => x.order_status?.toLowerCase() === orderStatusFilter);
       }
       return orders.filter(match);
     }
@@ -543,244 +689,172 @@ export default function AdminPerpustakaan() {
         },
       ],
 
-    pinjaman: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "loan_date",
-        label: "Loan Date",
+  pinjaman: [
+    { key: "member_code", label: "ID" },
+    { key: "member_name", label: "Member" },
+    { key: "book_title", label: "Book" },
+    {
+      key: "loan_date",
+      label: "Loan Date",
+      render: (row) =>
+        row.loan_date
+          ? new Date(row.loan_date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
+    },
+    {
+      key: "due_date",
+      label: "Due Date",
+      render: (row) =>
+        row.due_date
+          ? new Date(row.due_date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => <Badge status={row.status} />,
+    },
+    {
+      key: "action",
+      label: "Action",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => markAsReturned(getId(row))}
+            className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Complete
+          </button>
 
-        render: (row) => (
+          <button
+            type="button"
+            onClick={() => printReceipt(row)}
+            className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Print
+          </button>
+        </div>
+      ),
+    },
+  ],
 
-          row.loan_date
-            ? new Date(
-              row.loan_date
-            ).toLocaleDateString(
-              "en-GB",
-              {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              }
-            )
-            : "-"
+  anggota: [
+    { key: "member_code", label: "ID" },
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "nik", label: "NIK" },
+    { key: "phone", label: "Phone" },
+  ],
 
-        ),
-      },
+  pengembalian: [
+    { key: "member_code", label: "ID" },
+    { key: "member_name", label: "Member" },
+    { key: "book_title", label: "Book" },
+    {
+      key: "return_date",
+      label: "Return Date",
+      render: (row) =>
+        row.return_date
+          ? new Date(row.return_date).toLocaleString("en-GB", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "-",
+    },
+  ],
 
-      {
-        key: "due_date",
-        label: "Due Date",
+  ajukan: [
+    { key: "member_code", label: "ID" },
+    { key: "member_name", label: "Member" },
+    { key: "book_title", label: "Book" },
+    {
+      key: "request_date",
+      label: "Request Date",
+      render: (row) =>
+        row.request_date
+          ? new Date(row.request_date).toLocaleDateString("en-GB")
+          : "-",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => <Badge status={row.status} />,
+    },
+    {
+      key: "action",
+      label: "Action",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => approveLoanRequest(getId(row))}
+            className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Approve
+          </button>
 
-        render: (row) => (
+          <button
+            type="button"
+            onClick={() => rejectLoanRequest(getId(row))}
+            className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Reject
+          </button>
+        </div>
+      ),
+    },
+  ],
 
-          row.due_date
-            ? new Date(
-              row.due_date
-            ).toLocaleDateString(
-              "en-GB",
-              {
+  perpanjangan: [
+    { key: "member_code", label: "ID" },
+    { key: "member_name", label: "Member" },
+    { key: "book_title", label: "Book" },
+    { key: "old_due_date", label: "Old Due Date" },
+    { key: "new_due_date", label: "New Due Date" },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => <Badge status={row.status} />,
+    },
+    {
+      key: "action",
+      label: "Action",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => approveExtension(getId(row))}
+            className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Approve
+          </button>
 
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
+          <button
+            type="button"
+            onClick={() => rejectExtension(getId(row))}
+            className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Reject
+          </button>
+        </div>
+      ),
+    },
+  ],
 
-              }
-            )
-            : "-"
-
-        ),
-      },
-
-      {
-        key: "status",
-        label: "Status",
-
-        render: (row) => (
-          <Badge status={row.status} />
-        ),
-      },
-
-      {
-        key: "action",
-        label: "Action",
-
-        render: (row) => (
-
-          <div className="flex items-center gap-2">
-
-            <button
-              type="button"
-              onClick={() =>
-                markAsReturned(
-                  getId(row)
-                )
-              }
-              className="
-      rounded-xl
-      bg-linear-to-r
-      from-blue-600
-      to-indigo-600
-      px-3
-      py-1.5
-      text-xs
-      font-semibold
-      text-white
-      shadow-lg
-      hover:scale-[1.02]
-      transition-all
-    "
-            >
-              Complete
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                printReceipt(row)}
-              className="
-      rounded-xl
-      bg-emerald-600
-      hover:bg-emerald-700
-      px-3
-      py-1.5
-      text-xs
-      font-semibold
-      text-white
-      transition-all
-    "
-            >
-              Print
-            </button>
-
-          </div>
-
-        ),
-      },
-
-    ],
-    anggota: [
-      { key: "member_code", label: "ID" },
-      { key: "name", label: "Name" },
-      { key: "email", label: "Email" },
-      { key: "nik", label: "NIK" },
-      { key: "phone", label: "Phone" },
-    ],
-    pengembalian: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "return_date",
-        label: "Return Date",
-
-        render: (row) => (
-
-          row.return_date
-            ? new Date(
-              row.return_date
-            ).toLocaleString(
-              "en-GB",
-              {
-
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-
-              }
-            )
-            : "-"
-        ),
-      },
-    ],
-
-    ajukan: [
-  { key: "member_code", label: "ID" },
-  { key: "member_name", label: "Member" },
-  { key: "book_title", label: "Book" },
-
-  {
-    key: "request_date",
-    label: "Request Date",
-    render: (row) =>
-      row.request_date
-        ? new Date(row.request_date).toLocaleDateString("en-GB")
-        : "-",
-  },
-
-  {
-    key: "status",
-    label: "Status",
-    render: (row) => <Badge status={row.status} />,
-  },
-
-  {
-    key: "action",
-    label: "Action",
-    render: (row) => (
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => approveLoanRequest(getId(row))}
-          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-        >
-          Approve
-        </button>
-
-        <button
-          type="button"
-          onClick={() => rejectLoanRequest(getId(row))}
-          className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
-        >
-          Reject
-        </button>
-      </div>
-    ),
-  },
-],
-    perpanjangan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      { key: "old_due_date", label: "Old Due Date" },
-      { key: "new_due_date", label: "New Due Date" },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            {/* APPROVE BUTTON */}
-            <button
-              type="button"
-              onClick={() => approveExtension(getId(row))}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-            >
-              Approve
-            </button>
-
-            {/* REJECT BUTTON */}
-            <button
-              type="button"
-              onClick={() => rejectExtension(getId(row))}
-              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
-            >
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
 
     pesanan: [
-
       {
         key: "order_id",
         label: "Order No.",
@@ -800,15 +874,7 @@ export default function AdminPerpustakaan() {
         key: "amount",
         label: "Total",
 
-        render: (row) => (
-
-          row.amount
-            ? `Rp ${Number(
-              row.amount
-            ).toLocaleString("id-ID")}`
-            : "-"
-
-        ),
+        render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
       },
 
       {
@@ -820,9 +886,7 @@ export default function AdminPerpustakaan() {
         key: "status",
         label: "Status",
 
-        render: (row) => (
-          <Badge status={row.order_status} />
-        ),
+        render: (row) => <Badge status={row.order_status} />,
       },
 
       {
@@ -830,28 +894,15 @@ export default function AdminPerpustakaan() {
         label: "Action",
 
         render: (row) => (
-
-          <button
-
-            type="button"
-
-            onClick={() =>
-              setSelectedOrder(row)
-            }
-
-            className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors"
-          >
+          <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
             Manage
           </button>
-
         ),
       },
-
     ],
   }), [bookView]);
 
   const orderSteps = [
-
     {
       key: "waiting_payment",
       label: "Waiting Payment",
@@ -879,7 +930,6 @@ export default function AdminPerpustakaan() {
       desc: "Package received successfully",
       icon: PackageCheck,
     },
-
   ];
 
   const getStepIndex = (status) => orderSteps.findIndex((s) => s.key === status?.toLowerCase());
@@ -913,13 +963,8 @@ export default function AdminPerpustakaan() {
               </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Total</div>
-                <div className="font-bold text-blue-700">
-                  {order.amount
-                    ? `Rp ${Number(
-                      order.amount
-                    ).toLocaleString("id-ID")}`
-                    : "-"}
-                </div>                </div>
+                <div className="font-bold text-blue-700">{order.amount ? `Rp ${Number(order.amount).toLocaleString("id-ID")}` : "-"}</div>{" "}
+              </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Date</div>
                 <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
@@ -946,8 +991,9 @@ export default function AdminPerpustakaan() {
                       return (
                         <div key={step.key} className="relative flex items-start gap-3 pl-10">
                           <div
-                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
-                              } ${active ? "ring-4 ring-blue-100" : ""}`}
+                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
+                              done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
+                            } ${active ? "ring-4 ring-blue-100" : ""}`}
                           >
                             {done ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                           </div>
@@ -1090,7 +1136,29 @@ export default function AdminPerpustakaan() {
             Print
           </button>
 
-          <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">A</div>
+          <div className="relative" ref={profileMenuRef}>
+            <button
+              type="button"
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 ring-2 ring-white hover:shadow-xl transition-all cursor-pointer"
+            >
+              {adminName}
+            </button>
+
+            {/* Profile Dropdown Menu */}
+            {profileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-800">Admin Profile</p>
+                </div>
+
+                <button type="button" onClick={confirmLogout} className="w-full px-4 py-3 flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors text-sm font-semibold">
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1120,7 +1188,7 @@ export default function AdminPerpustakaan() {
             <button
               type="button"
               onClick={() => setSidebarOpen((p) => !p)}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2.5 text-xs font-semibold text-blue-600 hover:from-blue-100 hover:to-indigo-100 transition-all shadow-sm"
             >
               {sidebarOpen ? (
                 <>
@@ -1128,7 +1196,10 @@ export default function AdminPerpustakaan() {
                   Collapse
                 </>
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <>
+                  <ChevronRight className="w-4 h-4" />
+                  Expand
+                </>
               )}
             </button>
           </div>
@@ -1143,14 +1214,18 @@ export default function AdminPerpustakaan() {
           {activeTab !== "pesanan" && (
             <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Total Loans", value: data.summary.total_loans, icon: "📚", color: "blue" },
-                { label: "Total Members", value: data.summary.total_members, icon: "👥", color: "indigo" },
-                { label: "Returned", value: data.summary.total_returns, icon: "↩️", color: "emerald" },
-                { label: "Total Requests", value: data.summary.total_requests, icon: "📋", color: "amber" },
+                { label: "Total Loans", value: data.summary.total_loans, Icon: TrendingUp, color: "blue" },
+                { label: "Total Members", value: data.summary.total_members, Icon: UserCheck, color: "indigo" },
+                { label: "Returned", value: data.summary.total_returns, Icon: RotateCw, color: "emerald" },
+                { label: "Total Requests", value: data.summary.total_requests, Icon: ClipboardCheck, color: "amber" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-5 shadow-lg shadow-slate-200/40 hover:-translate-y-1 hover:shadow-xl transition-all">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl">{stat.icon}</span>
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color === "blue" ? "bg-blue-50 text-blue-600" : stat.color === "indigo" ? "bg-indigo-50 text-indigo-600" : stat.color === "emerald" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}
+                    >
+                      <stat.Icon className="w-5 h-5" />
+                    </div>
                     <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${statColorMap[stat.color]}`}>Data</span>
                   </div>
                   <div className="text-3xl font-black text-slate-900">{stat.value ?? 0}</div>
@@ -1163,14 +1238,16 @@ export default function AdminPerpustakaan() {
           {activeTab === "pesanan" && (
             <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-5">
               {[
-                { label: "Total Orders", value: orderStats.total, icon: "🛒", bg: "bg-slate-100", text: "text-slate-700" },
-                { label: "Pending", value: orderStats.pending, icon: "🕐", bg: "bg-amber-50", text: "text-amber-700" },
-                { label: "Processing", value: orderStats.processing, icon: "⚙️", bg: "bg-blue-50", text: "text-blue-700" },
-                { label: "Shipping", value: orderStats.shipping, icon: "🚚", bg: "bg-indigo-50", text: "text-indigo-700" },
-                { label: "Completed", value: orderStats.completed, icon: "✅", bg: "bg-emerald-50", text: "text-emerald-700" },
+                { label: "Total Orders", value: orderStats.total, Icon: ShoppingCart, bg: "bg-slate-100", text: "text-slate-700", iconColor: "text-slate-600" },
+                { label: "Pending", value: orderStats.pending, Icon: Clock3, bg: "bg-amber-50", text: "text-amber-700", iconColor: "text-amber-600" },
+                { label: "Processing", value: orderStats.processing, Icon: RefreshCcw, bg: "bg-blue-50", text: "text-blue-700", iconColor: "text-blue-600" },
+                { label: "Shipping", value: orderStats.shipping, Icon: Truck, bg: "bg-indigo-50", text: "text-indigo-700", iconColor: "text-indigo-600" },
+                { label: "Completed", value: orderStats.completed, Icon: CheckCircle2, bg: "bg-emerald-50", text: "text-emerald-700", iconColor: "text-emerald-600" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-4 shadow-lg shadow-slate-200/40">
-                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${stat.bg} text-xl mb-2`}>{stat.icon}</div>
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${stat.bg} ${stat.iconColor} mb-2`}>
+                    <stat.Icon className="w-5 h-5" />
+                  </div>
                   <div className={`text-2xl font-black ${stat.text}`}>{stat.value}</div>
                   <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
                 </div>
@@ -1210,6 +1287,7 @@ export default function AdminPerpustakaan() {
           </div>
 
           {activeTab === "buku" && (
+
 
   <div className="mb-6">
 
@@ -1264,7 +1342,6 @@ export default function AdminPerpustakaan() {
   </div>
 )}
 
-
           <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/40">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
@@ -1299,9 +1376,7 @@ export default function AdminPerpustakaan() {
                       <tr key={row.loan_id || row.id} className="hover:bg-slate-50/70 transition-colors">
                         {currentColumns.map((col) => (
                           <td key={col.key} className="px-4 py-4 text-slate-700">
-                            {col.render
-                              ? col.render(row, index)
-                              : (row[col.key] ?? "-")}
+                            {col.render ? col.render(row, index) : (row[col.key] ?? "-")}
                           </td>
                         ))}
                       </tr>
@@ -1315,6 +1390,31 @@ export default function AdminPerpustakaan() {
           {!loadingDashboard && !isTabLoading && filtered.length > 0 && <div className="mt-3 text-xs text-slate-400 text-right">Showing {filtered.length} data</div>}
         </main>
       </div>
+
+      {/* ═══════════ LOGOUT CONFIRMATION MODAL ═══════════ */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 shadow-2xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+
+            <h3 className="text-center text-lg font-black text-gray-800 mb-2">Confirm Logout</h3>
+
+            <p className="text-center text-gray-600 text-sm mb-6">Are you sure you want to logout? You will need to login again to access the library dashboard.</p>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+
+              <button type="button" onClick={handleLogout} className="flex-1 px-4 py-3 rounded-2xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors">
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedOrder && <OrderModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
     </div>

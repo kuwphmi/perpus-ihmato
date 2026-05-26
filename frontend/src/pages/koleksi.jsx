@@ -153,14 +153,16 @@ export default function HalamanUtama() {
 
  const handleSearch = async (e) => {
   if (e.key !== "Enter") return;
-  if (!search.trim()) return;
+
+  if (!search.trim()) {
+    setActiveCategory(null);
+    setGenreBooks([]);
+    return;
+  }
 
   try {
-     // ================= SAVE SEARCH HISTORY =================
-
-    const user = JSON.parse(
-      localStorage.getItem("user")
-    );
+    // ================= SAVE SEARCH HISTORY =================
+    const user = JSON.parse(localStorage.getItem("user"));
 
     await axios.post(
       "http://localhost:3000/api/search-history",
@@ -171,13 +173,18 @@ export default function HalamanUtama() {
       }
     );
 
-    // 1. SEARCH LOCAL BOOKS
-    const localResults = localBooks.filter((book) =>
-      book.title.toLowerCase().includes(search.toLowerCase()) ||
-      book.author.toLowerCase().includes(search.toLowerCase())
-    );
+    // ================= SEARCH LOCAL BOOKS =================
+    const localResults = localBooks.filter((book) => {
+      const keyword = search.toLowerCase();
 
-    // 2. SEARCH OPENLIBRARY
+      return (
+        book.title?.toLowerCase().includes(keyword) ||
+        book.author?.toLowerCase().includes(keyword) ||
+        book.category?.toLowerCase().includes(keyword)
+      );
+    });
+
+    // ================= SEARCH OPENLIBRARY =================
     const res = await fetch(
       `https://openlibrary.org/search.json?q=${search}&limit=12`
     );
@@ -197,10 +204,14 @@ export default function HalamanUtama() {
       isLocal: false,
     }));
 
-    // 3. GABUNGKAN HASIL
-    const combined = [...localResults, ...apiResults];
+    // ================= GABUNGKAN =================
+    const combinedResults = [
+      ...localResults,
+      ...apiResults,
+    ];
 
-    setGenreBooks(combined);
+    setGenreBooks(combinedResults);
+
     setActiveCategory(`Search Results: ${search}`);
 
     setTimeout(() => {
@@ -210,9 +221,10 @@ export default function HalamanUtama() {
     }, 100);
 
   } catch (err) {
-    console.log(err);
+    console.log("search error:", err);
   }
 };
+
 
   useEffect(() => {
     const fetchRekomendasi = async () => {
@@ -270,7 +282,6 @@ export default function HalamanUtama() {
 
 
         setLocalBooks(books);
-
       } catch (err) {
         console.log("local books error:", err);
       }
@@ -380,15 +391,11 @@ export default function HalamanUtama() {
   const fetchDescription = async (workKey) => {
     try {
       if (selectedBook?.isLocal) {
-        setBookDescription(
-          selectedBook.description || "No description available."
-        );
+        setBookDescription(selectedBook.description || "No description available.");
         return;
       }
 
-      const res = await fetch(
-        `https://openlibrary.org${workKey}.json`
-      );
+      const res = await fetch(`https://openlibrary.org${workKey}.json`);
 
       const data = await res.json();
 
@@ -503,11 +510,7 @@ export default function HalamanUtama() {
               {(selectedBook?.isLocal && selectedBook?.cover_url) ||
               (!selectedBook?.isLocal && selectedBook?.cover) ? (
                 <img
-                  src={
-                    selectedBook?.isLocal
-                      ? selectedBook.cover_url : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`
-                  }
-
+                  src={selectedBook?.isLocal ? selectedBook.cover_url : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
                   alt={selectedBook?.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -725,7 +728,6 @@ export default function HalamanUtama() {
 
             {/* ================= PROFILE ================= */}
             <div className="relative">
-
               {/* PROFILE BUTTON */}
               <button
                 onClick={(e) => {
@@ -734,18 +736,14 @@ export default function HalamanUtama() {
                 }}
                 className="
                 relative z-50 w-9 h-9 rounded-full
-                bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500
+                bg-linear-to-br from-blue-500 via-blue-600 to-cyan-500
                 flex items-center justify-center text-white font-semibold
                 shadow-lg hover:scale-105 hover:shadow-blue-400/40
                 transition-all duration-300 border-2 border-white
               "
               >
                 <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
-                  {user.profile_image ? (
-                    <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" />
-                  ) : (
-                    user.name?.charAt(0).toUpperCase() || "U"
-                  )}
+                  {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
 
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
@@ -755,10 +753,7 @@ export default function HalamanUtama() {
               {isProfileOpen && (
                 <>
                   {/* CLICK OUTSIDE */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsProfileOpen(false)}
-                  ></div>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
 
                   {/* POPUP */}
                   <div
@@ -774,9 +769,9 @@ export default function HalamanUtama() {
           z-50
         "
                   >
-
                     {/* HEADER */}
-                    <div className="
+                    <div
+                      className="
           h-28
           bg-linear-to-r
           from-blue-600
@@ -790,31 +785,21 @@ export default function HalamanUtama() {
 
                       {/* AVATAR */}
                       <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
-                        <div className="w-20 h-20 rounded-full bg-white p-[3px] shadow-2xl">
-                          <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold">
-                            {user.profile_image ? (
-                              <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" />
-                            ) : (
-                              user.name?.charAt(0).toUpperCase() || "U"
-                            )}
+                        <div className="w-20 h-20 rounded-full bg-white p-0.75 shadow-2xl">
+                          <div className="w-full h-full rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold">
+                            {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                           </div>
                         </div>
                       </div>
-
                     </div>
 
                     {/* CONTENT */}
                     <div className="pt-14 pb-6 px-6 text-center">
+                      <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">{user.name || "Unknown User"}</h3>
 
-                      <h3 className="text-[18px] font-bold text-gray-800 tracking-tight">
-                        {user.name || "Unknown User"}
-                      </h3>
+                      <p className="text-sm text-gray-500 mt-1 break-all">{user.email || "No email available"}</p>
 
-                      <p className="text-sm text-gray-500 mt-1 break-all">
-                        {user.email || "No email available"}
-                      </p>
-
-                      <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-5"></div>
+                      <div className="w-full h-px bg-linear-to-r from-transparent via-gray-200 to-transparent my-5"></div>
 
                       <Link to="/profil">
                         <button
@@ -837,17 +822,14 @@ export default function HalamanUtama() {
                           View Profile
                         </button>
                       </Link>
-
                     </div>
-
                   </div>
                 </>
               )}
-
             </div>
-          </div >
-        </div >
-      </div >
+          </div>
+        </div>
+      </div>
 
       {/* OVERLAY */}
       {/* ✅ OVERLAY FIX (tidak ganggu klik popup/navbar) */}
@@ -943,23 +925,14 @@ export default function HalamanUtama() {
                   Click detail to see description
                 </p>
                 </div>
-
                 <div className="flex gap-2 mt-auto">
-
-                  <button
-                    onClick={() => handlePinjam(book)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition"
-                  >
+                  <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
                     Borrow
                   </button>
 
-                  <button
-                    onClick={() => handleDetail(book)}
-                    className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300"
-                  >
+                  <button onClick={() => handleDetail(book)} className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300">
                     Detail
                   </button>
-
                 </div>
               </div>
             </div>
