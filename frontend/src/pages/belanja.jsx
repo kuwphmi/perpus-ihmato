@@ -554,7 +554,6 @@ export default function Belanja() {
                   {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
 
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
               </button>
 
               {/* DROPDOWN */}
@@ -763,6 +762,11 @@ export default function Belanja() {
         )
       )}
 
+      {/* FLOATING AI */}
+<div className="fixed bottom-6 right-6 z-50">
+  <Floating />
+</div>
+
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
         <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
@@ -885,11 +889,17 @@ function BookCard({ showNotif = () => {}, title, author, cover, workKey, price, 
 
       setCart(cartRes.data.data || []);
 
-      showNotif?.(res.data.message);
+      showNotif?.(
+  res.data.message ||
+  "Added to cart successfully!"
+);
     } catch (err) {
       console.log(err);
 
-      showNotif?.("Failed add cart");
+      showNotif?.(
+  err.response?.data?.message ||
+  "Failed to add cart"
+);
     }
   };
 
@@ -1102,8 +1112,6 @@ function BukuTerbaru({ data, cart, setCart, setIsBuyOpen, setSelectedBook, showN
         </div>
       </section>
 
-      {/* MASCOT */}
-      <Floating />
     </>
   );
 }

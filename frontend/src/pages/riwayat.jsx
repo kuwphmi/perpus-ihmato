@@ -285,8 +285,6 @@ export default function Riwayat() {
                 <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
                   {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
-
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
               </button>
 
               {/* DROPDOWN */}

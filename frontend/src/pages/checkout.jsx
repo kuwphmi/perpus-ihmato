@@ -283,9 +283,9 @@ export default function Checkout() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
 
         {/* ADDRESS */}
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
 
-          <div className="px-6 py-5 border-b flex items-center gap-3">
+          <div className="px-6 py-5 border-b border-blue-100 flex items-center gap-3">
 
             <FiMapPin className="text-blue-600 text-xl" />
 
@@ -299,7 +299,7 @@ export default function Checkout() {
 
             {selectedAddress ? (
 
-              <div className="border rounded-2xl p-5 bg-blue-50">
+              <div className="border border-blue-100 rounded-2xl p-5 bg-blue-50">
 
                 <div className="flex justify-between items-start gap-5">
 
@@ -364,9 +364,9 @@ export default function Checkout() {
         </div>
 
         {/* PRODUCTS */}
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
 
-          <div className="px-6 py-5 border-b flex items-center gap-3">
+          <div className="px-6 py-5 border-b border-blue-100 flex items-center gap-3">
 
             <FiShoppingBag className="text-blue-600 text-xl" />
 
@@ -376,7 +376,7 @@ export default function Checkout() {
 
           </div>
 
-          <div className="divide-y">
+          <div className="divide-y divide-blue-100">
 
             {items.map((item, index) => (
 
@@ -387,7 +387,7 @@ export default function Checkout() {
 
                 <div className="flex gap-4">
 
-                  <div className="w-24 h-24 bg-blue-50 rounded-xl overflow-hidden border">
+                  <div className="w-24 h-24 bg-blue-50 rounded-xl overflow-hidden border border-blue-100">
 
                     {item.cover ? (
 
@@ -442,9 +442,9 @@ export default function Checkout() {
         </div>
 
         {/* PAYMENT */}
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
 
-          <div className="px-6 py-5 border-b flex items-center gap-3">
+          <div className="px-6 py-5 border-b border-blue-100 flex items-center gap-3">
 
             <FiCreditCard className="text-blue-600 text-xl" />
 
@@ -486,7 +486,7 @@ export default function Checkout() {
 
             </div>
 
-            <div className="border-t pt-5 flex justify-between items-center">
+            <div className="border-t border-blue-100 pt-5 flex justify-between items-center">
 
               <span className="text-lg font-bold text-gray-800">
                 Total
