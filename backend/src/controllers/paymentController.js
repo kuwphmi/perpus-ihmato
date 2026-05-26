@@ -99,10 +99,10 @@ export const createTransaction =
       const { error } =
         await supabase
           .from("payments")
-.insert([
-  {
-    user_id,
-    address_id,
+          .insert([
+            {
+              user_id,
+              address_id,
 
               loan_id:
                 loan_id || null,
@@ -337,6 +337,60 @@ export const getPayments =
 
       res.status(500).json({
         message:
+          err.message,
+      });
+
+    }
+
+  };
+
+  export const cancelOrder =
+  async (req, res) => {
+
+    try {
+
+      const { id } =
+        req.params;
+
+      // cek order dulu
+      const { data: order } =
+        await supabase
+          .from("payments")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+      // kalau sudah diproses
+      if (
+        order.order_status !==
+        "waiting_payment"
+      ) {
+
+        return res.status(400).json({
+          message:
+            "Order cannot be cancelled",
+        });
+
+      }
+
+      // delete
+      const { error } =
+        await supabase
+          .from("payments")
+          .delete()
+          .eq("id", id);
+
+      if (error)
+        throw error;
+
+      res.json({
+        success: true,
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        error:
           err.message,
       });
 

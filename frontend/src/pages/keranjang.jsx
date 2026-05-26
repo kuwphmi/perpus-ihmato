@@ -352,6 +352,7 @@ const updateQty = async (id, qty) => {
         </button>
 
       </div>
+      
     </div>
   );
 }

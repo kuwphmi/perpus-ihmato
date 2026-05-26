@@ -45,14 +45,37 @@ import { LuChefHat } from "react-icons/lu";
 import { FaRegHeart } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
 
+const getBookCover = (book) => {
+  // LOCAL BOOK
+  if (book.isLocal) {
+    if (!book.cover_url) return "/no-image.png";
+
+    // kalau sudah URL penuh (Supabase / internet)
+    if (book.cover_url.startsWith("http")) {
+      return book.cover_url;
+    }
+
+    // kalau file upload lokal backend
+    return `http://localhost:3000/uploads/${book.cover_url}`;
+  }
+
+  // API BOOK (OpenLibrary)
+  if (book.cover) {
+    return `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`;
+  }
+
+  return "/no-image.png";
+};
 
 export default function Belanja() {
+  const [mode, setMode] = useState("default");
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [terbaru, setTerbaru] = useState([]);
   const [terlaris, setTerlaris] = useState([]);
+  const [localBooks, setLocalBooks] = useState([]);
   const [search, setSearch] = useState("");
   // ================= SEARCH FILTER =================
   const normalize = (text) =>
@@ -193,7 +216,32 @@ export default function Belanja() {
         stock: ((item.cover_i || 1) % 15) + 5,
       }));
 
-      setGenreBooks(books);
+      // FILTER LOCAL BOOKS BERDASARKAN GENRE
+      const localGenreBooks = localBooks.filter(
+        (book) =>
+          normalize(book.genre) ===
+          normalize(query)
+      );
+
+      // GABUNGKAN
+      const mergedGenreBooks = [
+        ...localGenreBooks,
+        ...books,
+      ];
+
+      // HAPUS DUPLIKAT
+      const uniqueGenreBooks =
+        mergedGenreBooks.filter(
+          (book, index, self) =>
+            index ===
+            self.findIndex(
+              (b) =>
+                b.title === book.title &&
+                b.author === book.author
+            )
+        );
+
+      setGenreBooks(uniqueGenreBooks);
       setActiveCategory(category);
 
       setTimeout(() => {
@@ -209,39 +257,76 @@ export default function Belanja() {
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
+     // FETCH LOCAL BOOKS
+   fetch("http://localhost:3000/api/buku")
+    .then((res) => res.json())
+    .then((localData) => {
+      console.log("LOCAL DATA:", localData);
+     const booksArray = Array.isArray(localData.data)
+        ? localData.data
+        : Array.isArray(localData)
+        ? localData
+        : [];
+    const localBooksFormatted = booksArray.map((item) => {
+      console.log("LOCAL ITEM:", item);
+
+      return {
+        workKey: `local-${item.id}`,
+        title: item.title || "-",
+        author: item.author || "-",
+        cover_url: item.cover || null,
+        isLocal: true,
+        genre: item.genre || "other",
+        description: item.description || "No description available.",
+        price: item.price || 50000,
+        stock: item.stock || 0,
+      };
+    });
+      console.log("LOCAL FORMATTED:", localBooksFormatted);
+      setLocalBooks(localBooksFormatted);
+
     // BUKU TERBARU
     fetch("https://openlibrary.org/search.json?q=new&limit=8")
-      .then((res) => res.json())
-      .then((data) => {
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-          price: ((item.cover_i || 1) * 137) % 100000 + 50000,
-          stock: ((item.cover_i || 1) % 15) + 5,
-        }));
-
-        setTerbaru(books);
-      });
-
+        .then((res) => res.json())
+        .then((data) => {
+          const apiBooks = data.docs.map((item) => ({
+            workKey: item.key,
+            title: item.title ?? "-",
+            author: item.author_name?.[0] ?? "-",
+            cover: item.cover_i ?? null,
+            price:
+              ((item.cover_i || 1) * 137) % 100000 + 50000,
+            stock:
+              ((item.cover_i || 1) % 15) + 5,
+          }));
+          console.log("API NEW:", apiBooks);
+          setTerbaru([
+            ...localBooksFormatted,
+            ...apiBooks,
+          ]);
+        });
     // BUKU TERLARIS
     fetch("https://openlibrary.org/search.json?q=bestseller&limit=8")
-      .then((res) => res.json())
-      .then((data) => {
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
-          price: ((item.cover_i || 1) * 137) % 100000 + 50000,
-          stock: ((item.cover_i || 1) % 15) + 5,
-        }));
-
-        setTerlaris(books);
-      });
-  }, []);
-
+        .then((res) => res.json())
+        .then((data) => {
+          const apiBooks = data.docs.map((item) => ({
+            workKey: item.key,
+            title: item.title ?? "-",
+            author: item.author_name?.[0] ?? "-",
+            cover: item.cover_i ?? null,
+            price:
+              ((item.cover_i || 1) * 137) % 100000 + 50000,
+            stock:
+              ((item.cover_i || 1) % 15) + 5,
+          }));
+          console.log("API BESTSELLER:", apiBooks);
+          setTerlaris([
+            ...apiBooks,
+            ...localBooksFormatted,
+          ]);
+        });
+    });
+    }, []);
   /* ================= FETCH CART ================= */
   useEffect(() => {
     const fetchCart = async () => {
@@ -299,44 +384,95 @@ export default function Belanja() {
   }, [isNotifOpen]);
 
   /* ================= SEARCH ================= */
-  const handleSearch = async () => {
-    if (!search.trim()) return;
+const handleSearch = async () => {
+  if (!search.trim()) return;
+  try {
+    setIsSearching(true);
 
-    try {
-      setIsSearching(true);
-      setIsSearchActive(true);
+    // SAVE SEARCH HISTORY // 
 
-      const res = await fetch(
-        `https://openlibrary.org/search.json?q=${search}&limit=12`
-      );
+    const user = JSON.parse(
+      localStorage.getItem("user")
+    );
 
-      const data = await res.json();
+    await axios.post(
+      "http://localhost:3000/api/search-history",
+      {
+        user_id: user.id,
+        keyword: search,
+        source: "belanja",
+      }
+    );
 
-      const books = data.docs.map((item) => ({
+    // FETCH BOOKS // 
+
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${search}&limit=12`
+    );
+
+    const data = await res.json();
+
+    const apiBooks = data.docs.map((item) => ({
         workKey: item.key,
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
-        price: ((item.cover_i || 1) * 137) % 100000 + 50000,
-        stock: ((item.cover_i || 1) % 15) + 5,
+        price:
+          ((item.cover_i || 1) * 137) %
+            100000 +
+          50000,
+        stock:
+          ((item.cover_i || 1) % 15) + 5,
       }));
 
-    setSearchResults(books);
-    setActiveCategory(`Search Results: ${search}`);
-    setIsSearchActive(true);
+      // FILTER LOCAL BOOKS
+    const filteredLocalBooks = localBooks.filter(
+        (book) =>
+          normalize(book.title).includes(
+            normalize(search)
+          ) ||
+          normalize(book.author).includes(
+            normalize(search)
+          )
+      );
 
-      setTimeout(() => {
-        genreSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 100);
+      // GABUNGKAN
+      const mergedBooks = [
+        ...filteredLocalBooks,
+        ...apiBooks,
+      ];
 
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
+      // HAPUS DUPLIKAT
+      const uniqueBooks = mergedBooks.filter(
+        (book, index, self) =>
+          index ===
+          self.findIndex(
+            (b) =>
+              b.title === book.title &&
+              b.author === book.author
+          )
+      );
+   
+    setSearchResults(uniqueBooks);
+    setMode("search");
+
+    setTimeout(() => {
+
+      genreSectionRef.current
+      ?.scrollIntoView({
+        behavior: "smooth",
+      });
+
+    }, 100);
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+
+    setIsSearching(false);
+  }
+
+};
 
   const categories = [
     {
@@ -645,14 +781,13 @@ export default function Belanja() {
       font-semibold
       shadow-lg
       hover:scale-105
-      hover:shadow-blue-400/40
       transition-all duration-300
       border-2 border-white
     "
   >
     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
 
-    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+    
   </button>
 
   {/* DROPDOWN */}
@@ -793,6 +928,7 @@ export default function Belanja() {
             <input
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
+                  e.preventDefault();
                   handleSearch(); // optional (boleh dihapus kalau mau realtime)
                 }
               }}
@@ -805,7 +941,7 @@ export default function Belanja() {
                 if (e.target.value === "") {
                   setSearchResults([]);
                   setActiveCategory(null);
-                  setIsSearchActive(false);
+                  setMode("default");
                 }
               }}
               className="flex-1 px-4 md:px-5 py-3 text-sm rounded-lg focus:outline-none"
@@ -855,48 +991,12 @@ export default function Belanja() {
             {genreBooks.map((book, index) => (
               <div key={index} className="min-w-[250px]">
                 <BookCard
-  workKey={book.workKey}
-  title={book.title}
-  author={book.author}
-  cover={book.cover}
-  price={book.price}
-  stock={book.stock}
-  cart={cart}
-  setCart={setCart}
-  setIsBuyOpen={setIsBuyOpen}
-  setSelectedBook={setSelectedBook}
-  showNotif={showNotif}
-/>
-              </div>
-            ))}
-          </div>
-
-
-        </section>
-      )}
-
-      {isSearchActive ? (
-
-  <section className="px-6 md:px-20 pb-14 mt-10">
-
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Search Results: {search}
-    </h2>
-
-          <div className="flex gap-5 overflow-x-auto">
-
-            {searchResults.map((book, index) => (
-
-              <div
-                key={index}
-                className="min-w-[250px]"
-              >
-
-                <BookCard
                   workKey={book.workKey}
                   title={book.title}
                   author={book.author}
                   cover={book.cover}
+                  isLocal={book.isLocal}
+                  cover_url={book.cover_url}
                   price={book.price}
                   stock={book.stock}
                   cart={cart}
@@ -905,57 +1005,107 @@ export default function Belanja() {
                   setSelectedBook={setSelectedBook}
                   showNotif={showNotif}
                 />
-
               </div>
-
             ))}
-
           </div>
 
+
         </section>
-
-      ) : !activeCategory && (
-
-        <>
-
-          {/* ================= BUKU TERLARIS ================= */}
-          <BukuTerlaris
-            data={filterBooks(terlaris)}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-            showNotif={showNotif}
-          />
-
-          {/* ================= LANDSCAPE ================= */}
-          <section className="px-4 md:px-20 pb-14">
-
-            <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-
-              <img
-                src={banner5}
-                className="w-full h-auto object-contain"
-                alt="Banner"
-              />
-
-            </div>
-
-          </section>
-
-          {/* ================= BUKU TERBARU ================= */}
-          <BukuTerbaru
-            data={filterBooks(terbaru)}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-            showNotif={showNotif}
-          />
-
-        </>
-
       )}
+
+      {mode === "search" ? (
+  <section className="px-6 md:px-20 pb-14 mt-10">
+    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+      Search Results: {search}
+    </h2>
+
+    <div className="flex gap-5 overflow-x-auto">
+      {searchResults.map((book, index) => (
+        <div key={index} className="min-w-[250px]">
+          <BookCard
+            workKey={book.workKey}
+            title={book.title}
+            author={book.author}
+            cover={book.cover}
+            isLocal={book.isLocal}
+            cover_url={book.cover_url}
+            price={book.price}
+            stock={book.stock}
+            cart={cart}
+            setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
+            showNotif={showNotif}
+          />
+        </div>
+      ))}
+    </div>
+  </section>
+) : mode === "genre" ? (
+  <>
+    {/* ================= BUKU TERLARIS ================= */}
+    <BukuTerlaris
+      data={filterBooks(terlaris)}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+
+    {/* ================= LANDSCAPE ================= */}
+    <section className="px-4 md:px-20 pb-14">
+      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
+        <img
+          src={banner5}
+          className="w-full h-auto object-contain"
+          alt="Banner"
+        />
+      </div>
+    </section>
+
+    {/* ================= BUKU TERBARU ================= */}
+    <BukuTerbaru
+      data={filterBooks(terbaru)}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+  </>
+) : (
+  <>
+    {/* ================= DEFAULT VIEW (INI PENTING BIAR NGGAK ERROR) ================= */}
+    <BukuTerlaris
+      data={filterBooks(terlaris)}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+
+    <section className="px-4 md:px-20 pb-14">
+      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
+        <img
+          src={banner5}
+          className="w-full h-auto object-contain"
+          alt="Banner"
+        />
+      </div>
+    </section>
+
+    <BukuTerbaru
+      data={filterBooks(terbaru)}
+      cart={cart}
+      setCart={setCart}
+      setIsBuyOpen={setIsBuyOpen}
+      setSelectedBook={setSelectedBook}
+      showNotif={showNotif}
+    />
+  </>
+)}
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -965,7 +1115,7 @@ export default function Belanja() {
           {/* BRAND */}
           <div>
             <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BukuIn
+              BookIn
             </h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">
@@ -1028,28 +1178,57 @@ function BookCard({
   workKey,
   price,
   stock,
+  isLocal,
+  cover_url,
+  localdescription,
   cart,
   setCart,
   setIsBuyOpen,
   setSelectedBook,
 }) {
-
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
-  const fetchDescription = async () => {
-    try {
+  const getImageSrc = () => {
+    // LOCAL BOOK
+    if (isLocal) {
+      if (!cover_url) return "/no-image.png";
 
+      if (cover_url.startsWith("http")) {
+        return cover_url;
+      }
+
+      return `http://localhost:3000/uploads/${cover_url}`;
+    }
+
+    // API BOOK (OpenLibrary)
+    if (cover) {
+      return `https://covers.openlibrary.org/b/id/${cover}-M.jpg`;
+    }
+
+    return "/no-image.png";
+  };
+
+  const imageSrc = getImageSrc();
+
+  const fetchDescription = async () => {
+  try {
+    // BUKU LOCAL
+     if (isLocal) {
+        setDescription(localdescription || "No description available.");
+        return;
+      }
+
+    // BUKU OPENLIBRARY
       if (!workKey) {
         setDescription("Description not available.");
         return;
       }
-
-      const res = await fetch(
+    const res = await fetch(
         `https://openlibrary.org${workKey}.json`
       );
 
-      const data = await res.json();
+    const data = await res.json();
 
       if (typeof data.description === "string") {
         setDescription(data.description);
@@ -1058,85 +1237,59 @@ function BookCard({
       } else {
         setDescription("Description not available.");
       }
-
     } catch (err) {
-      console.log(err);
       setDescription("Failed to load description.");
     }
   };
+
 
   // ================= HANDLE BUY =================
   const handleBuy = () => {
 
   window.scrollTo({
     top: 0,
-    behavior: "instant",
+    behavior: "auto",
   });
-
-  navigate("/checkout", {
-    state: {
-      items: [
-        {
-          title,
-          price,
-          qty: 1,
-          cover,
-        },
-      ],
-    },
-  });
-
+    navigate("/checkout", {
+      state: {
+        items: [
+          {
+            title,
+            price,
+            qty: 1,
+            cover: imageSrc,
+          },
+        ],
+      },
+    });
   };
-
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
-
     try {
-
       const user = JSON.parse(localStorage.getItem("user"));
-
-      if (!user) {
-
-        showNotif?.("Please login first");
-
-        return;
-
-      }
+      if (!user) return showNotif("Please login first");
 
       const payload = {
-
         user_id: user.id,
-        book_key:
-          workKey || `${title}_${author}`, title,
+        book_key: workKey || `${title}_${author}`,
         author,
-        cover,
+        cover: imageSrc,
         price,
         stock,
-
       };
 
-      const res = await axios.post(
-        "http://localhost:3000/api/cart",
-        payload
-      );
+     await axios.post("http://localhost:3000/api/cart", payload);
 
       // REFRESH CART DARI DB
-      const cartRes = await axios.get(
-        `http://localhost:3000/api/cart/${user.id}`
+     const cartRes = await axios.get(
+      `http://localhost:3000/api/cart/${user.id}`
       );
 
       setCart(cartRes.data.data || []);
-
-      showNotif?.(res.data.message);
-
+      showNotif("Added to cart");
     } catch (err) {
-
-      console.log(err);
-
-      showNotif?.("Failed add cart");
-
+      showNotif("Failed add cart");
     }
-
   };
 
   return (
@@ -1158,14 +1311,14 @@ function BookCard({
 
             {/* COVER */}
             <div className="h-52 md:h-64 bg-blue-100">
-
-              {cover ? (
-                <img
-                  src={`https://covers.openlibrary.org/b/id/${cover}-L.jpg`}
-                  alt={title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
+            {imageSrc ? (
+            <img
+              src={imageSrc}
+              className="w-full h-full object-cover"
+              alt={title}
+            />
+          ) : (
+        
                 <div className="w-full h-full flex items-center justify-center">
                   No Cover
                 </div>
@@ -1256,14 +1409,14 @@ function BookCard({
           <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-semibold text-blue-700 shadow">
             Bestseller
           </div>
-          {cover ? (
+            {imageSrc ? (
             <img
-              src={`https://covers.openlibrary.org/b/id/${cover}-M.jpg`}
+              src={imageSrc}
+              className="w-full h-full object-cover"
               alt={title}
-              className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
           ) : (
-            "No Cover"
+            <div className="text-xs text-gray-400">No Cover</div>
           )}
         </div>
 
@@ -1387,8 +1540,12 @@ function BukuTerlaris({
               title={book.title}
               author={book.author}
               cover={book.cover}
+              isLocal={book.isLocal}
+              cover_url={book.cover_url}
               price={book.price}
               stock={book.stock}
+              localdescription={book.description}
+              genre={book.genre}
               cart={cart}
               setCart={setCart}
               setIsBuyOpen={setIsBuyOpen}
@@ -1456,8 +1613,12 @@ function BukuTerbaru({
                 title={book.title}
                 author={book.author}
                 cover={book.cover}
+                isLocal={book.isLocal}
+                cover_url={book.cover_url}
                 price={book.price}
                 stock={book.stock}
+                localdescription={book.description}
+                genre={book.genre}
                 cart={cart}
                 setCart={setCart}
                 setIsBuyOpen={setIsBuyOpen}

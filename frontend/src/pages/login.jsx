@@ -78,6 +78,18 @@ function LoginForm({ onSwitch, onForgot }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [notif, setNotif] = useState("");
+  const showNotif = (message) => {
+
+  setNotif(message);
+
+  setTimeout(() => {
+
+    setNotif("");
+
+  }, 10000);
+
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +104,7 @@ function LoginForm({ onSwitch, onForgot }) {
       );
 
       if (!res.data.status) {
-        alert(res.data.message);
+        showNotif(res.data.message);
         return;
       }
 
@@ -100,11 +112,18 @@ function LoginForm({ onSwitch, onForgot }) {
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
+      
 
       // CEK ROLE
       if (user.role === "admin") {
         navigate("/admin");
         return;
+      }
+      if (user.role === "kurir") {
+
+        navigate("/courier");
+        return;
+
       }
 
       // CEK PROFIL MEMBER
@@ -122,6 +141,37 @@ function LoginForm({ onSwitch, onForgot }) {
 
 
   return (
+  <>
+
+    {notif && (
+
+      <div className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[99999]
+      ">
+
+        <div className="
+          bg-blue-600
+          text-white
+          px-6
+          py-3
+          rounded-full
+          shadow-2xl
+          text-sm
+          font-medium
+        ">
+
+          {notif}
+
+        </div>
+
+      </div>
+
+    )}
+
     <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
       <div className="mb-7">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Sign in to your account</h1>
@@ -165,13 +215,35 @@ function LoginForm({ onSwitch, onForgot }) {
         Login with Google
       </button>
     </div>
-  );
-}
 
-  // ─── REGISTER FORM ────────────────────────────────────────────────────────
-  function RegisterForm({ onSwitch }) {
-    const navigate = useNavigate();
-    const [form, setForm] = useState({
+</>
+
+);
+}
+// ─── REGISTER FORM ────────────────────────────────────────────────────────
+function RegisterForm({ onSwitch }) {
+
+  const navigate = useNavigate();
+
+  const [notif, setNotif] =
+    useState("");
+
+  const showNotif = (
+    message
+  ) => {
+
+    setNotif(message);
+
+    setTimeout(() => {
+
+      setNotif("");
+
+    }, 2500);
+
+  };
+
+  const [form, setForm] =
+    useState({
       firstName: "",
       lastName: "",
       email: "",
@@ -179,186 +251,381 @@ function LoginForm({ onSwitch, onForgot }) {
       password: "",
       agree: false,
     });
-    const strength = getStrength(form.password);
-    const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
 
-    const handleSubmit = async (e) => {
+  const strength =
+    getStrength(
+      form.password
+    );
+
+  const set = (key) => (e) =>
+    setForm((prev) => ({
+      ...prev,
+
+      [key]:
+        e.target.type ===
+        "checkbox"
+
+          ? e.target.checked
+
+          : e.target.value,
+    }));
+
+  const handleSubmit =
+    async (e) => {
+
       e.preventDefault();
-      if (!form.agree) return alert("Setujui syarat dulu");
-      try {
-        const res = await axios.post("http://localhost:3000/api/register", {
-          name: form.firstName + " " + form.lastName,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-        });
-        if (res.data.status) {
-          alert("Register berhasil, silakan lengkapi profil");
-          localStorage.setItem("user", JSON.stringify(res.data.data));
-          navigate("/profil");
-        } else {
-          alert(res.data.message);
-        }
-      } catch (error) {
-        console.log(error);
-        alert("Register gagal");
+
+      if (!form.agree) {
+
+        return showNotif(
+          "Setujui syarat dulu"
+        );
+
       }
+
+      try {
+
+        const res =
+          await axios.post(
+            "http://localhost:3000/api/register",
+            {
+              name:
+                form.firstName +
+                " " +
+                form.lastName,
+
+              email:
+                form.email,
+
+              password:
+                form.password,
+
+              phone:
+                form.phone,
+            }
+          );
+
+        if (
+          res.data.status
+        ) {
+
+          showNotif(
+            "Account created successfully!"
+          );
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify(
+              res.data.data
+            )
+          );
+
+          navigate("/profil");
+
+        } else {
+
+          showNotif(
+            res.data.message
+          );
+
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+        showNotif(
+          "Register failed"
+        );
+
+      }
+
     };
 
-    return (
-      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Create a new account</h1>
-          <p className="text-sm text-gray-500">
-           Already have an account?{" "}
-            <button onClick={onSwitch} className="text-blue-700 font-medium hover:underline">
-              Sign in here
-            </button>
-          </p>
+return (
+
+  <>
+
+    {notif && (
+
+      <div className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[99999]
+      ">
+
+        <div className="
+          bg-blue-600
+          text-white
+          px-6
+          py-3
+          rounded-full
+          shadow-2xl
+          text-sm
+          font-medium
+        ">
+
+          {notif}
+
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="First Name" placeholder="Budi" value={form.firstName} onChange={set("firstName")} />
-            <Field label="Last Name" placeholder="Santoso" value={form.lastName} onChange={set("lastName")} />
-          </div>
-          <Field label="Email Address" type="email" placeholder="nama@email.com" value={form.email} onChange={set("email")} />
-          <Field label="Phone Number" type="tel" placeholder="+62 812 3456 7890" value={form.phone} onChange={set("phone")} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-600">Password</label>
-            <input
-              type="password"
-              placeholder="Minimum 8 characters"
-              value={form.password}
-              onChange={set("password")}
-              className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-            />
-            {form.password && (
-              <div className="flex flex-col gap-1">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= strength ? strengthColors[strength - 1] : "bg-gray-100"}`} />
-                  ))}
-                </div>
-                <p className="text-xs text-gray-400">{strengthLabels[strength - 1]}</p>
-              </div>
-            )}
-          </div>
-          <label className="flex items-start gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={form.agree} onChange={set("agree")} className="mt-0.5 accent-blue-700" />
-            <span className="text-sm text-gray-500 leading-relaxed">
-              I agree to the{" "}
-              <a href="#" className="text-blue-700 hover:underline">
-                Terms & Conditions
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-blue-700 hover:underline">
-                Privacy Policy
-              </a>
-            </span>
-          </label>
-          <button type="submit" className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all">
-            Create Account
-          </button>
-        </form>
       </div>
-    );
-  }
 
-  // ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
-  function ForgotPasswordForm({ onBack }) {
-    const [email, setEmail] = useState("");
-    const [sent, setSent] = useState(false);
-    const [loading, setLoading] = useState(false);
+    )}
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setLoading(true);
-      try {
-        const res = await axios.post("http://localhost:3000/api/forgot-password", { email });
-        console.log(res.data); // ← tambah ini
-        // Kirim request ke API lupa password
-        await axios.post("http://localhost:3000/api/forgot-password", { email });
-        setSent(true);
-      } catch (error) {
-        console.log(error);
-        // Tetap tampilkan sukses agar tidak mengekspos email mana yang terdaftar
-        setSent(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
 
-    return (
-      <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
-        {/* Tombol kembali */}
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition mb-8 w-fit">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali ke login
+      <div className="mb-6">
+
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">
+          Create a new account
+        </h1>
+
+        <p className="text-sm text-gray-500">
+
+          Already have an account?{" "}
+
+          <button
+            onClick={onSwitch}
+            className="text-blue-700 font-medium hover:underline"
+          >
+            Sign in here
+          </button>
+
+        </p>
+
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
+      >
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <Field
+            label="First Name"
+            placeholder="Budi"
+            value={form.firstName}
+            onChange={set("firstName")}
+          />
+
+          <Field
+            label="Last Name"
+            placeholder="Santoso"
+            value={form.lastName}
+            onChange={set("lastName")}
+          />
+
+        </div>
+
+        <Field
+          label="Email Address"
+          type="email"
+          placeholder="nama@email.com"
+          value={form.email}
+          onChange={set("email")}
+        />
+
+        <Field
+          label="Phone Number"
+          type="tel"
+          placeholder="+62 812 3456 7890"
+          value={form.phone}
+          onChange={set("phone")}
+        />
+
+        <div className="flex flex-col gap-1.5">
+
+          <label className="text-sm font-medium text-gray-600">
+            Password
+          </label>
+
+          <input
+            type="password"
+            placeholder="Minimum 8 characters"
+            value={form.password}
+            onChange={set("password")}
+            className="h-11 px-3.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+          />
+
+          {form.password && (
+
+            <div className="flex flex-col gap-1">
+
+              <div className="flex gap-1">
+
+                {[1, 2, 3, 4].map((i) => (
+
+                  <div
+                    key={i}
+                    className={`flex-1 h-1 rounded-full transition-all ${
+                      i <= strength
+                        ? strengthColors[strength - 1]
+                        : "bg-gray-100"
+                    }`}
+                  />
+
+                ))}
+
+              </div>
+
+              <p className="text-xs text-gray-400">
+                {strengthLabels[strength - 1]}
+              </p>
+
+            </div>
+
+          )}
+
+        </div>
+
+        <label className="flex items-start gap-2.5 cursor-pointer">
+
+          <input
+            type="checkbox"
+            checked={form.agree}
+            onChange={set("agree")}
+            className="mt-0.5 accent-blue-700"
+          />
+
+          <span className="text-sm text-gray-500 leading-relaxed">
+
+            I agree to the{" "}
+
+            <a
+              href="#"
+              className="text-blue-700 hover:underline"
+            >
+              Terms & Conditions
+            </a>{" "}
+
+            and{" "}
+
+            <a
+              href="#"
+              className="text-blue-700 hover:underline"
+            >
+              Privacy Policy
+            </a>
+
+          </span>
+
+        </label>
+
+        <button
+          type="submit"
+          className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all"
+        >
+          Create Account
         </button>
 
-        {!sent ? (
-          <>
-            {/* Ikon amplop */}
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
-              <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
+      </form>
 
-            <div className="mb-7">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Forgot your password?</h1>
-              <p className="text-sm text-gray-500 leading-relaxed">Enter your registered email address. We'll send you a link to reset your password.</p>
-            </div>
+    </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <button type="submit" disabled={loading} className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? "Sending..." : "Send Reset Link"}
-              </button>
-            </form>
-          </>
-        ) : (
-          /* Tampilan setelah email terkirim */
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Sent!</h2>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              We've sent a password reset link to <span className="font-medium text-gray-700">{email}</span>. Please check your inbox or spam folder..
-            </p>
-            <button onClick={onBack} className="h-11 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg text-sm transition-all">
-             Back to Login
-            </button>
-            <button
-              onClick={() => {
-                setEmail("");
-                setSent(false);
-              }}
-              className="mt-3 text-xs text-gray-400 hover:text-blue-600 transition"
-            >
-              Resend email
-            </button>
+  </>
+
+);
+
+}
+
+// ─── LUPA PASSWORD FORM ───────────────────────────────────────────────────
+function ForgotPasswordForm({ onBack }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post("http://localhost:3000/api/forgot-password", { email });
+      console.log(res.data); // ← tambah ini
+      // Kirim request ke API lupa password
+      await axios.post("http://localhost:3000/api/forgot-password", { email });
+      setSent(true);
+    } catch (error) {
+      console.log(error);
+      // Tetap tampilkan sukses agar tidak mengekspos email mana yang terdaftar
+      setSent(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-1 flex-col justify-center px-8 md:px-12 py-10 max-w-md w-full mx-auto">
+      {/* Tombol kembali */}
+      <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition mb-8 w-fit">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Kembali ke login
+      </button>
+
+      {!sent ? (
+        <>
+          {/* Ikon amplop */}
+          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+            <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
-        )}
-      </div>
-    );
-  }
 
-  // ─── MAIN ────────────────────────────────────────────────────────────────
-  export default function AuthPage() {
-    const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
-    const isLogin = mode === "login";
-    const isForgot = mode === "forgot";
+          <div className="mb-7">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">Forgot your password?</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">Enter your registered email address. We'll send you a link to reset your password.</p>
+          </div>
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 flex items-center justify-center p-4 overflow-hidden relative">
-       <div className="
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Field label="Alamat Email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <button type="submit" disabled={loading} className="h-11 bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-medium rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+        </>
+      ) : (
+        /* Tampilan setelah email terkirim */
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Sent!</h2>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
+            We've sent a password reset link to <span className="font-medium text-gray-700">{email}</span>. Please check your inbox or spam folder..
+          </p>
+          <button onClick={onBack} className="h-11 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg text-sm transition-all">
+            Back to Login
+          </button>
+          <button
+            onClick={() => {
+              setEmail("");
+              setSent(false);
+            }}
+            className="mt-3 text-xs text-gray-400 hover:text-blue-600 transition"
+          >
+            Resend email
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────────────
+export default function AuthPage() {
+  const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
+  const isLogin = mode === "login";
+  const isForgot = mode === "forgot";
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 flex items-center justify-center p-4 overflow-hidden relative">
+      <div className="
 w-full
 max-w-5xl
 animate-[fadeIn_.5s_ease]
@@ -374,21 +641,21 @@ min-h-[720px]
 relative
 z-10
 "
->
-          {/* Side Panel */}
-          {isForgot ? (
-            <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset passwordntol" description="Don't worry, we'll help you regain access to your account." />
-          ) : isLogin ? (
-            <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Welcome Back!" description="Sign in to continue and access all available features." />
-          ) : (
-            <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Join Us Today" description="Create a free account and enjoy unlimited access to all platform features." />
-          )}
+      >
+        {/* Side Panel */}
+        {isForgot ? (
+          <SidePanel bgColor="bg-blue-600" dotIndex={2} title="Reset passwordntol" description="Don't worry, we'll help you regain access to your account." />
+        ) : isLogin ? (
+          <SidePanel bgColor="bg-blue-700" dotIndex={0} title="Welcome Back!" description="Sign in to continue and access all available features." />
+        ) : (
+          <SidePanel bgColor="bg-blue-900" dotIndex={1} title="Join Us Today" description="Create a free account and enjoy unlimited access to all platform features." />
+        )}
 
-          {/* Form Area */}
-          {isForgot ? <ForgotPasswordForm onBack={() => setMode("login")} /> : isLogin ? <LoginForm onSwitch={() => setMode("register")} onForgot={() => setMode("forgot")} /> : <RegisterForm onSwitch={() => setMode("login")} />}
-        </div>
+        {/* Form Area */}
+        {isForgot ? <ForgotPasswordForm onBack={() => setMode("login")} /> : isLogin ? <LoginForm onSwitch={() => setMode("register")} onForgot={() => setMode("forgot")} /> : <RegisterForm onSwitch={() => setMode("login")} />}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LayoutDashboard, BookOpen, Users, RotateCcw, ClipboardList, RefreshCcw, ShoppingCart, Search, Printer, ChevronLeft, ChevronRight, Menu, CheckCircle2, Clock3, Truck, PackageCheck, LibraryBig } from "lucide-react";
+import printReceipt from "../utils/printReceipt";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
@@ -136,6 +137,23 @@ export default function AdminPerpustakaan() {
   });
 
   const navigate = useNavigate();
+  const fetchJson = async (url, options = {}) => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      ...options,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Request failed");
+    }
+
+    return res.json();
+  };
+
 
   const addBorrowBook = async () => {
   try {
@@ -145,8 +163,6 @@ export default function AdminPerpustakaan() {
     });
 
     alert("Borrow book added");
-
-
 
     loadTabData("buku");
 
@@ -162,6 +178,7 @@ export default function AdminPerpustakaan() {
     alert("Failed to add borrow book");
   }
 };
+
 
   const addShopBook = async () => {
     try {
@@ -187,22 +204,6 @@ export default function AdminPerpustakaan() {
     }
   };
 
-  const fetchJson = async (url, options = {}) => {
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      ...options,
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Request failed");
-    }
-
-    return res.json();
-  };
 
   const loadDashboard = useCallback(async () => {
     setLoadingDashboard(true);
@@ -225,75 +226,70 @@ export default function AdminPerpustakaan() {
   }, []);
 
   const loadTabData = useCallback(async (tabKey) => {
-    const dataKey = getTabKey(tabKey, bookView);
-    if (!dataKey) return;
+  const dataKey = getTabKey(tabKey, bookView);
 
-    setLoadingTabs((prev) => ({ ...prev, [dataKey]: true }));
+  if (!dataKey) return;
 
-    try {
-      let result = [];
+  setLoadingTabs((prev) => ({
+    ...prev,
+    [dataKey]: true,
+  }));
 
-      switch (tabKey) {
-       case "buku":
+  try {
+    let result = [];
+
+    switch (tabKey) {
+      case "buku":
         if (bookView === "loan") {
-
-          result = await fetchJson(
-            `${API_BASE}/admin/borrow-books`
-          );
-
-          setData((prev) => ({
-            ...prev,
-            borrowBooks: Array.isArray(result)
-              ? result
-              : [],
-          }));
-
+          result = await fetchJson(`${API_BASE}/admin/borrow-books`);
         } else {
-
-          result = await fetchJson(
-            `${API_BASE}/admin/books`
-          );
-
-          setData((prev) => ({
-            ...prev,
-            shopBooks: Array.isArray(result)
-              ? result
-              : [],
-          }));
-
-        }
-
+          result = await fetchJson(`${API_BASE}/admin/books`); }
         break;
-        case "pinjaman":
-          result = await fetchJson(`${API_BASE}/admin/loans`);
-          break;
-        case "anggota":
-          result = await fetchJson(`${API_BASE}/admin/members`);
-          break;
-        case "pengembalian":
-          result = await fetchJson(`${API_BASE}/admin/returns`);
-          break;
-        case "ajukan":
-          result = await fetchJson(`${API_BASE}/admin/loan-requests`);
-          break;
-        case "perpanjangan":
-          result = await fetchJson(`${API_BASE}/admin/extension-requests`);
-          break;
-        case "pesanan":
-          result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
-          break;
-        default:
-          result = [];
-      }
-
-      setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch tab data.");
-    } finally {
-      setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
+      case "pinjaman":
+        result = await fetchJson(`${API_BASE}/admin/loans`);  
+        break;
+      case "anggota":
+        result = await fetchJson(`${API_BASE}/admin/members`);
+        break;
+      case "pengembalian":
+        result = await fetchJson(`${API_BASE}/admin/returns`);
+        break;
+      case "ajukan":
+        result = await fetchJson(`${API_BASE}/admin/loan-requests`);
+         break;  
+      case "perpanjangan":
+        result = await fetchJson(`${API_BASE}/admin/extension-requests`);
+        break;  
+      case "pesanan":
+        result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
+        break;
+      default:
+        result = [];
     }
-  }, [bookView]);
+
+    setData((prev) => ({
+      ...prev,
+      [dataKey]: Array.isArray(result)
+        ? result
+        : [],
+    }));
+
+    setLoadedTabs((prev) => ({
+      ...prev,
+      [dataKey]: true,
+    }));
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to fetch tab data.");
+  } finally {
+    setLoadingTabs((prev) => ({
+      ...prev,
+      [dataKey]: false,
+    }));
+  }
+}, [bookView]);
+
 
   const refreshCurrentView = useCallback(async () => {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
@@ -301,23 +297,16 @@ export default function AdminPerpustakaan() {
 
   useEffect(() => {
     loadDashboard();
-    if (!loadedTabs[getTabKey(activeTab, bookView)]) {
-      loadTabData(activeTab);
-    }
-
-    const interval = setInterval(() => {
-      loadDashboard();
-      loadTabData(activeTab);
-    }, 60000); // 1 menit
+    const interval = setInterval(loadDashboard, 60000);
     return () => clearInterval(interval);
-  }, [activeTab, bookView]);
-
+  }, [loadDashboard]);
 
   useEffect(() => {
-  if (activeTab === "buku") {
-    loadTabData("buku");
-  }
-}, [bookView]);
+    loadTabData(activeTab);
+    const interval = setInterval(() => loadTabData(activeTab), 60000);
+    return () => clearInterval(interval);
+  }, [activeTab, bookView, loadTabData]);
+
 
 
   const rejectLoanRequest = async (id) => {
@@ -451,17 +440,37 @@ export default function AdminPerpustakaan() {
 
     if (activeTab === "pengembalian") return data.returns.filter(match);
 
-    if (activeTab === "ajukan")
-      return data.loanRequests
-        .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({ ...x, _type: "loan_request" }))
-        .filter(match);
+   if (activeTab === "ajukan") {
+      console.log("loanRequests:", data.loanRequests);
 
-    if (activeTab === "perpanjangan")
-      return data.extensionRequests
-        .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({ ...x, _type: "extension_request" }))
+      return data.loanRequests
+        .filter(
+          (x) =>
+            !["approved", "rejected"].includes(
+              x.status?.toLowerCase()
+            )
+        )
+        .map((x) => ({
+          ...x,
+          _type: "loan_request",
+        }))
         .filter(match);
+    }
+
+    if (activeTab === "perpanjangan") {
+  return data.extensionRequests
+    .filter(
+      (x) =>
+        !["approved", "rejected"].includes(
+          x.status?.toLowerCase()
+        )
+    )
+    .map((x) => ({
+      ...x,
+      _type: "extension_request",
+    }))
+    .filter(match);
+}
 
      if (activeTab === "buku") {
         const books =
@@ -547,16 +556,12 @@ export default function AdminPerpustakaan() {
           row.loan_date
             ? new Date(
               row.loan_date
-            ).toLocaleString(
+            ).toLocaleDateString(
               "en-GB",
               {
-
                 day: "2-digit",
                 month: "short",
                 year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-
               }
             )
             : "-"
@@ -603,31 +608,53 @@ export default function AdminPerpustakaan() {
 
         render: (row) => (
 
-          <button
-            type="button"
-            onClick={() =>
-              markAsReturned(
-                getId(row)
-              )
-            }
-            className="
-          rounded-xl
-          bg-linear-to-r
-          from-blue-600
-          to-indigo-600
-          px-3
-          py-1.5
-          text-xs
-          font-semibold
-          text-white
-          shadow-lg
-          shadow-blue-500/20
-          hover:scale-[1.02]
-          transition-all
-        "
-          >
-            Complete
-          </button>
+          <div className="flex items-center gap-2">
+
+            <button
+              type="button"
+              onClick={() =>
+                markAsReturned(
+                  getId(row)
+                )
+              }
+              className="
+      rounded-xl
+      bg-linear-to-r
+      from-blue-600
+      to-indigo-600
+      px-3
+      py-1.5
+      text-xs
+      font-semibold
+      text-white
+      shadow-lg
+      hover:scale-[1.02]
+      transition-all
+    "
+            >
+              Complete
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                printReceipt(row)}
+              className="
+      rounded-xl
+      bg-emerald-600
+      hover:bg-emerald-700
+      px-3
+      py-1.5
+      text-xs
+      font-semibold
+      text-white
+      transition-all
+    "
+            >
+              Print
+            </button>
+
+          </div>
 
         ),
       },
@@ -671,41 +698,49 @@ export default function AdminPerpustakaan() {
     ],
 
     ajukan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      { key: "request_date", label: "Request Date" },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            {/* APPROVE BUTTON */}
-            <button
-              type="button"
-              onClick={() => approveLoanRequest(getId(row))}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-            >
-              Approve
-            </button>
+  { key: "member_code", label: "ID" },
+  { key: "member_name", label: "Member" },
+  { key: "book_title", label: "Book" },
 
-            {/* REJECT BUTTON */}
-            <button
-              type="button"
-              onClick={() => rejectLoanRequest(getId(row))}
-              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
-            >
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
+  {
+    key: "request_date",
+    label: "Request Date",
+    render: (row) =>
+      row.request_date
+        ? new Date(row.request_date).toLocaleDateString("en-GB")
+        : "-",
+  },
+
+  {
+    key: "status",
+    label: "Status",
+    render: (row) => <Badge status={row.status} />,
+  },
+
+  {
+    key: "action",
+    label: "Action",
+    render: (row) => (
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => approveLoanRequest(getId(row))}
+          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+        >
+          Approve
+        </button>
+
+        <button
+          type="button"
+          onClick={() => rejectLoanRequest(getId(row))}
+          className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
+        >
+          Reject
+        </button>
+      </div>
+    ),
+  },
+],
     perpanjangan: [
       { key: "member_code", label: "ID" },
       { key: "member_name", label: "Member" },
@@ -979,6 +1014,7 @@ export default function AdminPerpustakaan() {
   const activeTabInfo = tabs.find((t) => t.key === activeTab);
   const currentLoadingKey = getTabKey(activeTab, bookView);
   const isTabLoading = !!loadingTabs[currentLoadingKey];
+  const currentColumns = columnsByTab[activeTab] || [];
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] text-slate-900">
@@ -1174,6 +1210,7 @@ export default function AdminPerpustakaan() {
           </div>
 
           {activeTab === "buku" && (
+
   <div className="mb-6">
 
     <h2 className="text-xl font-bold mb-3">
@@ -1227,12 +1264,13 @@ export default function AdminPerpustakaan() {
   </div>
 )}
 
+
           <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/40">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    {columnsByTab[activeTab].map((col) => (
+                    {currentColumns.map((col) => (
                       <th key={col.key} className="px-4 py-4 text-xs font-bold uppercase tracking-wide text-slate-500">
                         {col.label}
                       </th>
@@ -1243,7 +1281,7 @@ export default function AdminPerpustakaan() {
                 <tbody className="divide-y divide-slate-100">
                   {loadingDashboard || isTabLoading ? (
                     <tr>
-                      <td colSpan={columnsByTab[activeTab].length} className="px-4 py-16 text-center">
+                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center">
                         <div className="inline-flex flex-col items-center gap-3 text-slate-400">
                           <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
                           <span className="text-sm font-medium">Loading data...</span>
@@ -1252,14 +1290,14 @@ export default function AdminPerpustakaan() {
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={columnsByTab[activeTab].length} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center text-slate-400">
                         No data found.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((row, index) => (
-                      <tr key={row.loan_id || row.id || Math.random()} className="hover:bg-slate-50/70 transition-colors">
-                        {columnsByTab[activeTab].map((col) => (
+                      <tr key={row.loan_id || row.id} className="hover:bg-slate-50/70 transition-colors">
+                        {currentColumns.map((col) => (
                           <td key={col.key} className="px-4 py-4 text-slate-700">
                             {col.render
                               ? col.render(row, index)

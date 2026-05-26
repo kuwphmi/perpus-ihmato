@@ -36,6 +36,19 @@ export default function ManageBooks() {
 
   const navigate = useNavigate();
 
+  const categories = [
+    "art",
+    "science fiction",
+    "fantasy",
+    "biographies",
+    "recipe",
+    "romance",
+    "textbook",
+    "children",
+    "medicine",
+    "religion",
+  ];
+
   // ================= FETCH =================
   const fetchBooks = async () => {
 
@@ -393,13 +406,20 @@ export default function ManageBooks() {
               className="border p-3 rounded-xl"
             />
 
-            <input
-              name="category"
-              value={bookForm.category}
-              onChange={handleChange}
-              placeholder="Category"
-              className="border p-3 rounded-xl"
-            />
+            <select
+            name="category"
+            value={bookForm.category}
+            onChange={handleChange}
+            className="border p-3 rounded-xl bg-white"
+          >
+            <option value="">Select Category</option>
+
+            {categories.map((cat, i) => (
+              <option key={i} value={cat}>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </option>
+            ))}
+          </select>
 
             <input
               type="number"

@@ -38,6 +38,19 @@ export default function ManageOrder() {
       description: "",
       cover: "",
     });
+  
+  const categories = [
+    "art",
+    "science fiction",
+    "fantasy",
+    "biographies",
+    "recipe",
+    "romance",
+    "textbook",
+    "children",
+    "medicine",
+    "religion",
+  ];
 
   // ================= FETCH SHOP BOOKS =================
   const fetchBooks = async () => {
@@ -421,13 +434,20 @@ export default function ManageOrder() {
             />
 
             {/* CATEGORY */}
-            <input
-              name="category"
-              value={bookForm.category}
-              onChange={handleChange}
-              placeholder="Category"
-              className="border p-3 rounded-xl"
-            />
+          <select
+            name="category"
+            value={bookForm.category}
+            onChange={handleChange}
+            className="border p-3 rounded-xl bg-white"
+          >
+            <option value="">Select Category</option>
+
+            {categories.map((cat, i) => (
+              <option key={i} value={cat}>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </option>
+            ))}
+          </select>
 
             {/* STOCK */}
             <input

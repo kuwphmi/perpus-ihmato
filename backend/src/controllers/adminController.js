@@ -276,6 +276,7 @@ export const addShopBook = async (req, res) => {
 
   } catch (err) {
 
+
     console.error(err);
 
     res.status(500).json({
@@ -359,9 +360,10 @@ export const deleteShopBook = async (req, res) => {
       status: false,
       message: err.message,
     });
-
   }
 };
+
+
 
 /* ================= LOANS ================= */
 export const getLoans = async (req, res) => {
@@ -369,13 +371,14 @@ export const getLoans = async (req, res) => {
     const { data, error } = await supabase
       .from("loans")
       .select(`
-        id,
-        title,
-        loan_date,
-        due_date,
-        status,
-        users(name, member_code)
-      `)
+  id,
+  title,
+  receipt_code,
+  loan_date,
+  due_date,
+  status,
+  users(name, member_code)
+`)
       .eq("status", "borrowed");
 
     if (error) throw error;
@@ -389,6 +392,7 @@ export const getLoans = async (req, res) => {
         loan_date: item.loan_date,
         due_date: item.due_date,
         status: item.status,
+        receipt_code: item.receipt_code,
       }))
     );
   } catch (err) {
@@ -400,21 +404,25 @@ export const getLoans = async (req, res) => {
 
 /* ================= LOAN REQUEST ================= */
 export const getLoanRequests =
+
   async (req, res) => {
 
     try {
 
-      const { data, error } =
-        await supabase
-          .from("loan_requests")
-          .select(`
-            id,
-            book_title,
-            request_date,
-            status,
-            users(name, member_code)
-          `)
-          .eq("status", "pending");
+     const { data, error } =
+      await supabase
+        .from("loan_requests")
+        .select(`
+          id,
+          book_title,
+          request_date,
+          status,
+          user_id,
+          users(name, member_code)
+        `)
+        .eq("status", "pending");
+
+      console.log(data);
 
       if (error) throw error;
 
@@ -423,6 +431,9 @@ export const getLoanRequests =
         data.map((item) => ({
 
           id: item.id,
+
+          receipt_code:
+            item.receipt_code,
 
           member_code:
             item.users?.member_code || "-",
@@ -472,6 +483,8 @@ export const approveLoanRequest =
 
       if (requestError)
         throw requestError;
+      const receiptCode =
+        `BK-${Date.now()}`;
 
       const { error: loanError } =
         await supabase
@@ -504,6 +517,8 @@ export const approveLoanRequest =
 
               status:
                 "borrowed",
+              receipt_code:
+                receiptCode,
             },
           ]);
 
@@ -825,11 +840,11 @@ export const getExtensions = async (req, res) => {
     res.json(
       data.map((item) => ({
         id: item.id,
-        member_name: item.loans?.users?.name || "-",
         member_code: item.loans?.users?.member_code || "-",
-        book_title: item.loans?.title,
-        old_due_date: item.loans?.due_date,
-        new_due_date: item.new_due_date,
+        member_name: item.loans?.users?.name || "-",
+        book_title: item.loans?.title || "-",
+        old_due_date: item.loans?.due_date || "-",   
+        new_due_date: item.new_due_date || "-",
         status: item.status,
       }))
     );
@@ -858,11 +873,7 @@ export const approveExtension =
       await supabase
         .from("loans")
         .update({
-          due_date:
-            new Date(
-              Date.now() +
-              7 * 86400000
-            ),
+          due_date: new Date(new Date(ext.old_due_date).getTime() + 7 * 86400000),
         })
         .eq("id", ext.loan_id);
 
@@ -887,7 +898,7 @@ export const approveExtension =
               "Extension Approved",
 
             message:
-              "Your borrowing extension has been approved.",
+              "Your borrowing extension has been approvedc.",
           },
         ]);
       res.json({
@@ -1177,4 +1188,3 @@ export const getCourierOrders =
     }
 
   };
-

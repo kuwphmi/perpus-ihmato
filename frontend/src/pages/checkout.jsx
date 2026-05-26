@@ -390,13 +390,19 @@ export default function Checkout() {
                   <div className="w-24 h-24 bg-blue-50 rounded-xl overflow-hidden border">
 
                     {item.cover ? (
-
-                      <img
-                        src={`https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-
+                      item.cover.startsWith("http") ? (
+                        <img
+                          src={item.cover}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={`https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )
                     ) : (
 
                       <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
@@ -522,7 +528,7 @@ export default function Checkout() {
           <div>
 
             <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BukuIn
+              BookIn
             </h2>
 
             <p className="text-gray-400 text-sm leading-relaxed">

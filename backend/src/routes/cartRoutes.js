@@ -14,3 +14,4 @@ router.delete("/:id", removeCart);
 router.put("/:id", updateQty);
 
 export default router;
+
