@@ -53,7 +53,7 @@ export default function HalamanUtama() {
     Biographies: "biography",
     Recipe: "cooking",
     Romance: "romance",
-    Textbox: "textbook",
+    Textbook: "textbook",
     Children: "children",
     Medicine: "medicine",
     Religion: "religion",
@@ -82,39 +82,45 @@ export default function HalamanUtama() {
     }
     try {
       const query = genreMap[category] || category.toLowerCase();
-
+      // ================= API BOOKS ================= //
       const res = await fetch(`https://openlibrary.org/search.json?subject=${query}&limit=12`);
-
       const data = await res.json();
-
-      const books = data.docs.map((item) => ({
+      const apiBooks = data.docs.map((item) => ({
         workKey: item.key,
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
-
         firstSentence: item.first_sentence?.[0] || item.first_sentence || "",
-
         subjects: item.subject?.slice(0, 5) || [],
+        isLocal: false,
       }));
 
-      setGenreBooks(books);
-      if (books.length === 0) {
-        setActiveCategory(`No books found for "${search}"`);
-      } else {
-        setActiveCategory(`Search Results: ${search}`);
-      }
-      setActiveCategory(category);
+       // ================= LOCAL BOOKS ================= //
+    const localGenreBooks = localBooks.filter((book) =>
+      book.category
+        ?.toLowerCase()
+        .includes(query.toLowerCase())
+    );
 
-      setTimeout(() => {
-        bookSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 100);
-    } catch (err) {
-      console.log("error genre:", err);
-    }
-  };
+    // ================= GABUNG ================= //
+    const combinedBooks = [
+      ...localGenreBooks,
+      ...apiBooks,
+    ];
+
+    setGenreBooks(combinedBooks);
+    setActiveCategory(category);
+
+    setTimeout(() => {
+      bookSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+
+  } catch (err) {
+    console.log("error genre:", err);
+  }
+};
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -144,55 +150,81 @@ export default function HalamanUtama() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = async (e) => {
-    if (e.key === "Enter") {
-      if (!search.trim()) return;
 
-      try {
-        // SAVE SEARCH HISTORY //
+ const handleSearch = async (e) => {
+  if (e.key !== "Enter") return;
 
-        const user = JSON.parse(localStorage.getItem("user"));
+  if (!search.trim()) {
+    setActiveCategory(null);
+    setGenreBooks([]);
+    return;
+  }
 
-        await axios.post("http://localhost:3000/api/search-history", {
-          user_id: user.id,
-          keyword: search,
-          source: "koleksi",
-        });
+  try {
+    // ================= SAVE SEARCH HISTORY =================
+    const user = JSON.parse(localStorage.getItem("user"));
 
-        // FETCH BOOKS //
-
-        const res = await fetch(`https://openlibrary.org/search.json?q=${search}&limit=12`);
-
-        const data = await res.json();
-
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-
-          title: item.title ?? "-",
-
-          author: item.author_name?.[0] ?? "-",
-
-          cover: item.cover_i ?? null,
-
-          firstSentence: item.first_sentence?.[0] || item.first_sentence || "",
-
-          subjects: item.subject?.slice(0, 5) || [],
-        }));
-
-        setGenreBooks(books);
-
-        setActiveCategory(`Search Results: ${search}`);
-
-        setTimeout(() => {
-          bookSectionRef.current?.scrollIntoView({
-            behavior: "smooth",
-          });
-        }, 100);
-      } catch (err) {
-        console.log(err);
+    await axios.post(
+      "http://localhost:3000/api/search-history",
+      {
+        user_id: user.id,
+        keyword: search,
+        source: "koleksi",
       }
-    }
-  };
+    );
+
+    // ================= SEARCH LOCAL BOOKS =================
+    const localResults = localBooks.filter((book) => {
+      const keyword = search.toLowerCase();
+
+      return (
+        book.title?.toLowerCase().includes(keyword) ||
+        book.author?.toLowerCase().includes(keyword) ||
+        book.category?.toLowerCase().includes(keyword)
+      );
+    });
+
+    // ================= SEARCH OPENLIBRARY =================
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${search}&limit=12`
+    );
+
+    const data = await res.json();
+
+    const apiResults = data.docs.map((item) => ({
+      workKey: item.key,
+      title: item.title ?? "-",
+      author: item.author_name?.[0] ?? "-",
+      cover: item.cover_i ?? null,
+      firstSentence:
+        item.first_sentence?.[0] ||
+        item.first_sentence ||
+        "",
+      subjects: item.subject?.slice(0, 5) || [],
+      isLocal: false,
+    }));
+
+    // ================= GABUNGKAN =================
+    const combinedResults = [
+      ...localResults,
+      ...apiResults,
+    ];
+
+    setGenreBooks(combinedResults);
+
+    setActiveCategory(`Search Results: ${search}`);
+
+    setTimeout(() => {
+      bookSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+
+  } catch (err) {
+    console.log("search error:", err);
+  }
+};
+
 
   useEffect(() => {
     const fetchRekomendasi = async () => {
@@ -212,39 +244,42 @@ export default function HalamanUtama() {
           subjects: item.subject?.slice(0, 5) || [],
         }));
 
-        setRekomendasi(books);
+        setRekomendasi([
+          ...localBooks,
+          ...books,
+        ]);
       } catch (err) {
         console.log(err);
       }
-    };
+    }; 
 
-    fetchRekomendasi();
-  }, []);
+  fetchRekomendasi();
+}, [localBooks]);
+
 
   useEffect(() => {
-    const fetchLocalBooks = async () => {
-      try {
-        const res = await fetch("http://localhost:3000/api/admin/books");
+  const fetchLocalBooks = async () => {
+    try {
+        const res = await fetch(
+          "http://localhost:3000/api/admin/borrow-books"
+        );
 
         const data = await res.json();
 
         const books = data.map((item) => ({
-          id: item.id,
+        id: item.id,
+        workKey: "local_" + item.id,
+        title: item.title,
+        author: item.author,
+        cover_url: item.cover,
+        description: item.description,
+        stock: item.stock,
+        category: item.category || "",
+        subjects: [item.category || ""],
 
-          workKey: "local_" + item.id,
+        isLocal: true,
+}));
 
-          title: item.title,
-          author: item.author,
-
-          cover_url: item.cover,
-
-          description: item.description,
-
-          stock: item.stock,
-          price: item.price,
-
-          isLocal: true,
-        }));
 
         setLocalBooks(books);
       } catch (err) {
@@ -327,10 +362,12 @@ export default function HalamanUtama() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          book_key: selectedBook.cover + "_" + selectedBook.title,
+          book_key: selectedBook.workKey,
           title: selectedBook.title,
           author: selectedBook.author,
-          cover: selectedBook.cover,
+          cover: selectedBook.isLocal
+            ? selectedBook.cover_url
+            : selectedBook.cover,
         }),
       });
 
@@ -470,7 +507,8 @@ export default function HalamanUtama() {
 
             {/* COVER */}
             <div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-              {selectedBook?.cover ? (
+              {(selectedBook?.isLocal && selectedBook?.cover_url) ||
+              (!selectedBook?.isLocal && selectedBook?.cover) ? (
                 <img
                   src={selectedBook?.isLocal ? selectedBook.cover_url : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
                   alt={selectedBook?.title}
@@ -502,6 +540,8 @@ export default function HalamanUtama() {
                       title: selectedBook?.title,
                       author: selectedBook?.author,
                       cover: selectedBook?.cover,
+                      cover_url: selectedBook?.cover_url,
+                      isLocal: selectedBook?.isLocal,
                       firstSentence: selectedBook?.firstSentence,
                       subjects: selectedBook?.subjects,
                     };
@@ -839,26 +879,50 @@ export default function HalamanUtama() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {[...localBooks, ...(activeCategory ? genreBooks : rekomendasi)].map((book, i) => (
-            <div key={i} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-              <div className="relative h-44 md:h-60 bg-linear-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
-                {book.cover ? (
-                  <img src={book.isLocal ? book.cover_url : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`} alt={book.title} className="h-full w-full object-cover group-hover:scale-105 transition duration-500" />
-                ) : (
-                  "No Cover"
-                )}
-              </div>
+          {
+          (activeCategory ? genreBooks : rekomendasi).map((book, i) => (
+            <div
+            key={i}
+            className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+          >
 
-              <div className="p-4 flex flex-col h-42.5 md:h-47.5">
-                <div>
-                  <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-8.5 md:min-h-10">{book.title}</h3>
+            <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
+              {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
+              <img
+                src={
+                  book.isLocal
+                    ? book.cover_url
+                    : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
+                }
+                alt={book.title}
+                className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : (
+              <p>No Cover</p>
+            )}
+            </div>
 
-                  <p className="text-[11px] md:text-xs text-gray-500 min-h-4.5 md:min-h-5">{book.author}</p>
 
-                  <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-8">Click detail to see description</p>
+            <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
+
+              <div>
+
+                <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
+                  {book.title}
+                </h3>
+
+                <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
+                  {book.author}
+                </p>
+
+                <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
+                  Click detail to see description
+                </p>
                 </div>
-
                 <div className="flex gap-2 mt-auto">
                   <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
                     Borrow
@@ -871,6 +935,8 @@ export default function HalamanUtama() {
               </div>
             </div>
           ))}
+
+
         </div>
       </section>
 

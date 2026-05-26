@@ -58,35 +58,176 @@ export const getDashboard = async (req, res) => {
   }
 };
 
-/* ================= MANAGE BOOKS ================= */
-
-/* GET ALL BOOKS */
-export const getBooks = async (req, res) => {
+// ================= BORROW BOOKS =================
+export const getBorrowBooks = async (req, res) => {
   try {
+
     const { data, error } = await supabase
-      .from("books") // sesuaikan nama tabel kamu (bisa "books" kalau beda)
+      .from("borrow_books")
       .select("*")
       .order("id", { ascending: false });
 
     if (error) throw error;
 
     res.json(data);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to fetch borrow books",
+    });
   }
 };
 
-/* ADD BOOK */
-export const addBooks = async (req, res) => {
+// ================= ADD BORROW BOOK =================
+export const addBorrowBook = async (req, res) => {
   try {
-    const { title, author, cover, stock, category, price, description } = req.body;
 
-    if (!title || !author) {
-      return res.status(400).json({
-        status: false,
-        message: "Title dan author wajib diisi",
-      });
-    }
+    const {
+      title,
+      author,
+      category,
+      stock,
+      description,
+      cover,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("borrow_books")
+      .insert([
+        {
+          title,
+          author,
+          category,
+          stock,
+          description,
+          cover,
+        },
+      ])
+      .select();
+
+    if (error) throw error;
+
+    res.json(data);
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Failed to add borrow book",
+    });
+  }
+};
+
+/* ================= UPDATE BORROW BOOK ================= */
+
+export const updateBorrowBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      title,
+      author,
+      category,
+      stock,
+      description,
+      cover,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("borrow_books")
+      .update({
+        title,
+        author,
+        category,
+        stock,
+        description,
+        cover,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Borrow book updated",
+      data,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+/* ================= DELETE BORROW BOOK ================= */
+
+export const deleteBorrowBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("borrow_books")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Borrow book deleted",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+
+/* ================= SHOP BOOKS ================= */
+
+/* GET ALL SHOP BOOKS */
+export const getShopBooks = async (req, res) => {
+  try {
+
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message,
+    });
+
+  }
+};
+
+/* ADD SHOP BOOK */
+export const addShopBook = async (req, res) => {
+  try {
+
+    const {
+      title,
+      author,
+      cover,
+      stock,
+      category,
+      price,
+      description,
+    } = req.body;
 
     const { data, error } = await supabase
       .from("books")
@@ -95,10 +236,10 @@ export const addBooks = async (req, res) => {
           title,
           author,
           cover,
-          stock: stock || 0,
-          category: category || "Umum",
-          price: price || 0,
-          description: description || "",
+          stock,
+          category,
+          price,
+          description,
         },
       ])
       .select()
@@ -108,19 +249,101 @@ export const addBooks = async (req, res) => {
 
     res.json({
       status: true,
-      message: "Buku berhasil ditambahkan",
+      message: "Shop book added",
       data,
     });
   } catch (err) {
+
+
+    console.error(err);
+
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+
+  }
+};
+
+/* UPDATE SHOP BOOK */
+export const updateShopBook = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const {
+      title,
+      author,
+      cover,
+      stock,
+      category,
+      price,
+      description,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("books")
+      .update({
+        title,
+        author,
+        cover,
+        stock,
+        category,
+        price,
+        description,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Shop book updated",
+      data,
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+
+  }
+};
+
+/* DELETE SHOP BOOK */
+export const deleteShopBook = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("books")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: "Shop book deleted",
+    });
+
+  } catch (err) {
+
     console.error("ADD BOOK ERROR:", err);
 
     res.status(500).json({
       status: false,
       message: err.message,
-      full_error: err,
     });
   }
 };
+
+
 
 /* ================= LOANS ================= */
 export const getLoans = async (req, res) => {
@@ -162,21 +385,24 @@ export const getLoans = async (req, res) => {
 };
 
 /* ================= LOAN REQUEST ================= */
-export const getLoanRequests = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("loan_requests")
-      .select(
-        `
-            id,
-            book_title,
-            request_date,
-            status,
-            users(name, member_code)
-          `,
-      )
-      .eq("status", "pending");
+export const getLoanRequests =
+  async (req, res) => {
+    try {
 
+     const { data, error } =
+      await supabase
+        .from("loan_requests")
+        .select(`
+          id,
+          book_title,
+          request_date,
+          status,
+          user_id,
+          users(name, member_code)
+        `)
+        .eq("status", "pending");
+
+      console.log(data);
     if (error) throw error;
 
     res.json(
@@ -184,15 +410,10 @@ export const getLoanRequests = async (req, res) => {
         id: item.id,
 
         receipt_code: item.receipt_code,
-
         member_code: item.users?.member_code || "-",
-
         member_name: item.users?.name || "-",
-
         book_title: item.book_title || "-",
-
         request_date: item.request_date,
-
         status: item.status,
       })),
     );
@@ -331,23 +552,14 @@ export const markAsReturned = async (req, res) => {
     const { error: returnError } = await supabase.from("returns").insert([
       {
         loan_id: loan.id,
-
         user_id: user.id,
-
         member_code: user.member_code,
-
         member_name: user.name,
-
         book_key: loan.book_key,
-
         book_title: loan.title,
-
         author: loan.author,
-
         cover: loan.cover,
-
         return_date: new Date(),
-
         fine: 0,
       },
     ]);
@@ -465,19 +677,13 @@ export const getExtensions = async (req, res) => {
     res.json(
       data.map((item) => ({
         id: item.id,
-
-        member_code: item.users?.member_code || "-",
-
-        member_name: item.users?.name || "-",
-
-        book_title: item.title,
-
-        loan_date: item.loan_date,
-
-        due_date: item.due_date,
-
+        member_code: item.loans?.users?.member_code || "-",
+        member_name: item.loans?.users?.name || "-",
+        book_title: item.loans?.title || "-",
+        old_due_date: item.loans?.due_date || "-",   
+        new_due_date: item.new_due_date || "-",
         status: item.status,
-      })),
+      }))
     );
   } catch (err) {
     res.status(500).json({
@@ -507,15 +713,20 @@ export const approveExtension = async (req, res) => {
       })
       .eq("id", id);
 
+
+      await supabase
+        .from("loans")
+        .update({
+          due_date: new Date(new Date(ext.old_due_date).getTime() + 7 * 86400000),
+        })
+        .eq("id", ext.loan_id);
+
     await supabase.from("notifications").insert([
       {
         user_id: ext.user_id,
-
         type: "extension",
-
         title: "Extension Approved",
-
-        message: "Your borrowing extension has been approvedc.",
+        message: "Your borrowing extension has been approved.",
       },
     ]);
     res.json({
@@ -657,25 +868,31 @@ export const updateOrderStatus = async (req, res) => {
 /* ================= COURIER ORDERS ================= */
 export const getCourierOrders = async (req, res) => {
   try {
-    const { data: payments, error } = await supabase.from("payments").select("*").in("order_status", ["processing", "shipping", "completed"]).order("created_at", {
-      ascending: false,
-    });
+    const { data: payments, error } = await supabase
+      .from("payments")
+      .select("*")
+      .in("order_status", ["processing", "shipping", "completed"])
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    const { data: addresses } = await supabase.from("addresses").select("*");
+    const { data: addresses } = await supabase
+      .from("addresses")
+      .select("*");
 
     const result = payments.map((item) => {
-      const address = addresses.find((a) => String(a.id) === String(item.address_id));
+      const address = addresses.find(
+        (a) => String(a.id) === String(item.address_id)
+      );
 
       return {
         ...item,
-
         address,
       };
     });
 
     res.json(result);
+
   } catch (err) {
     res.status(500).json({
       error: err.message,
