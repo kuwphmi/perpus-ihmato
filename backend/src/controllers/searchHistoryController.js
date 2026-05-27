@@ -8,6 +8,7 @@ export const addSearchHistory = async (
   res
 ) => {
   try {
+     console.log("BODY:", req.body);
 
     const {
       user_id,
@@ -26,8 +27,11 @@ export const addSearchHistory = async (
           },
         ])
         .select();
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
     if (error) {
+
       return res.status(500).json({
         message: error.message,
       });
@@ -36,6 +40,8 @@ export const addSearchHistory = async (
     return res.json(data);
 
   } catch (err) {
+
+     console.log("CATCH:", err);
 
     return res.status(500).json({
       message: err.message,

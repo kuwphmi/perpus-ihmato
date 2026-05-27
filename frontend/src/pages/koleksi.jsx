@@ -151,19 +151,26 @@ export default function HalamanUtama() {
   }, []);
 
 
- const handleSearch = async (e) => {
+const handleSearch = async (e) => {
   if (e.key !== "Enter") return;
 
-  if (!search.trim()) {
+  const keyword = search.trim().toLowerCase();
+
+  if (!keyword) {
     setActiveCategory(null);
     setGenreBooks([]);
     return;
   }
 
   try {
-    // ================= SAVE SEARCH HISTORY =================
-    const user = JSON.parse(localStorage.getItem("user"));
 
+     console.log("LOCAL BOOKS:", localBooks);
+
+// ================= SAVE SEARCH HISTORY =================
+try {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user?.id) {
     await axios.post(
       "http://localhost:3000/api/search-history",
       {
@@ -172,21 +179,24 @@ export default function HalamanUtama() {
         source: "koleksi",
       }
     );
+  }
+} catch (err) {
+  console.log("save history error:", err);
+}
 
-    // ================= SEARCH LOCAL BOOKS =================
+    // ================= SEARCH LOCAL =================
     const localResults = localBooks.filter((book) => {
-      const keyword = search.toLowerCase();
-
       return (
         book.title?.toLowerCase().includes(keyword) ||
         book.author?.toLowerCase().includes(keyword) ||
         book.category?.toLowerCase().includes(keyword)
       );
     });
+    console.log("LOCAL RESULTS:", localResults);
 
     // ================= SEARCH OPENLIBRARY =================
     const res = await fetch(
-      `https://openlibrary.org/search.json?q=${search}&limit=12`
+      `https://openlibrary.org/search.json?q=${search}&limit=20`
     );
 
     const data = await res.json();
@@ -204,21 +214,36 @@ export default function HalamanUtama() {
       isLocal: false,
     }));
 
-    // ================= GABUNGKAN =================
+    // ================= GABUNG =================
     const combinedResults = [
       ...localResults,
       ...apiResults,
     ];
 
-    setGenreBooks(combinedResults);
+    // ================= HAPUS DUPLIKAT =================
+    const uniqueResults = combinedResults.filter(
+      (book, index, self) =>
+        index ===
+        self.findIndex(
+          (b) =>
+            b.title?.toLowerCase() ===
+            book.title?.toLowerCase()
+        )
+    );
 
+    console.log("FINAL RESULTS:", uniqueResults);
+
+    setGenreBooks(uniqueResults);
     setActiveCategory(`Search Results: ${search}`);
 
     setTimeout(() => {
       bookSectionRef.current?.scrollIntoView({
         behavior: "smooth",
       });
+
     }, 100);
+
+  
 
   } catch (err) {
     console.log("search error:", err);
@@ -322,7 +347,7 @@ export default function HalamanUtama() {
     },
 
     {
-      name: "Textbox",
+      name: "Textbook",
       icon: <FiBook />,
     },
 
@@ -375,9 +400,16 @@ export default function HalamanUtama() {
 
       // kalau limit tercapai
       if (!data.status) {
+      if (data.message === "Borrow limit reached") {
+        showNotif(
+          "You can only borrow 2 books before returning them."
+        );
+      } else {
         showNotif(data.message);
-        return;
       }
+
+      return;
+    }
 
       // sukses
       showNotif("Borrow request submitted");

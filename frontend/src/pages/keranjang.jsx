@@ -260,11 +260,15 @@ const updateQty = async (id, qty) => {
             />
 
             {/* IMAGE */}
-            <img
-              src={`https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`}
-              alt={item.title}
-              className="w-20 h-24 object-cover rounded-md"
-            />
+           <img
+            src={
+              item.cover?.startsWith("http")
+                ? item.cover
+                : `https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`
+            }
+            alt={item.title}
+            className="w-20 h-24 object-cover rounded-md"
+          />
 
             {/* INFO */}
             <div className="flex flex-col justify-between flex-1">

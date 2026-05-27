@@ -185,7 +185,7 @@ export default function Belanja() {
       // FILTER LOCAL BOOKS BERDASARKAN GENRE
       const localGenreBooks = localBooks.filter(
         (book) =>
-          normalize(book.genre) ===
+          normalize(book.category) ===
           normalize(query)
       );
 
@@ -241,7 +241,7 @@ export default function Belanja() {
         author: item.author || "-",
         cover_url: item.cover || null,
         isLocal: true,
-        genre: item.genre || "other",
+        category: item.category || "other",
         description: item.description || "No description available.",
         price: item.price || 50000,
         stock: item.stock || 0,
@@ -837,59 +837,44 @@ const handleSearch = async () => {
       )}
       
 {mode === "search" ? (
-  <section className="px-6 md:px-20 pb-14 mt-10">
+  <section
+    ref={genreSectionRef}
+    className="px-6 md:px-20 pb-14 mt-10"
+  >
     <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Search Results: {search}
+      Search: "{search}"
     </h2>
 
-    <div className="flex gap-5 overflow-x-auto">
-      {searchResults.map((book, index) => (
-        <div key={index} className="min-w-[250px]">
-          <BookCard
-            workKey={book.workKey}
-            title={book.title}
-            author={book.author}
-            cover={book.cover}
-            isLocal={book.isLocal}
-            cover_url={book.cover_url}
-            price={book.price}
-            stock={book.stock}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-            showNotif={showNotif}
-          />
-        </div>
-      ))}
-    </div>
-  </section>
-) : mode === "genre" ? (
-  <>
-    <BukuTerlaris
-      data={filterBooks(terlaris)}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
-
-    <section className="px-4 md:px-20 pb-14">
-      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-        <img src={banner5} className="w-full h-auto object-contain" alt="Banner" />
+    {searchResults.length === 0 ? (
+      <div className="text-center text-gray-500">
+        Book not found.
       </div>
-    </section>
-
-    <BukuTerbaru
-      data={filterBooks(terbaru)}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
-  </>
+    ) : (
+      <div className="flex gap-5 overflow-x-auto">
+        {searchResults.map((book, index) => (
+          <div key={index} className="min-w-[250px]">
+            <BookCard
+              workKey={book.workKey}
+              title={book.title}
+              author={book.author}
+              cover={book.cover}
+              isLocal={book.isLocal}
+              cover_url={book.cover_url}
+              price={book.price}
+              stock={book.stock}
+              localdescription={book.description}
+              category={book.category}
+              cart={cart}
+              setCart={setCart}
+              setIsBuyOpen={setIsBuyOpen}
+              setSelectedBook={setSelectedBook}
+              showNotif={showNotif}
+            />
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
 ) : (
   <>
     <BukuTerlaris
@@ -903,7 +888,11 @@ const handleSearch = async () => {
 
     <section className="px-4 md:px-20 pb-14">
       <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-        <img src={banner5} className="w-full h-auto object-contain" alt="Banner" />
+        <img
+          src={banner5}
+          className="w-full h-auto object-contain"
+          alt="Banner"
+        />
       </div>
     </section>
 
@@ -917,6 +906,7 @@ const handleSearch = async () => {
     />
   </>
 )}
+ 
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -1065,7 +1055,7 @@ function BookCard({
 
       const payload = {
         user_id: user.id,
-        book_key: workKey || `${title}_${author}`,
+        book_key: isLocal ? `local-${title}-${author}` : workKey,
         title,
         author,
         cover: imageSrc,
