@@ -334,7 +334,7 @@ await axios.post(
               mb-6
             "
             >
-              ✨ Smart Recommendation System
+               Smart Recommendation System
             </div>
 
             <h2

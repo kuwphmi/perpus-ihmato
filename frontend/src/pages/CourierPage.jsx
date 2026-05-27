@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { FiTruck, FiCheckCircle, FiMapPin, FiPhone, FiUser, FiPackage, FiSearch, FiLogOut, FiAlertCircle } from "react-icons/fi";
+import { FiTruck, FiCheckCircle, FiCopy, FiMapPin, FiPhone, FiUser, FiPackage, FiSearch, FiLogOut, FiAlertCircle } from "react-icons/fi";
 
 export default function CourierPage() {
   const navigate = useNavigate();
@@ -11,6 +11,8 @@ export default function CourierPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const profileMenuRef = useRef(null);
   const [courierName, setCourierName] = useState("C");
+  const [notif, setNotif] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -49,6 +51,28 @@ export default function CourierPage() {
     setShowLogoutConfirm(true);
   };
 
+  const copyOrderId = async (id) => {
+
+  try {
+
+    await navigator.clipboard.writeText(id);
+
+    setNotif("Order ID copied!");
+
+    setTimeout(() => {
+
+      setNotif("");
+
+    }, 2500);
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
+
   const fetchOrders = async () => {
     try {
       const res = await fetch("http://localhost:3000/api/admin/courier-orders");
@@ -84,20 +108,77 @@ export default function CourierPage() {
 
   /* ================= FILTER ================= */
   const filteredOrders = orders.filter((order) => {
-    const keyword = search.toLowerCase();
 
-    return (
-      /* SEARCH TITLE */
-      order.title?.toLowerCase().includes(keyword) ||
-      /* SEARCH CUSTOMER */
-      order.address?.receiver_name?.toLowerCase().includes(keyword) ||
-      /* SEARCH ORDER ID */
-      order.order_id?.toString().toLowerCase().includes(keyword)
-    );
-  });
+  const keyword = search.toLowerCase();
+
+  const matchSearch = (
+
+    order.title?.toLowerCase().includes(keyword) ||
+
+    order.address?.receiver_name
+      ?.toLowerCase()
+      .includes(keyword) ||
+
+    order.order_id
+      ?.toString()
+      .toLowerCase()
+      .includes(keyword)
+
+  );
+
+  const matchFilter = (
+
+    activeFilter === "all" ||
+
+    order.order_status === activeFilter
+
+  );
+
+  return matchSearch && matchFilter;
+
+});
 
   return (
+
+  <>
+
+    {notif && (
+
+      <div
+        className="
+          fixed
+          top-5
+          left-1/2
+          -translate-x-1/2
+          z-[99999]
+          animate-[fadeIn_.3s_ease]
+        "
+      >
+
+        <div
+          className="
+            bg-blue-600
+            text-white
+            px-6
+            py-3
+            rounded-full
+            shadow-2xl
+            text-sm
+            font-semibold
+            backdrop-blur-xl
+          "
+        >
+
+          {notif}
+
+        </div>
+
+      </div>
+
+    )}
+
     <div className="min-h-screen bg-[#f4f7fb]">
+
       {/* ───────── HEADER ───────── */}
       <header
         className="
@@ -330,14 +411,26 @@ export default function CourierPage() {
         >
           {/* TOTAL */}
           <div
-            className="
-            bg-white
-            rounded-3xl
-            p-5
-            shadow-sm
-            border border-gray-100
-          "
-          >
+  onClick={() =>
+    setActiveFilter("all")
+  }
+  className={`
+    bg-white
+    rounded-3xl
+    p-5
+    shadow-sm
+    border
+    cursor-pointer
+    transition-all
+    hover:scale-[1.02]
+
+    ${
+      activeFilter === "all"
+        ? "border-blue-500 ring-2 ring-blue-100"
+        : "border-gray-100"
+    }
+  `}
+>
             <div
               className="
               flex
@@ -386,14 +479,26 @@ export default function CourierPage() {
 
           {/* PROCESSING */}
           <div
-            className="
-            bg-white
-            rounded-3xl
-            p-5
-            shadow-sm
-            border border-gray-100
-          "
-          >
+  onClick={() =>
+    setActiveFilter("processing")
+  }
+  className={`
+    bg-white
+    rounded-3xl
+    p-5
+    shadow-sm
+    border
+    cursor-pointer
+    transition-all
+    hover:scale-[1.02]
+
+    ${
+      activeFilter === "processing"
+        ? "border-indigo-500 ring-2 ring-indigo-100"
+        : "border-gray-100"
+    }
+  `}
+>
             <div
               className="
               flex
@@ -442,14 +547,26 @@ export default function CourierPage() {
 
           {/* SHIPPING */}
           <div
-            className="
-            bg-white
-            rounded-3xl
-            p-5
-            shadow-sm
-            border border-gray-100
-          "
-          >
+  onClick={() =>
+    setActiveFilter("shipping")
+  }
+  className={`
+    bg-white
+    rounded-3xl
+    p-5
+    shadow-sm
+    border
+    cursor-pointer
+    transition-all
+    hover:scale-[1.02]
+
+    ${
+      activeFilter === "shipping"
+        ? "border-blue-500 ring-2 ring-blue-100"
+        : "border-gray-100"
+    }
+  `}
+>
             <div
               className="
               flex
@@ -498,14 +615,26 @@ export default function CourierPage() {
 
           {/* COMPLETED */}
           <div
-            className="
-            bg-white
-            rounded-3xl
-            p-5
-            shadow-sm
-            border border-gray-100
-          "
-          >
+  onClick={() =>
+    setActiveFilter("completed")
+  }
+  className={`
+    bg-white
+    rounded-3xl
+    p-5
+    shadow-sm
+    border
+    cursor-pointer
+    transition-all
+    hover:scale-[1.02]
+
+    ${
+      activeFilter === "completed"
+        ? "border-green-500 ring-2 ring-green-100"
+        : "border-gray-100"
+    }
+  `}
+>
             <div
               className="
               flex
@@ -614,14 +743,37 @@ export default function CourierPage() {
                         {order.title}
                       </h2>
 
-                      <p
-                        className="
-                        text-gray-500
-                        mt-1
-                      "
-                      >
-                        Order ID: {order.order_id}
-                      </p>
+                      <div
+  className="
+  flex
+  items-center
+  gap-2
+  mt-1
+"
+>
+
+  <p className="text-gray-500">
+    Order ID: {order.order_id}
+  </p>
+
+  <button
+    onClick={() =>
+      copyOrderId(order.order_id)
+    }
+    className="
+      p-1.5
+      rounded-lg
+      hover:bg-blue-50
+      text-blue-600
+      transition
+    "
+  >
+
+    <FiCopy className="text-sm" />
+
+  </button>
+
+</div>
 
                       <p
                         className="
@@ -933,6 +1085,9 @@ export default function CourierPage() {
           </div>
         </div>
       )}
-    </div>
-  );
+   </div>
+
+</>
+
+);
 }

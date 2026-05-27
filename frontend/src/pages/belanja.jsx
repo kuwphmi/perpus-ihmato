@@ -667,7 +667,6 @@ const handleSearch = async () => {
                   {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
 
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
               </button>
 
               {/* DROPDOWN */}
@@ -908,6 +907,11 @@ const handleSearch = async () => {
 )}
  
 
+      {/* FLOATING AI */}
+<div className="fixed bottom-6 right-6 z-50">
+  <Floating />
+</div>
+
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
         <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
@@ -1048,10 +1052,15 @@ function BookCard({
   };
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
 
-      if (!user) return showNotif("Please login first");
+  try {
+     const user =
+      JSON.parse(
+        localStorage.getItem("user"));
+
+      if (!user) {
+        return showNotif("Please login first");
+      }
 
       const payload = {
         user_id: user.id,
@@ -1066,18 +1075,21 @@ function BookCard({
 
      await axios.post("http://localhost:3000/api/cart", payload);
 
-      // REFRESH CART DARI DB
+     // REFRESH CART
      const cartRes = await axios.get(
       `http://localhost:3000/api/cart/${user.id}`
-      );
+     );
 
-      setCart(cartRes.data.data || []);
-      showNotif("Added to cart");
-    } catch (err) {
-      showNotif("Failed add cart");
-      console.log(err);
-    }
-  };
+     setCart(cartRes.data.data || []);
+
+    showNotif("Success add to cart");
+
+  } catch (err) {
+    console.log(err);
+    showNotif("Failed to add cart");
+  }
+};
+
 
   return (
     <>
@@ -1133,6 +1145,47 @@ function BookCard({
               </div>
 
               {/* BUTTON */}
+<div className="flex gap-2">
+
+  <button
+    type="button"
+    onClick={() =>
+      tambahKeKeranjang()
+    }
+    className="
+      flex-1
+      border
+      border-blue-600
+      text-blue-600
+      text-xs
+      py-2.5
+      rounded-xl
+      hover:bg-blue-50
+      font-medium
+      transition
+    "
+  >
+    Cart
+  </button>
+
+  <button
+    onClick={handleBuy}
+    className="
+      flex-1
+      bg-blue-600
+      hover:bg-blue-700
+      text-white
+      text-xs
+      py-2.5
+      rounded-xl
+      font-semibold
+      transition
+    "
+  >
+    Buy
+  </button>
+
+</div>
             </div>
           </div>
         </div>
@@ -1318,8 +1371,6 @@ function BukuTerbaru({ data, cart, setCart, setIsBuyOpen, setSelectedBook, showN
         </div>
       </section>
 
-      {/* MASCOT */}
-      <Floating />
     </>
   );
 }

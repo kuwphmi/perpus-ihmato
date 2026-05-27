@@ -53,7 +53,10 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
   const navigate = useNavigate();
 
   return (
+    
     <>
+
+    
       <Routes>
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
