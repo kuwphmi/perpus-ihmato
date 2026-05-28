@@ -21,6 +21,7 @@ import notificationRoutes from "./src/routes/notificationRoutes.js";
 import historyRoutes from "./src/routes/historyRoutes.js";
 import favGenreRoutes from "./src/routes/favGenreRoutes.js";
 import searchHistoryRoutes from "./src/routes/searchHistoryRoutes.js";
+import recommendationRoutes from "./src/routes/recommendationRoutes.js";
 
 const app = express();
 
@@ -237,41 +238,108 @@ app.post("/api/loan-requests", async (req, res) => {
    TAMBAH CART
 ======================= */
 app.post("/api/cart", async (req, res) => {
-  try {
-    const { user_id, title, author, cover, price, stock } = req.body;
 
-    const { data, error } = await supabase
-      .from("cart")
-      .insert([
-        {
-          user_id,
-          title,
-          author,
-          cover,
-          price,
-          stock,
-          qty: 1,
-        },
-      ])
-      .select();
+  try {
+
+    const {
+      user_id,
+      title,
+      author,
+      cover,
+      price,
+      stock,
+    } = req.body;
+
+    // ================= CEK ITEM SUDAH ADA =================
+
+  const cleanTitle = title.trim().toLowerCase();
+
+const { data: existing } = await supabase
+  .from("cart")
+  .select("*")
+  .eq("user_id", user_id);
+
+const sameBook = existing.find(
+  (item) =>
+    item.title?.trim().toLowerCase() === cleanTitle
+);
+
+if (sameBook) {
+
+  await supabase
+    .from("cart")
+    .update({
+      qty: (sameBook.qty || 1) + 1,
+    })
+    .eq("id", sameBook.id);
+
+  return res.json({
+    status: true,
+    message: "Qty updated",
+  });
+
+}
+
+    // ================= JIKA SUDAH ADA =================
+
+    if (existing && existing.length > 0) {
+      const newQty =
+        (existing[0].qty || 1) + 1;
+
+      await supabase
+        .from("cart")
+        .update({
+          qty: newQty,
+        })
+        .eq("id", existing[0].id);
+      return res.json({
+        status: true,
+        message: "Qty updated",
+      });
+
+    }
+
+    // ================= INSERT BARU =================
+
+    const { data, error } =
+      await supabase
+        .from("cart")
+        .insert([
+          {
+            user_id,
+            title,
+            author,
+            cover,
+            price,
+            stock,
+            qty: 1,
+          },
+        ])
+        .select();
 
     if (error) {
+
       return res.json({
         status: false,
         message: error.message,
       });
+
     }
 
     return res.json({
       status: true,
       data: data?.[0] || null,
     });
+
   } catch (err) {
+
     return res.json({
       status: false,
       message: err.message,
     });
+
   }
+
 });
 /* =======================
    GET CART
@@ -370,6 +438,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api", historyRoutes);
 app.use("/api/fav-genres", favGenreRoutes);
 app.use("/api/search-history", searchHistoryRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 /* =======================
    ADMIN DASHBOARD
 ======================= */

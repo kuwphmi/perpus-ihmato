@@ -85,26 +85,35 @@ export default function Keranjang() {
     .reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
 
 
-const updateQty = async (id, qty) => {
+  const updateQty = async (id, qty, stock) => {
 
-  if (qty < 1) return;
+    if (qty < 1) return;
 
-  try {
+    if (qty > stock) {
 
-    await axios.put(
-      `http://localhost:3000/api/cart/${id}`,
-      { qty }
-    );
+      alert(`Stock hanya tersedia ${stock}`);
 
-    fetchCart();
+      return;
 
-  } catch (err) {
+    }
 
-    console.log(err);
+    try {
 
-  }
+      await axios.put(
+        `http://localhost:3000/api/cart/${id}`,
+        { qty }
+      );
 
-};
+      fetchCart();
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
   /* =========================
      HAPUS ITEM
   ========================= */
@@ -147,10 +156,10 @@ const updateQty = async (id, qty) => {
       <div className="bg-white p-4 shadow-sm flex justify-between items-center relative">
         <div className="flex items-center gap-3">
 
-  {/* BACK */}
-  <button
-    onClick={() => navigate(-1)}
-    className="
+          {/* BACK */}
+          <button
+            onClick={() => navigate(-1)}
+            className="
       w-10
       h-10
       rounded-full
@@ -161,19 +170,19 @@ const updateQty = async (id, qty) => {
       justify-center
       transition
     "
-  >
-    <FiArrowLeft className="text-blue-600 text-lg" />
-  </button>
+          >
+            <FiArrowLeft className="text-blue-600 text-lg" />
+          </button>
 
-  <div>
+          <div>
 
-    <h1 className="text-[20px] font-semibold text-blue-600">
-      Cart
-    </h1>
+            <h1 className="text-[20px] font-semibold text-blue-600">
+              Cart
+            </h1>
 
-  </div>
+          </div>
 
-</div>
+        </div>
 
         <div className="flex items-center gap-3">
 
@@ -260,15 +269,15 @@ const updateQty = async (id, qty) => {
             />
 
             {/* IMAGE */}
-           <img
-            src={
-              item.cover?.startsWith("http")
-                ? item.cover
-                : `https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`
-            }
-            alt={item.title}
-            className="w-20 h-24 object-cover rounded-md"
-          />
+            <img
+              src={
+                item.cover?.startsWith("http")
+                  ? item.cover
+                  : `https://covers.openlibrary.org/b/id/${item.cover}-M.jpg`
+              }
+              alt={item.title}
+              className="w-20 h-24 object-cover rounded-md"
+            />
 
             {/* INFO */}
             <div className="flex flex-col justify-between flex-1">
@@ -292,19 +301,33 @@ const updateQty = async (id, qty) => {
                 <div className="flex items-center gap-2 mt-1">
 
                   <button
-                    onClick={() => updateQty(item.id, item.qty - 1)}
-                    className="w-6 h-6 rounded bg-gray-200"
+                    onClick={() => updateQty(item.id, item.qty - 1, item.stock)}
+                    className="w-7 h-7 rounded bg-gray-200"
                   >
                     -
                   </button>
 
-                  <span className="text-sm">
-                    {item.qty}
-                  </span>
+                  <input
+                    type="text"
+                    min="1"
+                    max={item.stock}
+                    value={item.qty}
+                    onChange={(e) =>
+                      updateQty(
+                        item.id,
+                        Math.max(
+                          1,
+                          Math.min(item.stock, Number(e.target.value))
+                        ),
+                        item.stock
+                      )
+                    }
+                    className="w-14 h-8 border rounded text-center text-sm outline-none"
+                  />
 
                   <button
-                    onClick={() => updateQty(item.id, item.qty + 1)}
-                    className="w-6 h-6 rounded bg-gray-200"
+                    onClick={() => updateQty(item.id, item.qty + 1, item.stock)}
+                    className="w-7 h-7 rounded bg-gray-200"
                   >
                     +
                   </button>
@@ -356,7 +379,7 @@ const updateQty = async (id, qty) => {
         </button>
 
       </div>
-      
+
     </div>
   );
 }

@@ -56,3 +56,105 @@ Liby's Response:
     });
   }
 };
+
+export const getBookRecommendation =
+async (req, res) => {
+
+  try {
+
+    const {
+      genres,
+      searches,
+      books,
+    } = req.body;
+
+    const prompt = `
+User favorite genres:
+${genres.join(", ")}
+
+User recent searches:
+${searches.join(", ")}
+
+Available books:
+${JSON.stringify(books)}
+
+Recommend 8 books most relevant
+to the user's interests.
+
+Prioritize books matching:
+- category
+- favorite genres
+- search keywords
+
+Return JSON only:
+[
+ {
+   "title": "...",
+   "reason": "..."
+ }
+]
+`;
+
+    const result =
+      await model.generateContent(
+        prompt
+      );
+
+    const response =
+      await result.response;
+
+    const text =
+      response.text();
+
+    const cleanText =
+      text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    return res.json(
+      JSON.parse(cleanText)
+    );
+
+  } catch (err) {
+
+    console.log(err);
+
+  // ================= FALLBACK =================
+
+const fallbackBooks =
+  books
+    .filter((book) => {
+
+      const category =
+        (
+          book.category ||
+          book.subject ||
+          ""
+        ).toLowerCase();
+
+      return [
+
+        ...genres,
+        ...searches,
+
+      ].some((item) =>
+        category.includes(
+          item.toLowerCase()
+        )
+      );
+
+    })
+    .slice(0, 8)
+    .map((book) => ({
+      title: book.title,
+      reason:
+        "Matched your interests",
+    }));
+
+return res.json(
+  fallbackBooks
+);
+
+  }
+};

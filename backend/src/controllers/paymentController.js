@@ -9,12 +9,12 @@ export const createTransaction =
 
     try {
 
-      const {
-        user_id,
-        items,
-        loan_id,
-        address_id,
-      } = req.body;
+const {
+  user_id,
+  items,
+  address_id,
+  delivery_type,
+} = req.body;
 
       // VALIDATION
       if (
@@ -96,53 +96,51 @@ export const createTransaction =
       /* =========================
          SAVE DATABASE
       ========================= */
+      console.log("DELIVERY TYPE:", delivery_type);
       const { error } =
         await supabase
           .from("payments")
-          .insert([
-            {
-              user_id,
-              address_id,
+.insert([
+  {
+    user_id,
+    address_id,
 
-              loan_id:
-                loan_id || null,
+    order_id,
 
-              order_id,
+    amount:
+      gross_amount,
 
-              amount:
-                gross_amount,
+    payment_status:
+      "pending",
 
-              // PAYMENT STATUS
-              payment_status:
-                "pending",
+    order_status:
+      "waiting_payment",
 
-              // ORDER STATUS
-              order_status:
-                "waiting_payment",
+    payment_method:
+      "midtrans",
 
-              payment_method:
-                "midtrans",
+    delivery_type,
 
-              snap_token:
-                transaction.token,
+    snap_token:
+      transaction.token,
 
-              redirect_url:
-                transaction.redirect_url,
+    redirect_url:
+      transaction.redirect_url,
 
-              title:
-                items[0]?.title ||
-                null,
+    title:
+      items[0]?.title ||
+      null,
 
-              author:
-                items[0]?.author ||
-                null,
+    author:
+      items[0]?.author ||
+      null,
 
-              cover:
-                items[0]?.cover ||
-                null,
+    cover:
+      items[0]?.cover ||
+      null,
 
-            },
-          ]);
+  },
+]);
 
       if (error) throw error;
 

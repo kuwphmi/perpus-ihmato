@@ -12,30 +12,19 @@ import {
 import Floating from "./floating";
 
 export default function Checkout() {
-
   const location = useLocation();
   const navigate = useNavigate();
-
   const items = location.state?.items || [];
-
   const user = JSON.parse(localStorage.getItem("user")) || {};
-
   const [selectedAddress, setSelectedAddress] = useState(null);
-
   const [notif, setNotif] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
-
+  const [deliveryType, setDeliveryType] = useState("delivery");
   const showNotif = (message) => {
-
     setNotif(message);
-
     setTimeout(() => {
-
       setNotif("");
-
     }, 2500);
-
   };
 
   const subtotal = items.reduce(
@@ -45,8 +34,10 @@ export default function Checkout() {
 
   );
 
-  const shipping = 5000;
-
+  const shipping =
+    deliveryType === "pickup"
+      ? 0
+      : 5000;
   const serviceFee = 2000;
 
   const total = subtotal + shipping + serviceFee;
@@ -87,112 +78,138 @@ export default function Checkout() {
 
   };
 
-  const handlePayment = async () => {
+const handlePayment = async () => {
 
-    if (!selectedAddress) {
+  if (
+    deliveryType === "delivery" &&
+    !selectedAddress
+  ) {
 
-      showNotif("Please add address first");
+    showNotif("Please add address first");
+
+    return;
+
+  }
+
+  try {
+
+    setIsLoading(true);
+
+    const userData = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    const res = await axios.post(
+      "http://localhost:3000/api/payment/create",
+      {
+        user_id: userData.id,
+        items,
+
+        address_id:
+          deliveryType === "delivery"
+            ? selectedAddress.id
+            : null,
+
+        delivery_type: deliveryType,
+      }
+    );
+
+    console.log("PAYMENT RESPONSE:", res.data);
+
+    const token = res.data.token;
+
+    if (!token) {
+
+      showNotif("Midtrans token failed");
+
+      setIsLoading(false);
 
       return;
 
     }
 
-    try {
+    if (!window.snap) {
 
-      setIsLoading(true);
-
-      const userData = JSON.parse(
-        localStorage.getItem("user")
-      );
-
-      const res = await axios.post(
-        "http://localhost:3000/api/payment/create",
-        {
-          user_id: userData.id,
-          items,
-          address_id: selectedAddress.id,
-        }
-      );
-
-      console.log("PAYMENT RESPONSE:", res.data);
-
-      const token = res.data.token;
-
-      if (!token) {
-
-        showNotif("Midtrans token failed");
-
-        setIsLoading(false);
-
-        return;
-
-      }
-
-      if (!window.snap) {
-
-        showNotif("Midtrans not loaded");
-
-        setIsLoading(false);
-
-        return;
-
-      }
-
-      window.snap.pay(token, {
-
-        onSuccess: function () {
-
-          showNotif("Payment successful");
-
-          setTimeout(() => {
-
-            navigate("/trackingbuku");
-
-          }, 1500);
-
-        },
-
-        onPending: function () {
-
-          showNotif("Waiting for payment");
-
-          setTimeout(() => {
-
-            navigate("/trackingbuku");
-
-          }, 1500);
-
-        },
-
-        onError: function (result) {
-
-          console.log(result);
-
-          showNotif("Payment failed");
-
-        },
-
-        onClose: function () {
-
-          showNotif("Payment cancelled");
-
-        },
-
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      showNotif("Checkout failed");
-
-    } finally {
+      showNotif("Midtrans not loaded");
 
       setIsLoading(false);
 
+      return;
+
     }
 
-  };
+    window.snap.pay(token, {
+
+      onSuccess: async function () {
+
+        await Promise.all(
+          items.map((item) =>
+            axios.delete(
+              `http://localhost:3000/api/cart/${item.id}`
+            )
+          )
+        );
+
+        showNotif("Payment successful");
+
+        setTimeout(() => {
+
+          navigate("/trackingbuku");
+
+        }, 1500);
+
+      },
+
+      onPending: async function () {
+
+        await Promise.all(
+          items.map((item) =>
+            axios.delete(
+              `http://localhost:3000/api/cart/${item.id}`
+            )
+          )
+        );
+
+        showNotif("Waiting for payment");
+
+        setTimeout(() => {
+
+          navigate("/trackingbuku");
+
+        }, 1500);
+
+      },
+
+      onError: function (result) {
+
+        console.log(result);
+
+        showNotif("Payment failed");
+
+      },
+
+      onClose: function () {
+
+        showNotif("Payment cancelled");
+
+      },
+
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    showNotif("Checkout failed");
+
+  } finally {
+
+    setIsLoading(false);
+
+  }
+
+};
+
 
   if (!items || items.length === 0) {
 
@@ -243,14 +260,14 @@ export default function Checkout() {
       )}
 
       {/* HEADER */}
-<div className="bg-blue-600 text-white px-5 py-2.5 shadow-md">
+      <div className="bg-blue-600 text-white px-5 py-2.5 shadow-md">
 
-  <div className="w-full flex items-center gap-3">
+        <div className="w-full flex items-center gap-3">
 
-    {/* BACK */}
-    <button
-      onClick={() => navigate(-1)}
-      className="
+          {/* BACK */}
+          <button
+            onClick={() => navigate(-1)}
+            className="
         w-9
         h-9
         rounded-full
@@ -261,108 +278,202 @@ export default function Checkout() {
         justify-center
         transition
       "
-    >
+          >
 
-      <FiArrowLeft className="text-white text-lg" />
+            <FiArrowLeft className="text-white text-lg" />
 
-    </button>
+          </button>
 
-    <div>
+          <div>
 
-      <h1 className="text-[20px] font-semibold">
-        Checkout
-      </h1>
-
-    </div>
-
-  </div>
-
-</div>
-
-      {/* CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
-
-        {/* ADDRESS */}
-        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-
-          <div className="px-6 py-5 border-b border-blue-100 flex items-center gap-3">
-
-            <FiMapPin className="text-blue-600 text-xl" />
-
-            <h2 className="text-xl font-semibold text-blue-700">
-              Shipping Information
-            </h2>
-
-          </div>
-
-          <div className="p-6">
-
-            {selectedAddress ? (
-
-              <div className="border border-blue-100 rounded-2xl p-5 bg-blue-50">
-
-                <div className="flex justify-between items-start gap-5">
-
-                  <div>
-
-                    <p className="text-blue-600 text-sm font-semibold">
-                      Main Address
-                    </p>
-
-                    <h3 className="font-bold text-lg mt-2">
-                      {selectedAddress.receiver_name}
-                    </h3>
-
-                    <p className="text-gray-600 text-sm">
-                      {selectedAddress.phone}
-                    </p>
-
-                    <p className="text-gray-600 text-sm mt-2">
-                      {selectedAddress.full_address}
-                    </p>
-
-                    <p className="text-gray-500 text-sm mt-2">
-                      {selectedAddress.district}, Surabaya
-                    </p>
-
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      navigate("/address?from=checkout")
-                    }
-                    className="text-blue-600 text-sm font-semibold"
-                  >
-                    Change
-                  </button>
-
-                </div>
-
-              </div>
-
-            ) : (
-
-              <div className="text-center py-10">
-
-                <p className="text-gray-500 mb-5">
-                  No address yet
-                </p>
-
-                <button
-                  onClick={() => navigate("/address")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
-                >
-                  Add Address
-                </button>
-
-              </div>
-
-            )}
+            <h1 className="text-[20px] font-semibold">
+              Checkout
+            </h1>
 
           </div>
 
         </div>
 
+      </div>
+
+      {/* CONTENT */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
+
+        {/* ADDRESS */}
+        {/* ADDRESS / PICKUP */}
+        {deliveryType === "delivery" ? (
+
+          <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+
+            <div className="px-6 py-5 border-b border-blue-100 flex items-center gap-3">
+
+              <FiMapPin className="text-blue-600 text-xl" />
+
+              <h2 className="text-xl font-semibold text-blue-700">
+                Shipping Information
+              </h2>
+
+            </div>
+
+            <div className="p-6">
+
+              {selectedAddress ? (
+
+                <div className="border border-blue-100 rounded-2xl p-5 bg-blue-50">
+
+                  <div className="flex justify-between items-start gap-5">
+
+                    <div>
+
+                      <p className="text-blue-600 text-sm font-semibold">
+                        Main Address
+                      </p>
+
+                      <h3 className="font-bold text-lg mt-2">
+                        {selectedAddress.receiver_name}
+                      </h3>
+
+                      <p className="text-gray-600 text-sm">
+                        {selectedAddress.phone}
+                      </p>
+
+                      <p className="text-gray-600 text-sm mt-2">
+                        {selectedAddress.full_address}
+                      </p>
+
+                      <p className="text-gray-500 text-sm mt-2">
+                        {selectedAddress.district}, Surabaya
+                      </p>
+
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        navigate("/address?from=checkout")
+                      }
+                      className="text-blue-600 text-sm font-semibold"
+                    >
+                      Change
+                    </button>
+
+                  </div>
+
+                </div>
+
+              ) : (
+
+                <div className="text-center py-10">
+
+                  <p className="text-gray-500 mb-5">
+                    No address yet
+                  </p>
+
+                  <button
+                    onClick={() => navigate("/address")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
+                  >
+                    Add Address
+                  </button>
+
+                </div>
+
+              )}
+
+            </div>
+
+          </div>
+
+        ) : (
+
+          <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
+
+            <div className="px-6 py-5 border-b border-emerald-100 flex items-center gap-3">
+
+              <FiMapPin className="text-emerald-600 text-xl" />
+
+              <h2 className="text-xl font-semibold text-emerald-700">
+                Pickup Location
+              </h2>
+
+            </div>
+
+            <div className="p-6">
+
+              <div className="border border-emerald-200 rounded-2xl p-5 bg-emerald-50">
+
+                <p className="text-emerald-600 text-sm font-semibold">
+                  Library Pickup Point
+                </p>
+
+                <h3 className="font-bold text-lg mt-2">
+                  BukuIn Library
+                </h3>
+
+                <p className="text-gray-600 text-sm mt-2">
+                  Jl. Ketintang, Surabaya
+                </p>
+
+                <p className="text-gray-600 text-sm">
+                  08.00 - 16.00 WIB
+                </p>
+
+                <p className="text-emerald-700 text-sm mt-3">
+                  Your order can be picked up after admin updates the status to
+                  <span className="font-bold">
+                    {" "}Ready Pickup
+                  </span>
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+
+          <div className="px-6 py-5 border-b border-blue-100">
+            <h2 className="text-xl font-semibold text-blue-700">
+              Delivery Method
+            </h2>
+          </div>
+
+          <div className="p-6 flex gap-4">
+
+            <button
+              onClick={() => setDeliveryType("delivery")}
+              className={`flex-1 border rounded-2xl p-4 ${deliveryType === "delivery"
+                ? "border-blue-600 bg-blue-50"
+                : "border-gray-200"
+                }`}
+            >
+              Delivery
+            </button>
+
+            <button
+              onClick={() => setDeliveryType("pickup")}
+              className={`flex-1 border rounded-2xl p-4 ${deliveryType === "pickup"
+                ? "border-emerald-600 bg-emerald-50"
+                : "border-gray-200"
+                }`}
+            >
+              Pickup
+            </button>
+
+            {deliveryType === "pickup" && (
+              <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-700">
+                Pickup Location:
+                <br />
+                BookIn Library
+                <br />
+                08.00 - 16.00 WIB
+              </div>
+            )}
+          </div>
+
+        </div>
         {/* PRODUCTS */}
         <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
 

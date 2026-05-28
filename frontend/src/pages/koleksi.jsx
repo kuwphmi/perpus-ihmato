@@ -19,6 +19,7 @@ export default function HalamanUtama() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [genreBooks, setGenreBooks] = useState([]);
   const [rekomendasi, setRekomendasi] = useState([]);
+  const [showRecommendPopup, setShowRecommendPopup] = useState(false);
   const [localBooks, setLocalBooks] = useState([]);
 
   const [selectedBook, setSelectedBook] = useState(null);
@@ -95,32 +96,32 @@ export default function HalamanUtama() {
         isLocal: false,
       }));
 
-       // ================= LOCAL BOOKS ================= //
-    const localGenreBooks = localBooks.filter((book) =>
-      book.category
-        ?.toLowerCase()
-        .includes(query.toLowerCase())
-    );
+      // ================= LOCAL BOOKS ================= //
+      const localGenreBooks = localBooks.filter((book) =>
+        book.category
+          ?.toLowerCase()
+          .includes(query.toLowerCase())
+      );
 
-    // ================= GABUNG ================= //
-    const combinedBooks = [
-      ...localGenreBooks,
-      ...apiBooks,
-    ];
+      // ================= GABUNG ================= //
+      const combinedBooks = [
+        ...localGenreBooks,
+        ...apiBooks,
+      ];
 
-    setGenreBooks(combinedBooks);
-    setActiveCategory(category);
+      setGenreBooks(combinedBooks);
+      setActiveCategory(category);
 
-    setTimeout(() => {
-      bookSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }, 100);
+      setTimeout(() => {
+        bookSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
 
-  } catch (err) {
-    console.log("error genre:", err);
-  }
-};
+    } catch (err) {
+      console.log("error genre:", err);
+    }
+  };
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -151,112 +152,97 @@ export default function HalamanUtama() {
   }, []);
 
 
-const handleSearch = async (e) => {
-  if (e.key !== "Enter") return;
+  const handleSearch = async (e) => {
+    if (e.key !== "Enter") return;
 
-  const keyword = search.trim().toLowerCase();
+    if (!search.trim()) {
+      setActiveCategory(null);
+      setGenreBooks([]);
+      return;
+    }
 
-  if (!keyword) {
-    setActiveCategory(null);
-    setGenreBooks([]);
-    return;
-  }
+    try {
+      // ================= SAVE SEARCH HISTORY =================
+      const user = JSON.parse(localStorage.getItem("user"));
 
-  try {
-
-     console.log("LOCAL BOOKS:", localBooks);
-
-// ================= SAVE SEARCH HISTORY =================
-try {
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  if (user?.id) {
-    await axios.post(
-      "http://localhost:3000/api/search-history",
-      {
-        user_id: user.id,
-        keyword: search,
-        source: "koleksi",
-      }
-    );
-  }
-} catch (err) {
-  console.log("save history error:", err);
-}
-
-    // ================= SEARCH LOCAL =================
-    const localResults = localBooks.filter((book) => {
-      return (
-        book.title?.toLowerCase().includes(keyword) ||
-        book.author?.toLowerCase().includes(keyword) ||
-        book.category?.toLowerCase().includes(keyword)
+      await axios.post(
+        "http://localhost:3000/api/search-history",
+        {
+          user_id: user.id,
+          keyword: search,
+          source: "koleksi",
+        }
       );
-    });
-    console.log("LOCAL RESULTS:", localResults);
 
-    // ================= SEARCH OPENLIBRARY =================
-    const res = await fetch(
-      `https://openlibrary.org/search.json?q=${search}&limit=20`
-    );
+      // ================= SEARCH LOCAL BOOKS =================
+      const localResults = localBooks.filter((book) => {
+        const keyword = search.toLowerCase();
 
-    const data = await res.json();
+        return (
+          book.title?.toLowerCase().includes(keyword) ||
+          book.author?.toLowerCase().includes(keyword) ||
+          book.category?.toLowerCase().includes(keyword) ||
 
-    const apiResults = data.docs.map((item) => ({
-      workKey: item.key,
-      title: item.title ?? "-",
-      author: item.author_name?.[0] ?? "-",
-      cover: item.cover_i ?? null,
-      firstSentence:
-        item.first_sentence?.[0] ||
-        item.first_sentence ||
-        "",
-      subjects: item.subject?.slice(0, 5) || [],
-      isLocal: false,
-    }));
-
-    // ================= GABUNG =================
-    const combinedResults = [
-      ...localResults,
-      ...apiResults,
-    ];
-
-    // ================= HAPUS DUPLIKAT =================
-    const uniqueResults = combinedResults.filter(
-      (book, index, self) =>
-        index ===
-        self.findIndex(
-          (b) =>
-            b.title?.toLowerCase() ===
-            book.title?.toLowerCase()
-        )
-    );
-
-    console.log("FINAL RESULTS:", uniqueResults);
-
-    setGenreBooks(uniqueResults);
-    setActiveCategory(`Search Results: ${search}`);
-
-    setTimeout(() => {
-      bookSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
+          book.subjects
+            ?.join(" ")
+            .toLowerCase()
+            .includes(keyword));
       });
 
-    }, 100);
+      // ================= SEARCH OPENLIBRARY =================
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${search}&limit=12`
+      );
 
-  
+      const data = await res.json();
 
-  } catch (err) {
-    console.log("search error:", err);
-  }
-};
+      const apiResults = data.docs.map((item) => ({
+        workKey: item.key,
+        title: item.title ?? "-",
+        author: item.author_name?.[0] ?? "-",
+        cover: item.cover_i ?? null,
+        firstSentence:
+          item.first_sentence?.[0] ||
+          item.first_sentence ||
+          "",
+        subjects: item.subject?.slice(0, 5) || [],
+        isLocal: false,
+      }));
 
+      // ================= GABUNGKAN =================
+      const combinedResults = [
+        ...localResults,
+        ...apiResults,
+      ];
+
+      setGenreBooks(combinedResults);
+
+      setActiveCategory(`Search Results: ${search}`);
+
+      setTimeout(() => {
+        bookSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
+
+    } catch (err) {
+      console.log("search error:", err);
+    }
+  };
 
   useEffect(() => {
+
     const fetchRekomendasi = async () => {
+
       try {
-        const res = await fetch("https://openlibrary.org/search.json?q=popular&limit=12");
+
+        const res = await fetch(
+          "https://openlibrary.org/search.json?q=popular&limit=12"
+        );
 
         const data = await res.json();
+
+        // ================= OPENLIBRARY BOOKS =================
 
         const books = data.docs.map((item) => ({
           workKey: item.key,
@@ -264,27 +250,131 @@ try {
           author: item.author_name?.[0] ?? "-",
           cover: item.cover_i ?? null,
 
-          firstSentence: item.first_sentence?.[0] || item.first_sentence || "",
+          firstSentence:
+            item.first_sentence?.[0] ||
+            item.first_sentence ||
+            "",
 
-          subjects: item.subject?.slice(0, 5) || [],
+          subjects:
+            item.subject?.slice(0, 5) || [],
+
+          category:
+            item.subject?.[0] || "",
         }));
 
-        setRekomendasi([
+        // ================= COMBINED =================
+
+        const combinedBooks = [
           ...localBooks,
           ...books,
-        ]);
+        ];
+
+        const user =
+          JSON.parse(
+            localStorage.getItem("user")
+          );
+
+        if (!user) return;
+
+        // ================= FAV GENRES =================
+
+        const favRes =
+          await axios.get(
+            `http://localhost:3000/api/fav-genres/${user.id}`
+          );
+
+        // ================= SEARCH HISTORY =================
+
+        const historyRes =
+          await axios.get(
+            `http://localhost:3000/api/search-history/${user.id}`
+          );
+
+        // ================= AI =================
+
+        const aiRes =
+          await axios.post(
+            "http://localhost:3000/api/ai/recommend-books",
+            {
+              genres:
+                favRes.data.map(
+                  (g) => g.category
+                ),
+
+              searches:
+                historyRes.data.map(
+                  (s) => s.keyword
+                ),
+
+              books:
+                combinedBooks.map((b) => ({
+                  title: b.title,
+
+                  category:
+                    b.category ||
+                    b.subject ||
+                    "",
+                })),
+            }
+          );
+
+        const recommendedTitles =
+          aiRes.data.map(
+            (r) =>
+              r.title.toLowerCase().trim()
+          );
+
+        const filteredBooks =
+          combinedBooks.filter((book) => {
+
+            return recommendedTitles.some(
+              (title) =>
+                book.title
+                  ?.toLowerCase()
+                  .includes(title)
+            );
+
+          });
+
+
+        // fallback kalau AI ga cocok
+        if (filteredBooks.length > 0) {
+
+          setRekomendasi(
+            filteredBooks
+          );
+
+        } else {
+
+          console.log(
+            "AI fallback aktif"
+          );
+
+          setRekomendasi(
+            combinedBooks.slice(0, 12)
+          );
+
+        }
+
       } catch (err) {
-        console.log(err);
+
+        console.log(
+          "AI fallback aktif"
+        );
+
       }
-    }; 
 
-  fetchRekomendasi();
-}, [localBooks]);
+    };
 
+    if (localBooks.length > 0) {
+      fetchRekomendasi();
+    }
+
+  }, [localBooks]);
 
   useEffect(() => {
-  const fetchLocalBooks = async () => {
-    try {
+    const fetchLocalBooks = async () => {
+      try {
         const res = await fetch(
           "http://localhost:3000/api/admin/borrow-books"
         );
@@ -292,18 +382,18 @@ try {
         const data = await res.json();
 
         const books = data.map((item) => ({
-        id: item.id,
-        workKey: "local_" + item.id,
-        title: item.title,
-        author: item.author,
-        cover_url: item.cover,
-        description: item.description,
-        stock: item.stock,
-        category: item.category || "",
-        subjects: [item.category || ""],
+          id: item.id,
+          workKey: "local_" + item.id,
+          title: item.title,
+          author: item.author,
+          cover_url: item.cover,
+          description: item.description,
+          stock: item.stock,
+          category: item.category || "",
+          subjects: [item.category || ""],
 
-        isLocal: true,
-}));
+          isLocal: true,
+        }));
 
 
         setLocalBooks(books);
@@ -347,7 +437,7 @@ try {
     },
 
     {
-      name: "Textbook",
+      name: "Textbox",
       icon: <FiBook />,
     },
 
@@ -400,16 +490,9 @@ try {
 
       // kalau limit tercapai
       if (!data.status) {
-      if (data.message === "Borrow limit reached") {
-        showNotif(
-          "You can only borrow 2 books before returning them."
-        );
-      } else {
         showNotif(data.message);
+        return;
       }
-
-      return;
-    }
 
       // sukses
       showNotif("Borrow request submitted");
@@ -468,6 +551,151 @@ try {
       {notif && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-9999 animate-bounce">
           <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">{notif}</div>
+        </div>
+      )}
+
+      {/* RECOMMEND POPUP */}
+      {showRecommendPopup && (
+        <div
+          className="
+    fixed inset-0 z-[9999]
+    bg-black/40
+    flex items-center
+    justify-center
+  "
+        >
+          <div
+            className="
+      bg-white
+      rounded-3xl
+      p-6
+      w-[92%]
+      max-w-3xl
+    "
+          >
+
+            {/* HEADER */}
+            <div
+              className="
+        flex items-center
+        justify-between
+        mb-6
+      "
+            >
+
+              <div>
+
+                <h2
+                  className="
+            text-2xl
+            font-bold
+            text-blue-700
+          "
+                >
+                  Recommended For You ✨
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Based on your favorite genres
+                  and search history
+                </p>
+
+              </div>
+
+              <button
+                onClick={() =>
+                  setShowRecommendPopup(false)
+                }
+                className="
+          text-gray-500
+          hover:text-black
+          text-xl
+        "
+              >
+                ✕
+              </button>
+
+            </div>
+
+            {/* BOOKS */}
+            <div
+              className="
+        grid
+        grid-cols-2
+        md:grid-cols-4
+        gap-4
+      "
+            >
+              {rekomendasi
+                .slice(0, 4)
+                .map((book, i) => (
+
+                  <div
+                    key={i}
+                    className="
+            bg-gray-50
+            rounded-2xl
+            overflow-hidden
+          "
+                  >
+
+                    <div className="h-48 bg-blue-100">
+
+                      {book.cover_url || book.cover ? (<img
+                        src={book.cover_url}
+                        className="
+                  w-full
+                  h-full
+                  object-cover
+                "
+                      />
+                      ) : (
+                        <div
+                          className="
+                  w-full
+                  h-full
+                  flex
+                  items-center
+                  justify-center
+                  text-gray-400
+                "
+                        >
+                          No Cover
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="p-3">
+
+                      <p
+                        className="
+                text-sm
+                font-semibold
+                line-clamp-2
+              "
+                      >
+                        {book.title}
+                      </p>
+
+                      <p
+                        className="
+                text-xs
+                text-gray-500
+                mt-1
+              "
+                      >
+                        {book.author}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                ))}
+            </div>
+
+          </div>
         </div>
       )}
 
@@ -540,7 +768,7 @@ try {
             {/* COVER */}
             <div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
               {(selectedBook?.isLocal && selectedBook?.cover_url) ||
-              (!selectedBook?.isLocal && selectedBook?.cover) ? (
+                (!selectedBook?.isLocal && selectedBook?.cover) ? (
                 <img
                   src={selectedBook?.isLocal ? selectedBook.cover_url : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
                   alt={selectedBook?.title}
@@ -912,61 +1140,61 @@ try {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {
-          (activeCategory ? genreBooks : rekomendasi).map((book, i) => (
-            <div
-            key={i}
-            className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-          >
+            (activeCategory ? genreBooks : rekomendasi).map((book, i) => (
+              <div
+                key={i}
+                className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+              >
 
-            <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
-              {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
-              <img
-                src={
-                  book.isLocal
-                    ? book.cover_url
-                    : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
-                }
-                alt={book.title}
-                className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            ) : (
-              <p>No Cover</p>
-            )}
-            </div>
-
-
-            <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
-
-              <div>
-
-                <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
-                  {book.title}
-                </h3>
-
-                <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
-                  {book.author}
-                </p>
-
-                <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
-                  Click detail to see description
-                </p>
+                <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
+                  {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
+                    <img
+                      src={
+                        book.isLocal
+                          ? book.cover_url
+                          : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
+                      }
+                      alt={book.title}
+                      className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <p>No Cover</p>
+                  )}
                 </div>
-                <div className="flex gap-2 mt-auto">
-                  <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
-                    Borrow
-                  </button>
 
-                  <button onClick={() => handleDetail(book)} className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300">
-                    Detail
-                  </button>
+
+                <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
+
+                  <div>
+
+                    <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
+                      {book.title}
+                    </h3>
+
+                    <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
+                      {book.author}
+                    </p>
+
+                    <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
+                      Click detail to see description
+                    </p>
+                  </div>
+                  <div className="flex gap-2 mt-auto">
+                    <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
+                      Borrow
+                    </button>
+
+                    <button onClick={() => handleDetail(book)} className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300">
+                      Detail
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
 
         </div>
