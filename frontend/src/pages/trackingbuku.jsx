@@ -4,6 +4,9 @@ import axios from "axios";
 import { FiBell, FiHeart, FiSearch, FiShoppingCart, FiPackage, FiTruck, FiMapPin, FiCheckCircle, FiClock, FiHome } from "react-icons/fi";
 
 import logo from "../assets/logo.png";
+import Lottie from "lottie-react";
+import processingAnim from "../assets/lottie/prosesing.json";
+import shippingAnim from "../assets/lottie/shipping.json";
 import Floating from "./floating";
 
 export default function Trackingbuku() {
@@ -19,6 +22,8 @@ export default function Trackingbuku() {
   const popupRef = useRef();
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [pickupOrder, setPickupOrder] = useState(null);
+  const [popup, setPopup] = useState(null);
   const [activeFilter, setActiveFilter] =
     useState("all");
   useEffect(() => {
@@ -346,13 +351,16 @@ if (section) {
       {/* STATUS CARDS */}
       <section className="px-6 md:px-12 mt-8">
 
-        <div className="
-          max-w-7xl
-          mx-auto
-          grid
-          md:grid-cols-4
-          gap-6
-        ">
+        <div
+  className="
+    max-w-7xl
+    mx-auto
+    grid
+    grid-cols-2
+    md:grid-cols-5
+    gap-5
+  "
+>
 
           {/* UNPAID */}
           <div
@@ -373,6 +381,8 @@ if (section) {
         cursor-pointer
         transition-all
         hover:shadow-lg
+        p-7
+h-full
 
         ${activeFilter ===
                 "waiting_payment"
@@ -430,6 +440,8 @@ if (section) {
   )
 }
             className={`
+              min-w-[150px]
+flex-shrink-0
             flex
             items-center
             gap-4
@@ -497,6 +509,8 @@ if (section) {
   )
 }
             className={`
+              p-7
+h-full
         flex
         items-center
         gap-4
@@ -559,9 +573,11 @@ if (section) {
           {/* READY PICKUP */}
           <div
             onClick={() =>
-              setActiveFilter("ready_pickup")
-            }
+  handleFilterClick("ready_pickup")
+}
             className={`
+              p-7
+h-full
     flex
     items-center
     gap-4
@@ -625,6 +641,8 @@ if (section) {
   )
 }
             className={`
+              p-7
+h-full
         flex
         items-center
         gap-4
@@ -754,7 +772,6 @@ className="
   font-bold
   text-gray-800
 ">{order.title}</h3>
-                    <h3 className="text-xl font-semibold text-gray-800">{order.title}</h3>
                     <p className="text-gray-400 mt-1">Order ID: {order.order_id}</p>
                     <p className="text-blue-600 font-bold mt-3">Rp {order.amount?.toLocaleString("id-ID")}</p>
                   </div>
@@ -762,14 +779,27 @@ className="
 
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
-                  {order.order_status === "waiting_payment" && (
-                    <>
-                      <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">Waiting Payment</span>
-                      <button onClick={() => setSelectedOrder(order)} className="border border-blue-600 text-blue-600 px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition">
-                        View Detail
-                      </button>
-                    </>
-                  )}
+                 {order.order_status === "waiting_payment" && (
+  <div
+    onClick={() => setSelectedOrder(order)}
+    className="cursor-pointer flex flex-col gap-2"
+  >
+    <span className="
+bg-yellow-100
+    text-yellow-600
+      px-4
+      py-2
+      rounded-full
+      text-sm
+      font-medium
+      cursor-pointer
+     hover:bg-yellow-200
+      transition
+    ">
+      Waiting Payment
+    </span>
+  </div>
+)} 
 <div className="rounded-lg bg-slate-50 p-3">
   <div className="text-xs text-slate-400 mb-1">
     Delivery Method
@@ -783,135 +813,67 @@ className="
 </div>
 
 {order.order_status === "processing" && (
+  <span
+    onClick={() => setPopup("processing")}
+    className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-indigo-200 transition"
+  >
+    Processing
+  </span>
+)}
 
-  <>
-    <span className="
-      bg-indigo-100
-      text-indigo-600
+{order.order_status === "shipping" && (
+  <span
+    onClick={() => setPopup("shipping")}
+    className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition"
+  >
+    Shipping
+  </span>
+)}
+{order.order_status === "ready_pickup" && (
+  <button
+    onClick={() => setPickupOrder(order)}
+    className="
+      bg-emerald-100
+      text-emerald-600
       px-4
       py-2
       rounded-full
       text-sm
       font-medium
-    ">
-      Processing
-    </span>
-
-    <button
-      onClick={() =>
-        setSelectedOrder(order)
-      }
-      className="
-        border
-        border-indigo-500
-        text-indigo-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-indigo-50
-        transition
-      "
-    >
-      View Receipt
-    </button>
-  </>
-
+      cursor-pointer
+      hover:bg-emerald-200
+      transition
+    "
+  >
+    Ready Pickup
+  </button>
 )}
 
-{(
-  order.order_status === "shipping" ||
-  order.order_status === "ready_pickup"
-) && (
-
-  <>
-    <span
-      className="
-        bg-blue-100
-        text-blue-600
-        px-4
-        py-2
-        rounded-full
-        text-sm
-        font-medium
-      "
-    >
-
-      {order.order_status === "ready_pickup"
-        ? "Ready Pickup"
-        : "Shipping"}
-
-    </span>
-
-    <button
-      onClick={() =>
-        setSelectedOrder(order)
-      }
-      className="
-        border
-        border-blue-500
-        text-blue-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-blue-50
-        transition
-      "
-    >
-      View Receipt
-    </button>
-  </>
-)}
-                  {order.order_status ===
-                    "completed" && (
-
-                      <>
-
-                        <span className="
-      bg-green-100
-      text-green-600
+                  {order.order_status === "completed" && (
+  <span className="
+      bg-emerald-100
+      text-emerald-600
       px-4
       py-2
       rounded-full
       text-sm
       font-medium
-    ">
-
-                          Completed
-
-                        </span>
-
-                        <button
-                          onClick={() =>
-                            setSelectedOrder(order)
-                          }
-                          className="
-        border
-        border-green-500
-        text-green-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-green-50
-        transition
-      "
-                        >
-
-                          View Receipt
-
-                        </button>
-
-                      </>
-
-                    )}
+      cursor-pointer
+      hover:bg-emerald-200
+      transition
+    "
+  onClick={() => setSelectedOrder(order)}
+  >
+    Completed
+  </span>
+)}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -1042,6 +1004,13 @@ className="
 
             {/* DETAIL */}
             <div className="mt-6 space-y-4 text-sm">
+              <div className="flex justify-between">
+  <span className="text-gray-500">Name</span>
+
+  <span className="font-medium">
+    {user.name}
+  </span>
+</div>
 
               <div className="flex justify-between">
                 <span className="text-gray-500">
@@ -1071,7 +1040,27 @@ className="
                 <span className="font-bold text-blue-600">
                   Rp {selectedOrder.amount?.toLocaleString("id-ID")}
                 </span>
+                
               </div>
+              {/* PRINT BUTTON (ONLY COMPLETED) */}
+{selectedOrder.order_status === "completed" && (
+  <button
+    onClick={() => window.print()}
+    className="
+      mt-6
+      w-full
+      bg-black
+      text-white
+      py-3
+      rounded-2xl
+      font-semibold
+      hover:bg-gray-800
+      transition
+    "
+  >
+    Print Receipt
+  </button>
+)}
 
             </div>
 
@@ -1184,603 +1173,216 @@ className="
 
               )}
 
-            {/* COMPLETED */}
-            {selectedOrder.order_status ===
-              "processing" && (
-
-                <div className="
-    mt-2
-    w-full
-    w-[290px]
-    mx-auto
-    bg-white
-    border
-    border-gray-300
-    shadow-xl
-    print-area
-    overflow-hidden
-    font-mono
-  ">
-
-                  {/* TOP */}
-                  <div className="
-      text-center
-      py-4
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={logo}
-                      alt="logo"
-                      className="
-          w-16
-          h-16
-          mx-auto
-          mb-2
-        "
-                    />
-
-                    <h2 className="
-        text-2xl
-        font-black
-        tracking-widest
-      ">
-
-                      BOOKIN
-
-                    </h2>
-
-                    <p className="text-xs mt-1">
-                      PROCESSING RECEIPT
-                    </p>
-
-                  </div>
-
-                  {/* COVER */}
-                  <div className="
-      flex
-      justify-center
-      py-5
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                      alt={selectedOrder.title}
-                      className="
-          w-24
-          h-36
-          object-cover
-          shadow-md
-        "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="
-      p-4
-      text-[12px]
-      space-y-3
-    ">
-
-                    <div className="flex justify-between">
-                      <span>ORDER ID</span>
-                      <span>{selectedOrder.order_id}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>CUSTOMER</span>
-                      <span>{user?.name}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-  flex
-  justify-between
-  gap-5
-">
-
-                      <span>BOOK</span>
-
-                      <span className="text-right">
-                        {selectedOrder.title}
-                      </span>
-
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>STATUS</span>
-
-                      <span className="font-bold text-indigo-600">
-                        PROCESSING
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>PAYMENT</span>
-
-                      <span className="font-bold">
-                        SUCCESS
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-                          flex
-                          justify-between
-                          text-lg
-                          font-black
-                        ">
-
-                      <span>TOTAL</span>
-
-                      <span>
-                        Rp
-                        {selectedOrder.amount?.toLocaleString("id-ID")}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="
-                      text-center
-                      py-5
-                      border-t
-                      border-dashed
-                      text-xs
-                    ">
-
-                    <p>
-                      Your order is being processed
-                    </p>
-
-                    <p className="mt-1">
-                      Thank you for shopping at BOOKIN
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        window.print()
-                      }
-                      className="
-          mt-4
-          border
-          border-black
-          px-5
-          py-2
-          text-sm
-          hover:bg-black
-          hover:text-white
-          transition
-        "
-                    >
-
-                      PRINT RECEIPT
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* SHIPPING RECEIPT */}
-            {(
-              selectedOrder.order_status === "shipping" ||
-              selectedOrder.order_status === "ready_pickup"
-            ) && (
-
-                <div className="
-                mt-4
-                w-full
-                w-[290px]
-                mx-auto
-                bg-white
-                border
-                border-gray-300
-                shadow-none
-                print-area
-                overflow-hidden
-                font-mono
-              ">
-
-                  {/* TOP */}
-                  <div className="
-                    text-center
-                    py-6
-                    border-b
-                    border-dashed
-                  ">
-
-                    <img
-                      src={logo}
-                      alt="logo"
-                      className="
-                      w-16
-                      h-16
-                      mx-auto
-                      mb-2
-                    "
-                    />
-
-                    <h2 className="
-                    text-2xl
-                    font-black
-                    tracking-widest
-                  ">
-
-                      BOOKIN
-
-                    </h2>
-
-                    <p className="text-xs mt-1">
-
-                      {selectedOrder.order_status === "ready_pickup"
-                        ? "PICKUP RECEIPT"
-                        : "SHIPPING RECEIPT"}
-
-                    </p>
-
-                  </div>
-
-                  {/* COVER */}
-                  <div className="
-                  flex
-                  justify-center
-                  py-5
-                  border-b
-                  border-dashed
-                ">
-
-                    <img
-                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                      alt={selectedOrder.title}
-                      className="
-                      w-24
-                      h-36
-                      object-cover
-                      shadow-md
-                    "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="
-                  p-4
-                  text-[12px]
-                  space-y-3
-                ">
-
-                    <div className="flex justify-between">
-                      <span>ORDER ID</span>
-                      <span>{selectedOrder.order_id}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>CUSTOMER</span>
-                      <span>{user?.name}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between gap-5">
-                      <span>BOOK</span>
-
-                      <span className="text-right">
-                        {selectedOrder.title}
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>STATUS</span>
-
-                      <span className="font-bold">
-
-                        {selectedOrder.order_status === "ready_pickup"
-                          ? "READY PICKUP"
-                          : "SHIPPING"}
-
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>PAYMENT</span>
-
-                      <span className="font-bold">
-                        SUCCESS
-                      </span>
-                    </div>
-
-<div className="border-b border-dashed"></div>
-
-<div className="flex justify-between">
-
-  <span>
-    {selectedOrder.order_status === "ready_pickup"
-      ? "PICKUP CODE"
-      : "TRACKING"}
-  </span>
-
-  <span>
-    BK-{selectedOrder.id}
-  </span>
-
-</div>
-
-<div className="border-b border-dashed"></div>
-  
-                        <div className="
-                              flex
-                              justify-between
-                              text-lg
-                              font-black
-                            ">
-
-                          <span>TOTAL</span>
-
-                          <span>
-                            Rp
-                            {selectedOrder.amount?.toLocaleString("id-ID")}
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                      {/* FOOTER */}
-                      <div className="
-                          text-center
-                          py-5
-                          border-t
-                          border-dashed
-                          text-xs
-                        ">
-
-                        <p>
-
-                          {selectedOrder.order_status === "ready_pickup"
-                            ? "Your order is ready to pickup"
-                            : "Your package is on delivery"}
-
-                        </p>
-
-                        <p className="mt-1">
-                          Thank you for shopping
-                        </p>
-
-                        <button
-                          onClick={() =>
-                            window.print()
-                          }
-                          className="
-                              mt-2
-                              border
-                              border-black
-                              px-4
-                              py-1.5
-                              text-sm
-                              hover:bg-black
-                              hover:text-white
-                              transition
-                            "
-                        >
-
-                          PRINT RECEIPT
-
-                        </button>
-
-                      </div>
-
-                    </div>
-
-              )}
-
-                    {/* COMPLETED RECEIPT */}
-                    {selectedOrder.order_status ===
-                      "completed" && (
-
-                        <div className="
-                                mt-2
-                                w-full
-                                w-[290px]
-                                mx-auto
-                                bg-white
-                                border
-                                border-gray-300
-                                shadow-none
-                                print-area
-                            overflow-hidden
-                            font-mono
-                              ">
-
-                          {/* TOP */}
-                          <div className="
-                                text-center
-                                  py-4
-                                  border-b
-                                  border-dashed
-                                ">
-
-                            <img
-                              src={logo}
-                              alt="logo"
-                              className="
-                                  w-16
-                                  h-16
-                                  mx-auto
-                                  mb-2
-                                "
-                            />
-
-                            <h2 className="
-                              text-2xl
-                              font-black
-                              tracking-widest
-                            ">
-
-                              BOOKIN
-
-                            </h2>
-
-                            <p className="text-xs mt-1">
-                              COMPLETED RECEIPT
-                            </p>
-
-                          </div>
-
-                          {/* COVER */}
-                          <div className="
-                            flex
-                            justify-center
-                            py-5
-                            border-b
-                            border-dashed
-                          ">
-
-                            <img
-                              src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                              alt={selectedOrder.title}
-                              className="
-                                w-24
-                                h-36
-                                object-cover
-                                shadow-md
-                              "
-                            />
-
-                          </div>
-
-                          {/* CONTENT */}
-                          <div className="
-                                    p-4
-                                    text-[12px]
-                                    space-y-3
-                                  ">
-
-                            <div className="flex justify-between">
-                              <span>ORDER ID</span>
-                              <span>{selectedOrder.order_id}</span>
-                            </div>
-
-                            <div className="border-b border-dashed"></div>
-
-                            <div className="flex justify-between">
-                              <span>CUSTOMER</span>
-                              <span>{user?.name}</span>
-                            </div>
-
-                            <div className="border-b border-dashed"></div>
-
-                            <div className="
-                                  flex
-                                  justify-between
-                                  gap-5
-                                ">
-                              <span>BOOK</span>
-
-                              <span className="text-right">
-                                {selectedOrder.title}
-                              </span>
-                            </div>
-
-                            <div className="border-b border-dashed"></div>
-
-                            <div className="flex justify-between">
-                              <span>STATUS</span>
-
-                              <span className="font-bold">
-                                COMPLETED
-                              </span>
-                            </div>
-
-                            <div className="border-b border-dashed"></div>
-
-                            <div className="
-                                flex
-                                justify-between
-                                text-lg
-                                font-black
-                              ">
-
-                              <span>TOTAL</span>
-
-                              <span>
-                                Rp
-                                {selectedOrder.amount?.toLocaleString("id-ID")}
-                              </span>
-
-                            </div>
-
-                          </div>
-
-                          {/* FOOTER */}
-                          <div className="
-                              text-center
-                              py-5
-                              border-t
-                              border-dashed
-                              text-xs
-                            ">
-
-                            <p>
-                              Order completed successfully
-                            </p>
-
-                            <p className="mt-1">
-                              Thank you for shopping at BOOKIN
-                            </p>
-
-                            <button
-                              onClick={() =>
-                                window.print()
-                              }
-                              className="
-          mt-4
-          border
-          border-black
-          px-5
-          py-2
-          text-sm
-          hover:bg-black
-          hover:text-white
-          transition
-        "
-                            >
-
-                              PRINT RECEIPT
-
-                            </button>
-
-                          </div>
-
-                        </div>
-
-                      )}
 
                                  </div>
               </div>
             )}
+
+            {pickupOrder && (
+  <div
+    onClick={() => setPickupOrder(null)}
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="
+        bg-white
+        w-[380px]
+        md:w-[430px]
+        rounded-xl
+        p-6
+        relative
+        shadow-2xl
+        border
+        border-gray-200
+      "
+    >
+      {/* CLOSE */}
+      <button
+        onClick={() => setPickupOrder(null)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
+      >
+        ✕
+      </button>
+
+      {/* TITLE */}
+      <h2 className="text-3xl font-bold text-center text-gray-800">
+        RECEIPT
+      </h2>
+
+      <p className="text-center text-sm text-gray-500 mt-1">
+        Pickup Order Confirmation
+      </p>
+
+      {/* COVER */}
+      <img
+        src={`https://covers.openlibrary.org/b/id/${pickupOrder.cover}-L.jpg`}
+        alt={pickupOrder.title}
+        className="
+          w-36
+          h-52
+          object-cover
+          rounded-lg
+          mx-auto
+          mt-6
+          shadow-lg
+        "
+      />
+
+      {/* BOOK TITLE */}
+      <h3 className="text-xl font-bold text-center mt-4 text-gray-800">
+        {pickupOrder.title}
+      </h3>
+
+      {/* STATUS */}
+      <div className="flex justify-center mt-3">
+        <span className="bg-emerald-100 text-emerald-600 px-4 py-2 rounded-full text-sm font-medium">
+          Ready for Pickup
+        </span>
+      </div>
+
+      {/* DETAIL */}
+      <div className="mt-6 space-y-4 text-sm">
+        <div className="flex justify-between">
+  <span className="text-gray-500">Name</span>
+
+  <span className="font-medium">
+    {user.name}
+  </span>
+</div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">Order ID</span>
+          <span className="font-medium">{pickupOrder.order_id}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-500">Total</span>
+          <span className="font-bold text-blue-600">
+            Rp {pickupOrder.amount?.toLocaleString("id-ID")}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-500">Type</span>
+          <span className="font-medium">Pickup</span>
+        </div>
+      </div>
+
+      {/* PRINT BUTTON */}
+      <button
+        onClick={() => window.print()}
+        className="
+          mt-6
+          w-full
+          bg-black
+          text-white
+          py-3
+          rounded-2xl
+          font-semibold
+          hover:bg-gray-800
+          transition
+        "
+      >
+        Print Receipt
+      </button>
+    </div>
+  </div>
+)}
+{popup === "processing" && (
+  <div
+    onClick={() => setPopup(null)}
+    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+    >
+      {/* close button */}
+      <button
+        onClick={() => setPopup(null)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-black"
+      >
+        ✕
+      </button>
+
+      {/* badge */}
+      <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+        Processing
+      </span>
+
+      {/* title */}
+      <h2 className="text-lg font-semibold text-blue-600 mt-3">
+        Preparing Your Order
+      </h2>
+
+      {/* animation */}
+      <Lottie
+        animationData={processingAnim}
+        loop
+        autoplay
+        className="w-48 h-48 mx-auto"
+      />
+
+      {/* subtitle */}
+      <p className="text-sm text-gray-500 mt-2">
+        We are carefully packing your items. Please wait a moment.
+      </p>
+
+      {/* progress bar */}
+      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+        <div className="h-1 bg-blue-600 w-1/3 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+)}
+
+{popup === "shipping" && (
+  <div
+    onClick={() => setPopup(null)}
+    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+    >
+      {/* close button */}
+      <button
+        onClick={() => setPopup(null)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-black"
+      >
+        ✕
+      </button>
+
+      {/* badge */}
+      <span className="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full">
+        On Delivery
+      </span>
+
+      {/* title */}
+      <h2 className="text-lg font-semibold text-indigo-600 mt-3">
+        Your Order is On The Way
+      </h2>
+
+      {/* animation */}
+      <Lottie
+        animationData={shippingAnim}
+        loop
+        autoplay
+        className="w-48 h-48 mx-auto"
+      />
+
+      {/* subtitle */}
+      <p className="text-sm text-gray-500 mt-2">
+        Courier is delivering your package. Stay tuned!
+      </p>
+
+      {/* progress bar */}
+      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+        <div className="h-1 bg-indigo-600 w-2/3 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+)}
             
             {/* FLOATING */}
             <Floating />
