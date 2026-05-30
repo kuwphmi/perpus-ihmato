@@ -28,15 +28,11 @@ export default function Profil() {
   const [notif, setNotif] = useState("");
 
   const showNotif = (message) => {
-
     setNotif(message);
 
     setTimeout(() => {
-
       setNotif("");
-
     }, 5000);
-
   };
 
   const [addressForm, setAddressForm] = useState({
@@ -48,26 +44,17 @@ export default function Profil() {
   });
 
   useEffect(() => {
-
-    const stored =
-      localStorage.getItem("user");
+    const stored = localStorage.getItem("user");
 
     // kalau kosong
-    if (
-      !stored ||
-      stored === "undefined"
-    ) {
-
+    if (!stored || stored === "undefined") {
       navigate("/login");
 
       return;
-
     }
 
     try {
-
-      const data =
-        JSON.parse(stored);
+      const data = JSON.parse(stored);
 
       setUser({
         id: data.id ?? "",
@@ -77,144 +64,77 @@ export default function Profil() {
         nik: data.nik ?? "",
         birth: data.birth ?? "",
         gender: data.gender ?? "",
-        member_code:
-          data.member_code ?? "",
-        profile_image:
-          data.profile_image ?? "",
+        member_code: data.member_code ?? "",
+        profile_image: data.profile_image ?? "",
       });
-
     } catch (err) {
-
       console.log(err);
 
-      localStorage.removeItem(
-        "user"
-      );
+      localStorage.removeItem("user");
 
       navigate("/login");
-
     }
-
   }, []);
 
   useEffect(() => {
-
     fetchAddresses();
-
   }, []);
 
   const fetchAddresses = async () => {
-
     try {
+      const stored = localStorage.getItem("user");
 
-      const stored =
-        localStorage.getItem("user");
+      if (!stored || stored === "undefined") return;
 
-      if (
-        !stored ||
-        stored === "undefined"
-      ) return;
-
-      const userData =
-        JSON.parse(stored);
+      const userData = JSON.parse(stored);
 
       if (!userData?.id) return;
 
-      const res =
-        await axios.get(
-          `http://localhost:3000/api/address/${userData.id}`
-        );
+      const res = await axios.get(`http://localhost:3000/api/address/${userData.id}`);
 
       setAddresses(res.data);
-
     } catch (err) {
-
       console.log(err);
-
     }
-
   };
 
   // upload foto
   const handleImageChange = async (e) => {
-
     const file = e.target.files[0];
 
     if (!file) return;
 
     try {
+      const formData = new FormData();
 
-      const formData =
-        new FormData();
+      formData.append("profile_image", file);
 
-      formData.append(
-        "profile_image",
-        file
-      );
+      formData.append("id", user.id);
 
-      formData.append(
-        "id",
-        user.id
-      );
+      formData.append("name", user.name);
 
-      formData.append(
-        "name",
-        user.name
-      );
+      formData.append("phone", user.phone);
 
-      formData.append(
-        "phone",
-        user.phone
-      );
+      formData.append("nik", user.nik);
 
-      formData.append(
-        "nik",
-        user.nik
-      );
+      formData.append("birth", user.birth);
 
-      formData.append(
-        "birth",
-        user.birth
-      );
+      formData.append("gender", user.gender);
 
-      formData.append(
-        "gender",
-        user.gender
-      );
-
-      const res =
-        await axios.put(
-          "http://localhost:3000/api/update-profile",
-          formData
-        );
+      const res = await axios.put("http://localhost:3000/api/update-profile", formData);
 
       if (res.data.status) {
-
         setUser(res.data.user);
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify(
-            res.data.user
-          )
-        );
+        localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        alert(
-          "Photo updated!"
-        );
-
+        alert("Photo updated!");
       }
-
     } catch (err) {
-
       console.log(err);
 
-      alert(
-        "Failed upload image"
-      );
-
+      alert("Failed upload image");
     }
-
   };
   // ← SIMPAN KE DATABASE
   const handleSave = async () => {
@@ -225,19 +145,15 @@ export default function Profil() {
       }
 
       if (!user.birth) {
-
         showNotif("Please enter your date of birth");
 
         return;
-
       }
 
       if (!user.gender) {
-
         showNotif("Please select gender");
 
         return;
-
       }
       const res = await axios.put("http://localhost:3000/api/update-profile", {
         id: user.id,
@@ -250,86 +166,71 @@ export default function Profil() {
       });
 
       if (res.data.status) {
-
         // ambil user terbaru dari backend
-        const updatedUser =
-          res.data.user;
+        const updatedUser = res.data.user;
         // update state
         setUser(updatedUser);
 
         // update localstorage
-        localStorage.setItem(
-          "user",
-          JSON.stringify(updatedUser)
-        );
+        localStorage.setItem("user", JSON.stringify(updatedUser));
 
-        showNotif(
-          "Profile updated successfully!"
-        );
+        showNotif("Profile updated successfully!");
 
-setIsEdit(false);
+        setIsEdit(false);
 
-navigate("/choosegenre");
+        navigate("/choosegenre");
       } else {
-
-        showNotif(
-          res.data.message
-        );
-
+        showNotif(res.data.message);
       }
-
     } catch (err) {
-
       console.log(err);
 
-      showNotif(
-        "Failed to save profile"
-      );
-
+      showNotif("Failed to save profile");
     }
-  }
+  };
 
-const setPrimaryAddress = async (id) => {
+  const setPrimaryAddress = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/address/primary/${id}`);
 
-  try {
+      fetchAddresses();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-    await axios.put(
-      `http://localhost:3000/api/address/primary/${id}`
-    );
+  //logout
+  const handleLogout = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (storedUser?.id) {
+      const key = `chatHistory_${storedUser.id}`;
+      const archiveKey = `chatArchive_${storedUser.id}`;
+      const history = localStorage.getItem(key);
+      if (history) {
+        localStorage.setItem(archiveKey, history);
+        localStorage.removeItem(key);
+      }
+    }
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
 
-    fetchAddresses();
+    navigate("/login");
+  };
 
-  } catch (err) {
-
-    console.log(err);
-
-  }
-
-};
-
-//logout
-const handleLogout = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("token");
-
-  navigate("/login");
-};
-
-return (
-
-  <>
-
-    {notif && (
-
-      <div className="
+  return (
+    <>
+      {notif && (
+        <div
+          className="
         fixed
         top-6
         left-1/2
         -translate-x-1/2
-        z-[99999]
-      ">
-
-        <div className="
+        z-99999
+      "
+        >
+          <div
+            className="
           bg-blue-600
           text-white
           px-6
@@ -339,378 +240,304 @@ return (
           text-sm
           font-medium
           animate-[fadeIn_.3s_ease]
-        ">
-
-          {notif}
-
+        "
+          >
+            {notif}
+          </div>
         </div>
+      )}
 
-      </div>
-
-    )}
-
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
-        <div className="flex gap-6">
-          {[
-
-            { name: "Home", path: "/koleksi" },
-            { name: "History", path: "/riwayat" },
-            { name: "Shop", path: "/belanja" },
-          ].map((item, i) => (
-            <Link key={i} to={item.path} className="px-3 py-1 rounded-md hover:text-blue-200 hover:bg-white/10 transition">
-              {item.name}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* BANNER */}
-      <div className="relative h-56 bg-blue-500">
-        <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" className="w-full h-full object-cover opacity-40" alt="banner" />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10 flex-1 w-full">
-        {message && <div className="mb-6 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm text-center">{message}</div>}
-        <div className="flex flex-col md:flex-row gap-6 items-center md:items-end">
-          {/* FOTO */}
-          <label className="cursor-pointer relative">
-            <div className="w-32 h-32 rounded-xl overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
-              {user?.profile_image ? <img src={user?.profile_image} className="w-full h-full object-cover" /> : <span className="text-4xl font-bold text-white">{user.name?.charAt(0).toUpperCase() ?? "?"}</span>}
-            </div>
-
-            <div className="absolute bottom-2 right-2 bg-blue-600 p-2 rounded-full text-white">
-              <FiCamera size={16} />
-            </div>
-
-            <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-          </label>
-
-          {/* INFO */}
-          <div className="text-center md:text-left">
-            <h2 className="text-xl font-bold text-gray-800">{user.name || "-"}</h2>
-
-            <p className="text-gray-500 text-sm">{user.email || "-"}</p>
+      <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
+          <div className="flex gap-6">
+            {[
+              { name: "Home", path: "/koleksi" },
+              { name: "History", path: "/riwayat" },
+              { name: "Shop", path: "/belanja" },
+            ].map((item, i) => (
+              <Link key={i} to={item.path} className="px-3 py-1 rounded-md hover:text-blue-200 hover:bg-white/10 transition">
+                {item.name}
+              </Link>
+            ))}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-          {/* MOBILE NAV */}
-          <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+        {/* BANNER */}
+        <div className="relative h-56 bg-blue-500">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" className="w-full h-full object-cover opacity-40" alt="banner" />
+        </div>
 
-            <Link to="/koleksi">
-              <FiBook size={24} />
-            </Link>
-            <Link to="/riwayat">
-              <FiClock size={24} />
-            </Link>
-            <Link to="/belanja">
-              <FiShoppingCart size={24} />
-            </Link>
-          </div>
-
-          {/* BIODATA */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-700">Personal Information</h3>
-
-              <button
-                onClick={isEdit ? handleSave : () => setIsEdit(true)}
-                className={`text-sm font-medium px-4 py-1.5 rounded-lg transition ${isEdit ? "bg-blue-600 text-white hover:bg-blue-700" : "text-blue-600 border border-blue-200 hover:bg-blue-50"}`}
-              >
-                {isEdit ? "Save" : "Edit"}
-              </button>
-            </div>
-
-            <div className="space-y-4 text-sm">
-              {/* Nama */}
-              <div>
-                <p className="text-gray-500 mb-1">Full Name</p>
-
-                {isEdit ? (
-                  <input
-                    type="text"
-                    value={user.name || ""}
-                    onChange={(e) =>
-                      setUser({
-                        ...user,
-                        name: e.target.value,
-                      })
-                    }
-                    className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
-                  />
-                ) : (
-                  <p className="font-medium">{user.name || "-"}</p>
-                )}
+        <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10 flex-1 w-full">
+          {message && <div className="mb-6 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm text-center">{message}</div>}
+          <div className="flex flex-col md:flex-row gap-6 items-center md:items-end">
+            {/* FOTO */}
+            <label className="cursor-pointer relative">
+              <div className="w-32 h-32 rounded-xl overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
+                {user?.profile_image ? <img src={user?.profile_image} className="w-full h-full object-cover" /> : <span className="text-4xl font-bold text-white">{user.name?.charAt(0).toUpperCase() ?? "?"}</span>}
               </div>
 
-              {/* Email */}
-              <div>
-                <p className="text-gray-500 mb-1">Email</p>
-
-                <p className="font-medium">{user.email || "-"}</p>
+              <div className="absolute bottom-2 right-2 bg-blue-600 p-2 rounded-full text-white">
+                <FiCamera size={16} />
               </div>
 
-              {/* No Telepon */}
-              <div>
-                <p className="text-gray-500 mb-1">Phone Number</p>
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+            </label>
 
-                {isEdit ? (
-                  <input
-                    type="text"
-                    value={user.phone || ""}
-                    onChange={(e) =>
-                      setUser({
-                        ...user,
-                        phone: e.target.value,
-                      })
-                    }
-                    className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
-                  />
-                ) : (
-                  <p className="font-medium">{user.phone || "-"}</p>
-                )}
-              </div>
+            {/* INFO */}
+            <div className="text-center md:text-left">
+              <h2 className="text-xl font-bold text-gray-800">{user.name || "-"}</h2>
 
-              {/* NIK */}
-              <div>
-                <p className="text-gray-500 mb-1">NIK</p>
-
-                {isEdit ? (
-                  <input
-                    type="text"
-                    value={user.nik || ""}
-                    onChange={(e) =>
-                      setUser({
-                        ...user,
-                        nik: e.target.value,
-                      })
-                    }
-                    className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
-                  />
-                ) : (
-                  <p className="font-medium">{user.nik || "-"}</p>
-                )}
-              </div>
-
-              {/* Tanggal Lahir */}
-              <div>
-                <p className="text-gray-500 mb-1">Date of Birth</p>
-
-                {isEdit ? (
-                  <input
-                    type="date"
-                    value={user.birth || ""}
-                    onChange={(e) =>
-                      setUser({
-                        ...user,
-                        birth: e.target.value,
-                      })
-                    }
-                    className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
-                  />
-                ) : (
-                  <p className="font-medium">{user.birth || "-"}</p>
-                )}
-              </div>
-
-              {/* Jenis Kelamin */}
-              <div>
-                <p className="text-gray-500 mb-1">Gender</p>
-
-                {isEdit ? (
-                  <select
-                    value={user.gender || ""}
-                    onChange={(e) =>
-                      setUser({
-                        ...user,
-                        gender: e.target.value,
-                      })
-                    }
-                    className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
-                  >
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                ) : (
-                  <p className="font-medium">{user.gender || "-"}</p>
-                )}
-              </div>
+              <p className="text-gray-500 text-sm">{user.email || "-"}</p>
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6 mt-10">
+            {/* MOBILE NAV */}
+            <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[90%] bg-blue-600 text-white flex justify-around py-3 rounded-xl shadow-lg z-50">
+              <Link to="/koleksi">
+                <FiBook size={24} />
+              </Link>
+              <Link to="/riwayat">
+                <FiClock size={24} />
+              </Link>
+              <Link to="/belanja">
+                <FiShoppingCart size={24} />
+              </Link>
+            </div>
 
-            {/* KARTU ANGGOTA */}
-            <div className="bg-white rounded-2xl shadow-md p-6">
+            {/* BIODATA */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-700">Personal Information</h3>
 
-              <h3 className="font-semibold text-gray-700 mb-4">
-                Member Card
-              </h3>
+                <button
+                  onClick={isEdit ? handleSave : () => setIsEdit(true)}
+                  className={`text-sm font-medium px-4 py-1.5 rounded-lg transition ${isEdit ? "bg-blue-600 text-white hover:bg-blue-700" : "text-blue-600 border border-blue-200 hover:bg-blue-50"}`}
+                >
+                  {isEdit ? "Save" : "Edit"}
+                </button>
+              </div>
 
-              <div className="relative rounded-2xl p-6 text-white overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-blue-800 shadow-lg">
+              <div className="space-y-4 text-sm">
+                {/* Nama */}
+                <div>
+                  <p className="text-gray-500 mb-1">Full Name</p>
 
-                {/* EFFECT */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-
-                {/* CONTENT */}
-                <p className="text-xs opacity-70 mb-1">
-                  Member Number
-                </p>
-
-                <h2 className="text-2xl font-bold mb-6 tracking-wider">
-                  {user.member_code || user.id?.slice(0, 8).toUpperCase() || "-"}
-                </h2>
-
-                <div className="flex justify-between text-sm">
-
-                  <div>
-
-                    <p className="opacity-70 text-xs">
-                      Name
-                    </p>
-
-                    <p className="font-semibold">
-                      {user.name?.toUpperCase()}
-                    </p>
-
-                  </div>
-
-                  <div className="text-right">
-
-                    <p className="opacity-70 text-xs">
-                      Status
-                    </p>
-
-                    <p className="font-semibold text-green-300">
-                      Active
-                    </p>
-
-                  </div>
-
+                  {isEdit ? (
+                    <input
+                      type="text"
+                      value={user.name || ""}
+                      onChange={(e) =>
+                        setUser({
+                          ...user,
+                          name: e.target.value,
+                        })
+                      }
+                      className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
+                    />
+                  ) : (
+                    <p className="font-medium">{user.name || "-"}</p>
+                  )}
                 </div>
 
-              </div>
+                {/* Email */}
+                <div>
+                  <p className="text-gray-500 mb-1">Email</p>
 
+                  <p className="font-medium">{user.email || "-"}</p>
+                </div>
+
+                {/* No Telepon */}
+                <div>
+                  <p className="text-gray-500 mb-1">Phone Number</p>
+
+                  {isEdit ? (
+                    <input
+                      type="text"
+                      value={user.phone || ""}
+                      onChange={(e) =>
+                        setUser({
+                          ...user,
+                          phone: e.target.value,
+                        })
+                      }
+                      className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
+                    />
+                  ) : (
+                    <p className="font-medium">{user.phone || "-"}</p>
+                  )}
+                </div>
+
+                {/* NIK */}
+                <div>
+                  <p className="text-gray-500 mb-1">NIK</p>
+
+                  {isEdit ? (
+                    <input
+                      type="text"
+                      value={user.nik || ""}
+                      onChange={(e) =>
+                        setUser({
+                          ...user,
+                          nik: e.target.value,
+                        })
+                      }
+                      className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
+                    />
+                  ) : (
+                    <p className="font-medium">{user.nik || "-"}</p>
+                  )}
+                </div>
+
+                {/* Tanggal Lahir */}
+                <div>
+                  <p className="text-gray-500 mb-1">Date of Birth</p>
+
+                  {isEdit ? (
+                    <input
+                      type="date"
+                      value={user.birth || ""}
+                      onChange={(e) =>
+                        setUser({
+                          ...user,
+                          birth: e.target.value,
+                        })
+                      }
+                      className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
+                    />
+                  ) : (
+                    <p className="font-medium">{user.birth || "-"}</p>
+                  )}
+                </div>
+
+                {/* Jenis Kelamin */}
+                <div>
+                  <p className="text-gray-500 mb-1">Gender</p>
+
+                  {isEdit ? (
+                    <select
+                      value={user.gender || ""}
+                      onChange={(e) =>
+                        setUser({
+                          ...user,
+                          gender: e.target.value,
+                        })
+                      }
+                      className="border rounded-lg px-3 py-2 w-full focus:outline-blue-500"
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  ) : (
+                    <p className="font-medium">{user.gender || "-"}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* MY ADDRESS */}
-            <div className="bg-white rounded-2xl shadow-md p-6">
+            {/* RIGHT SIDE */}
+            <div className="space-y-6">
+              {/* KARTU ANGGOTA */}
+              <div className="bg-white rounded-2xl shadow-md p-6">
+                <h3 className="font-semibold text-gray-700 mb-4">Member Card</h3>
 
-              {/* HEADER */}
-              {/* HEADER */}
-              <div className="flex justify-between items-center mb-5">
+                <div className="relative rounded-2xl p-6 text-white overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-blue-800 shadow-lg">
+                  {/* EFFECT */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
 
-                <h3 className="font-semibold text-gray-700">
-                  My Addresses
-                </h3>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
 
-                <Link
-                  to="/address"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition"
-                >
-                  Manage Address
-                </Link>
+                  {/* CONTENT */}
+                  <p className="text-xs opacity-70 mb-1">Member Number</p>
+
+                  <h2 className="text-2xl font-bold mb-6 tracking-wider">{user.member_code || user.id?.slice(0, 8).toUpperCase() || "-"}</h2>
+
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <p className="opacity-70 text-xs">Name</p>
+
+                      <p className="font-semibold">{user.name?.toUpperCase()}</p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="opacity-70 text-xs">Status</p>
+
+                      <p className="font-semibold text-green-300">Active</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* ADDRESS LIST */}
-              <div className="space-y-4">
+              {/* MY ADDRESS */}
+              <div className="bg-white rounded-2xl shadow-md p-6">
+                {/* HEADER */}
+                {/* HEADER */}
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="font-semibold text-gray-700">My Addresses</h3>
 
-                {addresses.length === 0 && (
-                  <div className="border border-dashed rounded-xl p-8 text-center text-gray-400">
-                    No address added yet
-                  </div>
-                )}
+                  <Link to="/address" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                    Manage Address
+                  </Link>
+                </div>
 
-                {Array.isArray(addresses) &&
-                  addresses
-                    .filter((item) => item.is_primary)
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="border rounded-xl p-4"
-                      >
+                {/* ADDRESS LIST */}
+                <div className="space-y-4">
+                  {addresses.length === 0 && <div className="border border-dashed rounded-xl p-8 text-center text-gray-400">No address added yet</div>}
 
-                        <div className="flex justify-between items-start gap-4">
+                  {Array.isArray(addresses) &&
+                    addresses
+                      .filter((item) => item.is_primary)
+                      .map((item) => (
+                        <div key={item.id} className="border rounded-xl p-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div>
+                              {/* LABEL */}
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-800">{item.label}</h4>
 
-                          <div>
+                                {item.is_primary && <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">Main</span>}
+                              </div>
 
-                            {/* LABEL */}
-                            <div className="flex items-center gap-2">
+                              {/* RECEIVER */}
+                              <p className="mt-2 font-medium text-gray-700">{item.receiver_name}</p>
 
-                              <h4 className="font-semibold text-gray-800">
-                                {item.label}
-                              </h4>
+                              {/* PHONE */}
+                              <p className="text-sm text-gray-500">{item.phone}</p>
 
-                              {item.is_primary && (
-                                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
-                                  Main
-                                </span>
-                              )}
+                              {/* ADDRESS */}
+                              <p className="text-sm text-gray-500 mt-2 leading-relaxed">{item.full_address}</p>
 
+                              {/* POSTAL */}
+                              <p className="text-sm text-gray-400 mt-1">Postal Code: {item.postal_code}</p>
                             </div>
 
-                            {/* RECEIVER */}
-                            <p className="mt-2 font-medium text-gray-700">
-                              {item.receiver_name}
-                            </p>
-
-                            {/* PHONE */}
-                            <p className="text-sm text-gray-500">
-                              {item.phone}
-                            </p>
-
-                            {/* ADDRESS */}
-                            <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                              {item.full_address}
-                            </p>
-
-                            {/* POSTAL */}
-                            <p className="text-sm text-gray-400 mt-1">
-                              Postal Code: {item.postal_code}
-                            </p>
-
+                            {/* BUTTON */}
+                            {!item.is_primary && (
+                              <button onClick={() => setPrimaryAddress(item.id)} className="text-blue-600 text-sm hover:underline">
+                                Set Main
+                              </button>
+                            )}
                           </div>
-
-                          {/* BUTTON */}
-                          {!item.is_primary && (
-                            <button
-                              onClick={() => setPrimaryAddress(item.id)}
-                              className="text-blue-600 text-sm hover:underline"
-                            >
-                              Set Main
-                            </button>
-                          )}
-
                         </div>
-
-                      </div>
-
-                    ))}
-
+                      ))}
+                </div>
               </div>
-
             </div>
-
           </div>
-        </div>
 
-        {/* MASCOT (INI YANG KAMU TAMBAH) */}
-        <Floating />
+          {/* MASCOT (INI YANG KAMU TAMBAH) */}
+          <Floating />
 
-        {/* LOGOUT */}
-        <div className="mt-8 mb-16">
-          <button onClick={() => setShowLogoutConfirm(true)} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold shadow transition">
-            Logout
-          </button>
-        </div>
-        {showLogoutConfirm && (
-
-          <div className="
+          {/* LOGOUT */}
+          <div className="mt-8 mb-16">
+            <button onClick={() => setShowLogoutConfirm(true)} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold shadow transition">
+              Logout
+            </button>
+          </div>
+          {showLogoutConfirm && (
+            <div
+              className="
     fixed
     inset-0
     z-50
@@ -720,9 +547,10 @@ return (
     bg-black/40
     backdrop-blur-sm
     p-4
-  ">
-
-            <div className="
+  "
+            >
+              <div
+                className="
       bg-white
       rounded-3xl
       shadow-2xl
@@ -730,9 +558,10 @@ return (
       max-w-sm
       p-6
       text-center
-    ">
-
-              <div className="
+    "
+              >
+                <div
+                  className="
         w-16
         h-16
         rounded-full
@@ -742,40 +571,36 @@ return (
         justify-center
         mx-auto
         mb-4
-      ">
+      "
+                >
+                  <span className="text-2xl">↩</span>
+                </div>
 
-                <span className="text-2xl">
-                  ↩
-                </span>
-
-              </div>
-
-              <h2 className="
+                <h2
+                  className="
         text-xl
         font-bold
         text-gray-800
         mb-2
-      ">
+      "
+                >
+                  Logout Confirmation
+                </h2>
 
-                Logout Confirmation
-
-              </h2>
-
-              <p className="
+                <p
+                  className="
         text-sm
         text-gray-500
         mb-6
-      ">
+      "
+                >
+                  Are you sure you want to log out?
+                </p>
 
-                Are you sure you want to log out?
-
-              </p>
-
-              <div className="flex gap-3">
-
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="
             flex-1
             py-3
             rounded-2xl
@@ -784,15 +609,13 @@ return (
             hover:bg-gray-50
             transition
           "
-                >
+                  >
+                    Cancel
+                  </button>
 
-                  Cancel
-
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="
+                  <button
+                    onClick={handleLogout}
+                    className="
             flex-1
             py-3
             rounded-2xl
@@ -802,83 +625,56 @@ return (
             hover:bg-red-600
             transition
           "
-                >
-
-                  Logout
-
-                </button>
-
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
+            </div>
+          )}
+        </div>
 
+        {/* FOOTER */}
+        <footer className="bg-gray-900 text-white">
+          <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
+            {/* BRAND */}
+            <div>
+              <h2 className="text-2xl font-bold text-blue-400 mb-3">BookIn</h2>
+
+              <p className="text-gray-400 text-sm leading-relaxed">Discover thousands of books, explore new worlds, and enjoy a modern digital library experience.</p>
             </div>
 
+            {/* MENU */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Navigation</h3>
+
+              <div className="flex flex-col gap-2 text-gray-400 text-sm">
+                <Link to="/koleksi" className="hover:text-white">
+                  Home
+                </Link>
+
+                <Link to="/belanja" className="hover:text-white">
+                  Shop
+                </Link>
+
+                <Link to="/riwayat" className="hover:text-white">
+                  History
+                </Link>
+              </div>
+            </div>
+
+            {/* ABOUT */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4">About</h3>
+
+              <p className="text-gray-400 text-sm leading-relaxed">Built for book lovers who want a simple, elegant, and interactive reading platform.</p>
+            </div>
           </div>
 
-        )}
+          {/* BOTTOM */}
+          <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">© 2026 BukuIn. All rights reserved.</div>
+        </footer>
       </div>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-900 text-white">
-
-        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
-
-          {/* BRAND */}
-          <div>
-            <h2 className="text-2xl font-bold text-blue-400 mb-3">
-              BookIn
-            </h2>
-
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Discover thousands of books, explore new worlds,
-              and enjoy a modern digital library experience.
-            </p>
-          </div>
-
-          {/* MENU */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">
-              Navigation
-            </h3>
-
-            <div className="flex flex-col gap-2 text-gray-400 text-sm">
-              <Link to="/koleksi" className="hover:text-white">
-                Home
-              </Link>
-
-              <Link to="/belanja" className="hover:text-white">
-                Shop
-              </Link>
-
-              <Link to="/riwayat" className="hover:text-white">
-                History
-              </Link>
-            </div>
-          </div>
-
-          {/* ABOUT */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">
-              About
-            </h3>
-
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Built for book lovers who want a simple,
-              elegant, and interactive reading platform.
-            </p>
-          </div>
-
-        </div>
-
-        {/* BOTTOM */}
-        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">
-          © 2026 BukuIn. All rights reserved.
-        </div>
-
-      </footer>
-
-    </div>
-
-  </>
-
-);
+    </>
+  );
 }

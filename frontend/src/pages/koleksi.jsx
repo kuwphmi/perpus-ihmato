@@ -20,7 +20,8 @@ export default function HalamanUtama() {
   const [genreBooks, setGenreBooks] = useState([]);
   const [rekomendasi, setRekomendasi] = useState([]);
   const [showRecommendPopup, setShowRecommendPopup] = useState(false);
-  const [popupRekomendasi, setPopupRekomendasi] = useState([]); const [localBooks, setLocalBooks] = useState([]);
+  const [popupRekomendasi, setPopupRekomendasi] = useState([]);
+  const [localBooks, setLocalBooks] = useState([]);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBorrowPopup, setShowBorrowPopup] = useState(false);
@@ -62,7 +63,7 @@ export default function HalamanUtama() {
   const navigate = useNavigate();
   const handleDetail = (book) => {
     navigate(`/detail-buku/${book.workKey}`, {
-      state: { book }
+      state: { book },
     });
   };
 
@@ -102,17 +103,10 @@ export default function HalamanUtama() {
       }));
 
       // ================= LOCAL BOOKS ================= //
-      const localGenreBooks = localBooks.filter((book) =>
-        book.category
-          ?.toLowerCase()
-          .includes(query.toLowerCase())
-      );
+      const localGenreBooks = localBooks.filter((book) => book.category?.toLowerCase().includes(query.toLowerCase()));
 
       // ================= GABUNG ================= //
-      const combinedBooks = [
-        ...localGenreBooks,
-        ...apiBooks,
-      ];
+      const combinedBooks = [...localGenreBooks, ...apiBooks];
 
       setGenreBooks(combinedBooks);
       setActiveCategory(category);
@@ -122,7 +116,6 @@ export default function HalamanUtama() {
           behavior: "smooth",
         });
       }, 100);
-
     } catch (err) {
       console.log("error genre:", err);
     }
@@ -156,7 +149,6 @@ export default function HalamanUtama() {
     return () => clearInterval(interval);
   }, []);
 
-
   const handleSearch = async (e) => {
     if (e.key !== "Enter") return;
 
@@ -170,34 +162,21 @@ export default function HalamanUtama() {
       // ================= SAVE SEARCH HISTORY =================
       const user = JSON.parse(localStorage.getItem("user"));
 
-      await axios.post(
-        "http://localhost:3000/api/search-history",
-        {
-          user_id: user.id,
-          keyword: search,
-          source: "koleksi",
-        }
-      );
+      await axios.post("http://localhost:3000/api/search-history", {
+        user_id: user.id,
+        keyword: search,
+        source: "koleksi",
+      });
 
       // ================= SEARCH LOCAL BOOKS =================
       const localResults = localBooks.filter((book) => {
         const keyword = search.toLowerCase();
 
-        return (
-          book.title?.toLowerCase().includes(keyword) ||
-          book.author?.toLowerCase().includes(keyword) ||
-          book.category?.toLowerCase().includes(keyword) ||
-
-          book.subjects
-            ?.join(" ")
-            .toLowerCase()
-            .includes(keyword));
+        return book.title?.toLowerCase().includes(keyword) || book.author?.toLowerCase().includes(keyword) || book.category?.toLowerCase().includes(keyword) || book.subjects?.join(" ").toLowerCase().includes(keyword);
       });
 
       // ================= SEARCH OPENLIBRARY =================
-      const res = await fetch(
-        `https://openlibrary.org/search.json?q=${search}&limit=12`
-      );
+      const res = await fetch(`https://openlibrary.org/search.json?q=${search}&limit=12`);
 
       const data = await res.json();
 
@@ -206,19 +185,13 @@ export default function HalamanUtama() {
         title: item.title ?? "-",
         author: item.author_name?.[0] ?? "-",
         cover: item.cover_i ?? null,
-        firstSentence:
-          item.first_sentence?.[0] ||
-          item.first_sentence ||
-          "",
+        firstSentence: item.first_sentence?.[0] || item.first_sentence || "",
         subjects: item.subject?.slice(0, 5) || [],
         isLocal: false,
       }));
 
       // ================= GABUNGKAN =================
-      const combinedResults = [
-        ...localResults,
-        ...apiResults,
-      ];
+      const combinedResults = [...localResults, ...apiResults];
 
       setGenreBooks(combinedResults);
 
@@ -229,7 +202,6 @@ export default function HalamanUtama() {
           behavior: "smooth",
         });
       }, 100);
-
     } catch (err) {
       console.log("search error:", err);
     }
@@ -251,7 +223,7 @@ export default function HalamanUtama() {
       const [historyRes, favRes, loanRes] = await Promise.all([
         axios.get(`http://localhost:3000/api/search-history/${userId}`),
         axios.get(`http://localhost:3000/api/fav-genres/${userId}`),
-        axios.get(`http://localhost:3000/api/loans/user/${userId}`)
+        axios.get(`http://localhost:3000/api/loans/user/${userId}`),
       ]);
 
       const history = historyRes.data?.data || [];
@@ -259,35 +231,39 @@ export default function HalamanUtama() {
       const loans = loanRes.data?.data || [];
 
       // ================= SCORING =================
-      addScore(loans[0]?.category, 5);        // paling kuat
+      addScore(loans[0]?.category, 5); // paling kuat
       addScore(history[0]?.keyword, 3);
       addScore(favGenres[favGenres.length - 1]?.category, 2);
 
       // ================= AMBIL GENRE TERKUAT =================
-      const finalQuery =
-        Object.entries(scoreMap).sort((a, b) => b[1] - a[1])[0]?.[0]
-        || "fiction";
+      const finalQuery = Object.entries(scoreMap).sort((a, b) => b[1] - a[1])[0]?.[0] || "fiction";
 
       // ================= API =================
-      const res = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(finalQuery)}&limit=10`
-      );
+      const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(finalQuery)}&limit=10`);
 
       const data = await res.json();
-      const book = data.docs?.[0];
+      const docs = data.docs || [];
 
-      if (!book) return;
-
-      setRekomendasi([
-        {
-          workKey: book.key,
-          title: book.title,
-          author: book.author_name?.[0],
-          cover: book.cover_i,
+      // if openlibrary returned docs, map top 8 results
+      if (docs.length > 0) {
+        const books = docs.slice(0, 8).map((b) => ({
+          workKey: b.key,
+          title: b.title || "-",
+          author: b.author_name?.[0] || "Unknown",
+          cover: b.cover_i || null,
           isLocal: false,
-        },
-      ]);
+        }));
 
+        setRekomendasi(books);
+        setPopupRekomendasi(books.slice(0, 1));
+        return;
+      }
+
+      // fallback: use any available local books
+      if (localBooks.length > 0) {
+        setRekomendasi(localBooks.slice(0, 8));
+        setPopupRekomendasi(localBooks.slice(0, 1));
+      }
     } catch (err) {
       console.log(err);
     }
@@ -297,9 +273,7 @@ export default function HalamanUtama() {
     try {
       if (!userId) return;
 
-      const res = await axios.get(
-        `http://localhost:3000/api/fav-genres/${userId}`
-      );
+      const res = await axios.get(`http://localhost:3000/api/fav-genres/${userId}`);
 
       const data = res.data.data; // ⚠️ penting (lihat backend kamu)
 
@@ -391,7 +365,6 @@ export default function HalamanUtama() {
       setShowRecommendPopup(true);
       localStorage.removeItem("justLoggedIn"); // biar cuma sekali
     }
-
   }, []);
 
   const submitLoanRequest = async () => {
@@ -408,9 +381,7 @@ export default function HalamanUtama() {
           book_key: selectedBook.workKey,
           title: selectedBook.title,
           author: selectedBook.author,
-          cover: selectedBook.isLocal
-            ? selectedBook.cover_url
-            : selectedBook.cover,
+          cover: selectedBook.isLocal ? selectedBook.cover_url : selectedBook.cover,
         }),
       });
 
@@ -478,39 +449,21 @@ export default function HalamanUtama() {
 
       {/* RECOMMEND POPUP */}
       {showRecommendPopup && rekomendasi[0] && (
-        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
-
+        <div className="fixed inset-0 z-9999 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl max-w-sm w-full text-center">
+            <h2 className="text-lg font-bold text-blue-700 mb-4">Recommended For You ✨</h2>
 
-            <h2 className="text-lg font-bold text-blue-700 mb-4">
-              Recommended For You ✨
-            </h2>
+            <div onClick={() => handleDetail(rekomendasi[0])} className="cursor-pointer">
+              <img src={`https://covers.openlibrary.org/b/id/${rekomendasi[0].cover}-L.jpg`} className="w-full h-64 object-cover rounded-xl" />
 
-            <div
-              onClick={() => handleDetail(rekomendasi[0])}
-              className="cursor-pointer"
-            >
-              <img
-                src={`https://covers.openlibrary.org/b/id/${rekomendasi[0].cover}-L.jpg`}
-                className="w-full h-64 object-cover rounded-xl"
-              />
+              <h3 className="mt-3 font-semibold">{rekomendasi[0].title}</h3>
 
-              <h3 className="mt-3 font-semibold">
-                {rekomendasi[0].title}
-              </h3>
-
-              <p className="text-sm text-gray-500">
-                {rekomendasi[0].author}
-              </p>
+              <p className="text-sm text-gray-500">{rekomendasi[0].author}</p>
             </div>
 
-            <button
-              onClick={() => setShowRecommendPopup(false)}
-              className="mt-4 text-sm text-gray-500"
-            >
+            <button onClick={() => setShowRecommendPopup(false)} className="mt-4 text-sm text-gray-500">
               Close
             </button>
-
           </div>
         </div>
       )}
@@ -583,8 +536,7 @@ export default function HalamanUtama() {
 
             {/* COVER */}
             <div className="w-full h-64 bg-blue-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-              {(selectedBook?.isLocal && selectedBook?.cover_url) ||
-                (!selectedBook?.isLocal && selectedBook?.cover) ? (
+              {(selectedBook?.isLocal && selectedBook?.cover_url) || (!selectedBook?.isLocal && selectedBook?.cover) ? (
                 <img
                   src={selectedBook?.isLocal ? selectedBook.cover_url : `https://covers.openlibrary.org/b/id/${selectedBook.cover}-M.jpg`}
                   alt={selectedBook?.title}
@@ -955,64 +907,44 @@ export default function HalamanUtama() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {
-            (activeCategory ? genreBooks : rekomendasi).map((book, i) => (
-              <div
-                key={i}
-                className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-              >
+          {(activeCategory ? genreBooks : rekomendasi).map((book, i) => (
+            <div key={i} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              <div className="relative h-44 md:h-60 bg-linear-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
+                {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
+                  <img
+                    src={book.isLocal ? book.cover_url : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
+                    alt={book.title}
+                    className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <p>No Cover</p>
+                )}
+              </div>
 
-                <div className="relative h-44 md:h-60 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
-                  {(book.isLocal && book.cover_url) || (!book.isLocal && book.cover) ? (
-                    <img
-                      src={
-                        book.isLocal
-                          ? book.cover_url
-                          : `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`
-                      }
-                      alt={book.title}
-                      className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <p>No Cover</p>
-                  )}
+              <div className="p-4 flex flex-col h-42.5 md:h-47.5">
+                <div>
+                  <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-8.5 md:min-h-10">{book.title}</h3>
+
+                  <p className="text-[11px] md:text-xs text-gray-500 min-h-4.5 md:min-h-5">{book.author}</p>
+
+                  <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-8">Click detail to see description</p>
                 </div>
+                <div className="flex gap-2 mt-auto">
+                  <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
+                    Borrow
+                  </button>
 
-
-                <div className="p-4 flex flex-col h-[170px] md:h-[190px]">
-
-                  <div>
-
-                    <h3 className="text-xs md:text-sm font-semibold line-clamp-2 min-h-[34px] md:min-h-[40px]">
-                      {book.title}
-                    </h3>
-
-                    <p className="text-[11px] md:text-xs text-gray-500 min-h-[18px] md:min-h-[20px]">
-                      {book.author}
-                    </p>
-
-                    <p className="text-gray-400 text-xs mt-1 mb-3 line-clamp-2 min-h-[32px]">
-                      Click detail to see description
-                    </p>
-                  </div>
-                  <div className="flex gap-2 mt-auto">
-                    <button onClick={() => handlePinjam(book)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs md:text-sm font-semibold transition">
-                      Borrow
-                    </button>
-
-                    <button onClick={() => handleDetail(book)} className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300">
-                      Detail
-                    </button>
-                  </div>
+                  <button onClick={() => handleDetail(book)} className="flex-1 bg-gray-200 py-2 rounded-lg text-[11px] md:text-sm hover:bg-gray-300">
+                    Detail
+                  </button>
                 </div>
               </div>
-            ))}
-
-
+            </div>
+          ))}
         </div>
       </section>
 
