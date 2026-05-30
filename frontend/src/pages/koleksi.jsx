@@ -20,11 +20,10 @@ export default function HalamanUtama() {
   const [genreBooks, setGenreBooks] = useState([]);
   const [rekomendasi, setRekomendasi] = useState([]);
   const [showRecommendPopup, setShowRecommendPopup] = useState(false);
-  const [localBooks, setLocalBooks] = useState([]);
-
+  const [popupRekomendasi, setPopupRekomendasi] = useState([]); const [localBooks, setLocalBooks] = useState([]);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBorrowPopup, setShowBorrowPopup] = useState(false);
-  const [showDetailPopup, setShowDetailPopup] = useState(false);
   const bookSectionRef = useRef(null);
 
   const [bookDescription, setBookDescription] = useState("");
@@ -49,7 +48,7 @@ export default function HalamanUtama() {
   };
   const genreMap = {
     Art: "art",
-    "Science Fiction": "science fiction",
+    ScienceFiction: "science fiction",
     Fantasy: "fantasy",
     Biographies: "biography",
     Recipe: "cooking",
@@ -61,6 +60,12 @@ export default function HalamanUtama() {
   };
 
   const navigate = useNavigate();
+  const handleDetail = (book) => {
+    navigate(`/detail-buku/${book.workKey}`, {
+      state: { book }
+    });
+  };
+
   const fetchNotifications = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -230,180 +235,92 @@ export default function HalamanUtama() {
     }
   };
 
-  useEffect(() => {
+  const fetchRekomendasi = async (userId) => {
+    try {
+      if (!userId) return;
 
-    const fetchRekomendasi = async () => {
+      // 🔥 INI TARUH DI SINI
+      const scoreMap = {};
 
-      try {
+      const addScore = (genre, score) => {
+        if (!genre) return;
+        scoreMap[genre] = (scoreMap[genre] || 0) + score;
+      };
 
-        const res = await fetch(
-          "https://openlibrary.org/search.json?q=popular&limit=12"
-        );
+      // ================= AMBIL DATA =================
+      const [historyRes, favRes, loanRes] = await Promise.all([
+        axios.get(`http://localhost:3000/api/search-history/${userId}`),
+        axios.get(`http://localhost:3000/api/fav-genres/${userId}`),
+        axios.get(`http://localhost:3000/api/loans/user/${userId}`)
+      ]);
 
-        const data = await res.json();
+      const history = historyRes.data?.data || [];
+      const favGenres = favRes.data?.data || [];
+      const loans = loanRes.data?.data || [];
 
-        // ================= OPENLIBRARY BOOKS =================
+      // ================= SCORING =================
+      addScore(loans[0]?.category, 5);        // paling kuat
+      addScore(history[0]?.keyword, 3);
+      addScore(favGenres[favGenres.length - 1]?.category, 2);
 
-        const books = data.docs.map((item) => ({
-          workKey: item.key,
-          title: item.title ?? "-",
-          author: item.author_name?.[0] ?? "-",
-          cover: item.cover_i ?? null,
+      // ================= AMBIL GENRE TERKUAT =================
+      const finalQuery =
+        Object.entries(scoreMap).sort((a, b) => b[1] - a[1])[0]?.[0]
+        || "fiction";
 
-          firstSentence:
-            item.first_sentence?.[0] ||
-            item.first_sentence ||
-            "",
+      // ================= API =================
+      const res = await fetch(
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(finalQuery)}&limit=10`
+      );
 
-          subjects:
-            item.subject?.slice(0, 5) || [],
+      const data = await res.json();
+      const book = data.docs?.[0];
 
-          category:
-            item.subject?.[0] || "",
-        }));
+      if (!book) return;
 
-        // ================= COMBINED =================
+      setRekomendasi([
+        {
+          workKey: book.key,
+          title: book.title,
+          author: book.author_name?.[0],
+          cover: book.cover_i,
+          isLocal: false,
+        },
+      ]);
 
-        const combinedBooks = [
-          ...localBooks,
-          ...books,
-        ];
-
-        const user =
-          JSON.parse(
-            localStorage.getItem("user")
-          );
-
-        if (!user) return;
-
-        // ================= FAV GENRES =================
-
-        const favRes =
-          await axios.get(
-            `http://localhost:3000/api/fav-genres/${user.id}`
-          );
-
-        // ================= SEARCH HISTORY =================
-
-        const historyRes =
-          await axios.get(
-            `http://localhost:3000/api/search-history/${user.id}`
-          );
-
-        // ================= AI =================
-
-        const aiRes =
-          await axios.post(
-            "http://localhost:3000/api/ai/recommend-books",
-            {
-              genres:
-                favRes.data.map(
-                  (g) => g.category
-                ),
-
-              searches:
-                historyRes.data.map(
-                  (s) => s.keyword
-                ),
-
-              books:
-                combinedBooks.map((b) => ({
-                  title: b.title,
-
-                  category:
-                    b.category ||
-                    b.subject ||
-                    "",
-                })),
-            }
-          );
-
-        const recommendedTitles =
-          aiRes.data.map(
-            (r) =>
-              r.title.toLowerCase().trim()
-          );
-
-        const filteredBooks =
-          combinedBooks.filter((book) => {
-
-            return recommendedTitles.some(
-              (title) =>
-                book.title
-                  ?.toLowerCase()
-                  .includes(title)
-            );
-
-          });
-
-
-        // fallback kalau AI ga cocok
-        if (filteredBooks.length > 0) {
-
-          setRekomendasi(
-            filteredBooks
-          );
-
-        } else {
-
-          console.log(
-            "AI fallback aktif"
-          );
-
-          setRekomendasi(
-            combinedBooks.slice(0, 12)
-          );
-
-        }
-
-      } catch (err) {
-
-        console.log(
-          "AI fallback aktif"
-        );
-
-      }
-
-    };
-
-    if (localBooks.length > 0) {
-      fetchRekomendasi();
+    } catch (err) {
+      console.log(err);
     }
+  };
 
-  }, [localBooks]);
+  const fetchLocalBooks = async (userId) => {
+    try {
+      if (!userId) return;
 
-  useEffect(() => {
-    const fetchLocalBooks = async () => {
-      try {
-        const res = await fetch(
-          "http://localhost:3000/api/admin/borrow-books"
-        );
+      const res = await axios.get(
+        `http://localhost:3000/api/fav-genres/${userId}`
+      );
 
-        const data = await res.json();
+      const data = res.data.data; // ⚠️ penting (lihat backend kamu)
 
-        const books = data.map((item) => ({
-          id: item.id,
-          workKey: "local_" + item.id,
-          title: item.title,
-          author: item.author,
-          cover_url: item.cover,
-          description: item.description,
-          stock: item.stock,
-          category: item.category || "",
-          subjects: [item.category || ""],
+      const books = data.map((item) => ({
+        id: item.id,
+        workKey: "local_" + item.id,
+        title: item.title,
+        author: item.author,
+        cover_url: item.cover,
+        description: item.description,
+        stock: item.stock,
+        category: item.category || "",
+        subjects: [item.category || ""],
+        isLocal: true,
+      }));
 
-          isLocal: true,
-        }));
-
-
-        setLocalBooks(books);
-      } catch (err) {
-        console.log("local books error:", err);
-      }
-    };
-
-    fetchLocalBooks();
-  }, []);
+      setLocalBooks(books);
+    } catch (err) {
+      console.log("local books error:", err);
+    }
+  };
 
   const categories = [
     {
@@ -437,7 +354,7 @@ export default function HalamanUtama() {
     },
 
     {
-      name: "Textbox",
+      name: "Textbook",
       icon: <FiBook />,
     },
 
@@ -456,14 +373,25 @@ export default function HalamanUtama() {
       icon: <FiFileText />,
     },
   ];
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
 
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (!storedUser?.id) return;
+
+    setUser(storedUser);
 
     fetchNotifications();
+    fetchLocalBooks(storedUser.id);
+    fetchRekomendasi(storedUser.id);
+
+    const justLoggedIn = localStorage.getItem("justLoggedIn");
+
+    if (justLoggedIn === "true") {
+      setShowRecommendPopup(true);
+      localStorage.removeItem("justLoggedIn"); // biar cuma sekali
+    }
+
   }, []);
 
   const submitLoanRequest = async () => {
@@ -540,12 +468,6 @@ export default function HalamanUtama() {
     await fetchDescription(book.workKey);
   };
 
-  const handleDetail = async (book) => {
-    setSelectedBook(book);
-    setShowDetailPopup(true);
-    await fetchDescription(book.workKey);
-  };
-
   return (
     <div className="bg-white min-h-screen">
       {notif && (
@@ -555,145 +477,39 @@ export default function HalamanUtama() {
       )}
 
       {/* RECOMMEND POPUP */}
-      {showRecommendPopup && (
-        <div
-          className="
-    fixed inset-0 z-[9999]
-    bg-black/40
-    flex items-center
-    justify-center
-  "
-        >
-          <div
-            className="
-      bg-white
-      rounded-3xl
-      p-6
-      w-[92%]
-      max-w-3xl
-    "
-          >
+      {showRecommendPopup && rekomendasi[0] && (
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
 
-            {/* HEADER */}
+          <div className="bg-white p-6 rounded-2xl max-w-sm w-full text-center">
+
+            <h2 className="text-lg font-bold text-blue-700 mb-4">
+              Recommended For You ✨
+            </h2>
+
             <div
-              className="
-        flex items-center
-        justify-between
-        mb-6
-      "
+              onClick={() => handleDetail(rekomendasi[0])}
+              className="cursor-pointer"
             >
+              <img
+                src={`https://covers.openlibrary.org/b/id/${rekomendasi[0].cover}-L.jpg`}
+                className="w-full h-64 object-cover rounded-xl"
+              />
 
-              <div>
+              <h3 className="mt-3 font-semibold">
+                {rekomendasi[0].title}
+              </h3>
 
-                <h2
-                  className="
-            text-2xl
-            font-bold
-            text-blue-700
-          "
-                >
-                  Recommended For You ✨
-                </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  Based on your favorite genres
-                  and search history
-                </p>
-
-              </div>
-
-              <button
-                onClick={() =>
-                  setShowRecommendPopup(false)
-                }
-                className="
-          text-gray-500
-          hover:text-black
-          text-xl
-        "
-              >
-                ✕
-              </button>
-
+              <p className="text-sm text-gray-500">
+                {rekomendasi[0].author}
+              </p>
             </div>
 
-            {/* BOOKS */}
-            <div
-              className="
-        grid
-        grid-cols-2
-        md:grid-cols-4
-        gap-4
-      "
+            <button
+              onClick={() => setShowRecommendPopup(false)}
+              className="mt-4 text-sm text-gray-500"
             >
-              {rekomendasi
-                .slice(0, 4)
-                .map((book, i) => (
-
-                  <div
-                    key={i}
-                    className="
-            bg-gray-50
-            rounded-2xl
-            overflow-hidden
-          "
-                  >
-
-                    <div className="h-48 bg-blue-100">
-
-                      {book.cover_url || book.cover ? (<img
-                        src={book.cover_url}
-                        className="
-                  w-full
-                  h-full
-                  object-cover
-                "
-                      />
-                      ) : (
-                        <div
-                          className="
-                  w-full
-                  h-full
-                  flex
-                  items-center
-                  justify-center
-                  text-gray-400
-                "
-                        >
-                          No Cover
-                        </div>
-                      )}
-
-                    </div>
-
-                    <div className="p-3">
-
-                      <p
-                        className="
-                text-sm
-                font-semibold
-                line-clamp-2
-              "
-                      >
-                        {book.title}
-                      </p>
-
-                      <p
-                        className="
-                text-xs
-                text-gray-500
-                mt-1
-              "
-                      >
-                        {book.author}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                ))}
-            </div>
+              Close
+            </button>
 
           </div>
         </div>

@@ -79,37 +79,25 @@ export default function Checkout() {
   };
 
 const handlePayment = async () => {
-
-  if (
-    deliveryType === "delivery" &&
-    !selectedAddress
-  ) {
-
+  if (deliveryType === "delivery" && !selectedAddress) {
     showNotif("Please add address first");
-
     return;
-
   }
 
   try {
-
     setIsLoading(true);
 
-    const userData = JSON.parse(
-      localStorage.getItem("user")
-    );
+    const userData = JSON.parse(localStorage.getItem("user"));
 
     const res = await axios.post(
       "http://localhost:3000/api/payment/create",
       {
         user_id: userData.id,
         items,
-
         address_id:
           deliveryType === "delivery"
             ? selectedAddress.id
             : null,
-
         delivery_type: deliveryType,
       }
     );
@@ -119,95 +107,52 @@ const handlePayment = async () => {
     const token = res.data.token;
 
     if (!token) {
-
       showNotif("Midtrans token failed");
-
-      setIsLoading(false);
-
       return;
-
     }
 
     if (!window.snap) {
-
       showNotif("Midtrans not loaded");
-
-      setIsLoading(false);
-
       return;
-
     }
 
     window.snap.pay(token, {
-
-      onSuccess: async function () {
-
-        await Promise.all(
-          items.map((item) =>
-            axios.delete(
-              `http://localhost:3000/api/cart/${item.id}`
-            )
-          )
-        );
+      onSuccess: function (result) {
+        console.log("SUCCESS:", result);
 
         showNotif("Payment successful");
 
         setTimeout(() => {
-
           navigate("/trackingbuku");
-
         }, 1500);
-
       },
 
-      onPending: async function () {
-
-        await Promise.all(
-          items.map((item) =>
-            axios.delete(
-              `http://localhost:3000/api/cart/${item.id}`
-            )
-          )
-        );
+      onPending: function (result) {
+        console.log("PENDING:", result);
 
         showNotif("Waiting for payment");
 
         setTimeout(() => {
-
           navigate("/trackingbuku");
-
         }, 1500);
-
       },
 
       onError: function (result) {
-
-        console.log(result);
-
+        console.log("ERROR:", result);
         showNotif("Payment failed");
-
       },
 
       onClose: function () {
-
-        showNotif("Payment cancelled");
-
+        showNotif("Payment popup closed");
       },
-
     });
 
   } catch (err) {
-
     console.log(err);
-
     showNotif("Checkout failed");
-
   } finally {
-
     setIsLoading(false);
-
   }
-
 };
 
 
