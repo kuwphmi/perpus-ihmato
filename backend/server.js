@@ -6,6 +6,7 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 
+
 import supabase from "./src/config/supabase.js";
 import "./src/config/passport.js";
 
@@ -22,6 +23,10 @@ import historyRoutes from "./src/routes/historyRoutes.js";
 import favGenreRoutes from "./src/routes/favGenreRoutes.js";
 import searchHistoryRoutes from "./src/routes/searchHistoryRoutes.js";
 import recommendationRoutes from "./src/routes/recommendationRoutes.js";
+import {
+  checkDueReminders, 
+  checkLateLoans,
+} from "./src/controllers/loanController.js";
 
 const app = express();
 
@@ -254,12 +259,19 @@ app.post("/api/cart", async (req, res) => {
 
   const cleanTitle = title.trim().toLowerCase();
 
-const { data: existing } = await supabase
+const { data: existing, error: existingError } = await supabase
   .from("cart")
   .select("*")
   .eq("user_id", user_id);
 
-const sameBook = existing.find(
+if (existingError) {
+  return res.json({
+    status: false,
+    message: existingError.message,
+  });
+}
+
+const sameBook = (existing || []).find(
   (item) =>
     item.title?.trim().toLowerCase() === cleanTitle
 );
@@ -279,25 +291,6 @@ if (sameBook) {
   });
 
 }
-
-    // ================= JIKA SUDAH ADA =================
-
-    if (existing && existing.length > 0) {
-      const newQty =
-        (existing[0].qty || 1) + 1;
-
-      await supabase
-        .from("cart")
-        .update({
-          qty: newQty,
-        })
-        .eq("id", existing[0].id);
-      return res.json({
-        status: true,
-        message: "Qty updated",
-      });
-
-    }
 
     // ================= INSERT BARU =================
 
@@ -1083,6 +1076,17 @@ app.get("/api/history/detail/:id", async (req, res) => {
     });
   }
 });
+
+checkDueReminders();
+checkLateLoans();
+
+setInterval(async () => {
+
+  await checkDueReminders();
+
+  await checkLateLoans();
+
+}, 1000 * 60 * 60);
 
 /* =======================
    START SERVER

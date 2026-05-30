@@ -134,12 +134,12 @@ export const approveLoan = async (
       requestData
     );
 
-    // due date 7 hari
+    // due date 14 hari
     const dueDate =
       new Date();
 
     dueDate.setDate(
-      dueDate.getDate() + 7
+      dueDate.getDate() + 14
     );
 
     // insert ke loans
@@ -270,5 +270,119 @@ export const checkBorrowLimit =
       });
 
     }
-
   };
+
+    export const checkDueReminders = async () => {
+
+  try {
+
+    const tomorrow = new Date();
+
+    tomorrow.setDate(
+      tomorrow.getDate() + 1
+    );
+
+    const tomorrowStr =
+      tomorrow.toISOString().split("T")[0];
+
+    const { data: loans, error } =
+      await supabase
+        .from("loans")
+        .select("*")
+        .eq("status", "borrowed");
+
+    if (error) throw error;
+
+    for (const loan of loans) {
+
+      const dueDate =
+        new Date(loan.due_date)
+          .toISOString()
+          .split("T")[0];
+
+      if (dueDate === tomorrowStr) {
+
+        await supabase
+          .from("notifications")
+          .insert([
+            {
+              user_id: loan.user_id,
+              title: "Book Return Reminder",
+
+              message:
+                `The due date for "${loan.title}" is tomorrow. Please return the book on time to avoid late fees.`,
+              is_read: false,
+            },
+          ]);
+
+      }
+
+    }
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
+
+  export const checkLateLoans = async () => {
+  try {
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const todayStr = today.toISOString().split("T")[0];
+
+    const { data: loans, error } = await supabase
+      .from("loans")
+      .select("*")
+      .eq("status", "borrowed");
+
+    if (error) throw error;
+
+    for (const loan of loans) {
+
+      const dueDate = new Date(loan.due_date);
+      dueDate.setHours(0,0,0,0);
+
+      if (today <= dueDate) continue;
+
+      // cek apakah notif hari ini sudah pernah dibuat
+      const { data: existingNotif } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("user_id", loan.user_id)
+        .eq("title", "Overdue Book")
+        .gte("created_at", `${todayStr}T00:00:00`);
+
+      if (existingNotif?.length > 0) {
+        continue;
+      }
+
+      const diffTime = today - dueDate;
+
+      const lateDays = Math.ceil(
+        diffTime / (1000 * 60 * 60 * 24)
+      );
+
+      const fine = lateDays * 1000;
+
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id: loan.user_id,
+            title: "Overdue Book",
+            message: `"${loan.title}" is overdue by ${lateDays} day(s). Current late fee: Rp${fine}.`,
+            is_read: false,
+          },
+        ]);
+    }
+
+  } 
+  catch (err) {
+    console.log(err);
+  }
+};
