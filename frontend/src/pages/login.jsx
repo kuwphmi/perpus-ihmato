@@ -105,7 +105,8 @@ function LoginForm({ onSwitch, onForgot }) {
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
-
+      localStorage.setItem("showRecommendPopup", "1");
+      localStorage.setItem("justLoggedIn", "true");
       // CEK ROLE
       if (user.role === "admin") {
         navigate("/admin");

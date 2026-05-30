@@ -1076,6 +1076,24 @@ app.get("/api/history/detail/:id", async (req, res) => {
     });
   }
 });
+// GET LOANS BY USER
+app.get("/api/loans/user/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  const { data, error } = await supabase
+    .from("loans")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (error) {
+    return res.json({ status: false, message: error.message });
+  }
+
+  return res.json({
+    status: true,
+    data,
+  });
+});
 
 checkDueReminders();
 checkLateLoans();
