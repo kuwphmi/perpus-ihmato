@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiBell, FiHeart, FiSearch, FiShoppingCart, FiPackage, FiTruck, FiCheckCircle, FiClock, FiHome } from "react-icons/fi";
+import { FiBell, FiHeart, FiSearch, FiShoppingCart, FiPackage, FiTruck, FiMapPin, FiCheckCircle, FiClock, FiHome } from "react-icons/fi";
 
 import logo from "../assets/logo.png";
+import Lottie from "lottie-react";
+import processingAnim from "../assets/lottie/prosesing.json";
+import shippingAnim from "../assets/lottie/shipping.json";
 import Floating from "./floating";
 
 export default function Trackingbuku() {
@@ -19,6 +22,8 @@ export default function Trackingbuku() {
   const popupRef = useRef();
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [pickupOrder, setPickupOrder] = useState(null);
+  const [popup, setPopup] = useState(null);
   const [activeFilter, setActiveFilter] =
     useState("all");
   useEffect(() => {
@@ -37,18 +42,18 @@ export default function Trackingbuku() {
   }, []);
 
   useEffect(() => {
-  fetchOrders();
-  fetchNotifications();
-  fetchCart();
-
-  const interval = setInterval(() => {
     fetchOrders();
     fetchNotifications();
     fetchCart();
-  }, 5000);
 
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(() => {
+      fetchOrders();
+      fetchNotifications();
+      fetchCart();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -107,6 +112,11 @@ export default function Trackingbuku() {
     ).length;
 
   const shippingCount = orders.filter((o) => o.order_status === "shipping").length;
+  const readyPickupCount =
+    orders.filter(
+      (o) =>
+        o.order_status === "ready_pickup"
+    ).length;
   const completedCount = orders.filter((o) => o.order_status === "completed").length;
   const filteredOrders =
     activeFilter === "all"
@@ -115,6 +125,42 @@ export default function Trackingbuku() {
         (o) =>
           o.order_status === activeFilter
       );
+
+      const handleFilterClick = (
+  status
+) => {
+
+  setActiveFilter(status);
+
+  // khusus mobile
+  if (window.innerWidth < 768) {
+
+    setTimeout(() => {
+
+      const section =
+  document.getElementById(
+    "orders-section"
+  );
+
+if (section) {
+
+  const y =
+    section.getBoundingClientRect().top +
+    window.pageYOffset -
+    120;
+
+  window.scrollTo({
+    top: y,
+    behavior: "smooth",
+  });
+
+}
+
+    }, 100);
+
+  }
+
+};
 
   const cancelOrder =
     async (id) => {
@@ -305,21 +351,24 @@ export default function Trackingbuku() {
       {/* STATUS CARDS */}
       <section className="px-6 md:px-12 mt-8">
 
-        <div className="
+        <div
+  className="
     max-w-7xl
     mx-auto
     grid
-    md:grid-cols-4
-    gap-6
-  ">
+    grid-cols-2
+    md:grid-cols-5
+    gap-5
+  "
+>
 
           {/* UNPAID */}
           <div
             onClick={() =>
-              setActiveFilter(
-                "waiting_payment"
-              )
-            }
+  handleFilterClick(
+    "waiting_payment"
+  )
+}
             className={`
         flex
         items-center
@@ -332,6 +381,8 @@ export default function Trackingbuku() {
         cursor-pointer
         transition-all
         hover:shadow-lg
+        p-7
+h-full
 
         ${activeFilter ===
                 "waiting_payment"
@@ -383,39 +434,43 @@ export default function Trackingbuku() {
 
           {/* PROCESSING */}
           <div
-            onClick={() =>
-              setActiveFilter("processing")
-            }
+           onClick={() =>
+  handleFilterClick(
+    "processing"
+  )
+}
             className={`
-    flex
-    items-center
-    gap-4
-    bg-white
-    rounded-3xl
-    p-6
-    shadow-sm
-    border
-    cursor-pointer
-    transition-all
-    hover:shadow-lg
+              min-w-[150px]
+flex-shrink-0
+            flex
+            items-center
+            gap-4
+            bg-white
+            rounded-3xl
+            p-6
+            shadow-sm
+            border
+            cursor-pointer
+            transition-all
+            hover:shadow-lg
 
-    ${activeFilter === "processing"
+            ${activeFilter === "processing"
                 ? "border-indigo-400 ring-2 ring-indigo-100"
                 : "border-gray-100"
               }
-  `}
+          `}
           >
 
             <div className="
-    w-14
-    h-14
-    rounded-2xl
-    bg-indigo-100
-    flex
-    items-center
-    justify-center
-    text-indigo-600
-  ">
+              w-14
+              h-14
+              rounded-2xl
+              bg-indigo-100
+              flex
+              items-center
+              justify-center
+              text-indigo-600
+            ">
 
               <FiPackage className="text-2xl" />
 
@@ -449,9 +504,13 @@ export default function Trackingbuku() {
           {/* SHIPPING */}
           <div
             onClick={() =>
-              setActiveFilter("shipping")
-            }
+  handleFilterClick(
+    "shipping"
+  )
+}
             className={`
+              p-7
+h-full
         flex
         items-center
         gap-4
@@ -511,14 +570,79 @@ export default function Trackingbuku() {
 
           </div>
 
+          {/* READY PICKUP */}
+          <div
+            onClick={() =>
+  handleFilterClick("ready_pickup")
+}
+            className={`
+              p-7
+h-full
+    flex
+    items-center
+    gap-4
+    bg-white
+    rounded-3xl
+    p-6
+    shadow-sm
+    border
+    cursor-pointer
+    transition-all
+    hover:shadow-lg
+
+    ${activeFilter === "ready_pickup"
+                ? "border-emerald-400 ring-2 ring-emerald-100"
+                : "border-gray-100"
+              }
+  `}
+          >
+
+            <div className="
+    w-14
+    h-14
+    rounded-2xl
+    bg-emerald-100
+    flex
+    items-center
+    justify-center
+    text-emerald-600
+  ">
+
+              <FiMapPin className="text-2xl" />
+
+            </div>
+
+            <div>
+
+              <p className="
+      text-sm
+      text-gray-400
+    ">
+                Ready Pickup
+              </p>
+
+              <h2 className="
+      text-2xl
+      font-black
+      text-emerald-600
+    ">
+                {readyPickupCount}
+              </h2>
+
+            </div>
+
+          </div>
+
           {/* COMPLETED */}
           <div
             onClick={() =>
-              setActiveFilter(
-                "completed"
-              )
-            }
+  handleFilterClick(
+    "completed"
+  )
+}
             className={`
+              p-7
+h-full
         flex
         items-center
         gap-4
@@ -549,20 +673,15 @@ export default function Trackingbuku() {
         justify-center
         text-green-600
       ">
-
               <FiCheckCircle className="text-2xl" />
-
             </div>
 
             <div>
-
               <p className="
           text-sm
           text-gray-400
         ">
-
                 Completed
-
               </p>
 
               <h2 className="
@@ -570,17 +689,11 @@ export default function Trackingbuku() {
           font-black
           text-green-600
         ">
-
                 {completedCount}
-
               </h2>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* ORDER LIST */}
@@ -588,16 +701,15 @@ export default function Trackingbuku() {
         <div className="max-w-7xl mx-auto bg-white rounded-4xl shadow-sm border border-gray-100 overflow-hidden">
           {/* HEADER */}
           <div className="
-  px-8
-  py-4
-   border-blue-900
-  flex
-  items-center
-  justify-between
-">
+          px-8
+          py-4
+          border-blue-900
+          flex
+          items-center
+          justify-between
+        ">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">Recent Orders</h2>
-
               <p className="text-gray-400 text-sm mt-1">Manage all your orders in one place</p>
             </div>
 
@@ -605,184 +717,163 @@ export default function Trackingbuku() {
           </div>
 
           {/* CONTENT */}
-          <div className="p-8 space-y-6">
+<div
+  id="orders-section"
+  className="
+    p-5
+    md:p-8
+    space-y-5
+  "
+>
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="
-    flex
-    flex-col
-    md:flex-row
-    md:items-center
-    justify-between
-    gap-5
-    p-5
-    border
-    border-blue-400
-    rounded-3xl
-    hover:border-blue-600
-    hover:shadow-md
-    transition
-  "
+className="
+  flex
+  flex-col
+  md:flex-row
+  md:items-center
+  justify-between
+  gap-4
+
+  p-4
+  md:p-5
+
+  border
+  border-blue-300
+  rounded-[28px]
+
+  bg-white
+
+  hover:border-blue-500
+  hover:shadow-lg
+
+  transition-all
+  duration-300
+"
               >
                 <div className="flex items-center gap-5">
-                  <img src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`} alt={order.title} className="w-24 h-32 rounded-2xl object-cover" />
+                  <img src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`} alt={order.title} className="
+  w-20
+  h-28
+  md:w-24
+  md:h-32
+  rounded-2xl
+  object-cover
+  shadow
+">
+
+</img>
 
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800">{order.title}</h3>
-
+                    <h3 className="
+  text-lg
+  md:text-xl
+  font-bold
+  text-gray-800
+">{order.title}</h3>
                     <p className="text-gray-400 mt-1">Order ID: {order.order_id}</p>
-
                     <p className="text-blue-600 font-bold mt-3">Rp {order.amount?.toLocaleString("id-ID")}</p>
                   </div>
                 </div>
 
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
-                  {order.order_status === "waiting_payment" && (
-                    <>
-                      <span className="bg-yellow-100 text-yellow-600 px-4 py-2 rounded-full text-sm font-medium">Waiting Payment</span>
-
-                      <button onClick={() => setSelectedOrder(order)} className="border border-blue-600 text-blue-600 px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition">
-                        View Detail
-                      </button>
-                    </>
-                  )}
-
-                  {order.order_status === "processing" && (
-                    <>
-
-                      <span className="
-      bg-indigo-100
-      text-indigo-600
+                 {order.order_status === "waiting_payment" && (
+  <div
+    onClick={() => setSelectedOrder(order)}
+    className="cursor-pointer flex flex-col gap-2"
+  >
+    <span className="
+bg-yellow-100
+    text-yellow-600
       px-4
       py-2
       rounded-full
       text-sm
       font-medium
+      cursor-pointer
+     hover:bg-yellow-200
+      transition
     ">
+      Waiting Payment
+    </span>
+  </div>
+)} 
+<div className="rounded-lg bg-slate-50 p-3">
+  <div className="text-xs text-slate-400 mb-1">
+    Delivery Method
+  </div>
 
-                        Processing
+  <div className="font-semibold text-slate-800">
+    {order.delivery_type === "pickup"
+      ? "Pickup"
+      : "Delivery"}
+  </div>
+</div>
 
-                      </span>
+{order.order_status === "processing" && (
+  <span
+    onClick={() => setPopup("processing")}
+    className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-indigo-200 transition"
+  >
+    Processing
+  </span>
+)}
 
-                      <button
-                        onClick={() =>
-                          setSelectedOrder(order)
-                        }
-                        className="
-        border
-        border-indigo-500
-        text-indigo-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-indigo-50
-        transition
-      "
-                      >
-
-                        View Receipt
-
-                      </button>
-
-                    </>
-                  )}
-
-                  {order.order_status ===
-                    "shipping" && (
-
-                      <>
-
-                        <span className="
-      bg-blue-100
-      text-blue-600
+{order.order_status === "shipping" && (
+  <span
+    onClick={() => setPopup("shipping")}
+    className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition"
+  >
+    Shipping
+  </span>
+)}
+{order.order_status === "ready_pickup" && (
+  <button
+    onClick={() => setPickupOrder(order)}
+    className="
+      bg-emerald-100
+      text-emerald-600
       px-4
       py-2
       rounded-full
       text-sm
       font-medium
-    ">
+      cursor-pointer
+      hover:bg-emerald-200
+      transition
+    "
+  >
+    Ready Pickup
+  </button>
+)}
 
-                          Shipping
-
-                        </span>
-
-                        <button
-                          onClick={() =>
-                            setSelectedOrder(order)
-                          }
-                          className="
-        border
-        border-blue-500
-        text-blue-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-blue-50
-        transition
-      "
-                        >
-
-                          View Receipt
-
-                        </button>
-
-                      </>
-
-                    )}
-
-                  {order.order_status ===
-                    "completed" && (
-
-                      <>
-
-                        <span className="
-      bg-green-100
-      text-green-600
+                  {order.order_status === "completed" && (
+  <span className="
+      bg-emerald-100
+      text-emerald-600
       px-4
       py-2
       rounded-full
       text-sm
       font-medium
-    ">
-
-                          Completed
-
-                        </span>
-
-                        <button
-                          onClick={() =>
-                            setSelectedOrder(order)
-                          }
-                          className="
-        border
-        border-green-500
-        text-green-600
-        px-4
-        py-2
-        rounded-xl
-        text-sm
-        hover:bg-green-50
-        transition
-      "
-                        >
-
-                          View Receipt
-
-                        </button>
-
-                      </>
-
-                    )}
+      cursor-pointer
+      hover:bg-emerald-200
+      transition
+    "
+  onClick={() => setSelectedOrder(order)}
+  >
+    Completed
+  </span>
+)}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -840,20 +931,22 @@ export default function Trackingbuku() {
     px-4
   "
         >
+
           <div
             onClick={(e) =>
               e.stopPropagation()
             }
-            className="
-  bg-white/95
-  backdrop-blur-md
-  w-fit
-  rounded-[32px]
-  p-3
+           className="
+  bg-white
+  w-[380px]
+  md:w-[430px]
+  rounded-xl
+  p-6
   relative
   animate-fadeIn
-  shadow-[0_20px_60px_rgba(0,0,0,0.25)]
-  scale-[0.72]
+  shadow-2xl
+  border
+  border-gray-200
 "
           >
             {/* CLOSE */}
@@ -865,11 +958,24 @@ export default function Trackingbuku() {
             <img
               src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
               alt={selectedOrder.title}
-              className="w-32 h-44 object-cover rounded-2xl mx-auto shadow"
+              className="
+  w-36
+  h-52
+  object-cover
+  rounded-lg
+  mx-auto
+  shadow-lg
+"
             />
 
             {/* TITLE */}
-            <h2 className="text-2xl font-bold text-center mt-5">
+            <h2 className="
+  text-3xl
+  font-bold
+  text-center
+  mt-6
+  text-gray-800
+">
               {selectedOrder.title}
             </h2>
 
@@ -883,6 +989,8 @@ export default function Trackingbuku() {
 
                 {selectedOrder.order_status === "processing" &&
                   "Processing"}
+                {selectedOrder.order_status === "ready_pickup" &&
+                  "Ready Pickup"}
 
                 {selectedOrder.order_status === "shipping" &&
                   "Shipping"}
@@ -896,6 +1004,13 @@ export default function Trackingbuku() {
 
             {/* DETAIL */}
             <div className="mt-6 space-y-4 text-sm">
+              <div className="flex justify-between">
+  <span className="text-gray-500">Name</span>
+
+  <span className="font-medium">
+    {user.name}
+  </span>
+</div>
 
               <div className="flex justify-between">
                 <span className="text-gray-500">
@@ -925,7 +1040,27 @@ export default function Trackingbuku() {
                 <span className="font-bold text-blue-600">
                   Rp {selectedOrder.amount?.toLocaleString("id-ID")}
                 </span>
+                
               </div>
+              {/* PRINT BUTTON (ONLY COMPLETED) */}
+{selectedOrder.order_status === "completed" && (
+  <button
+    onClick={() => window.print()}
+    className="
+      mt-6
+      w-full
+      bg-black
+      text-white
+      py-3
+      rounded-2xl
+      font-semibold
+      hover:bg-gray-800
+      transition
+    "
+  >
+    Print Receipt
+  </button>
+)}
 
             </div>
 
@@ -1039,594 +1174,218 @@ export default function Trackingbuku() {
               )}
 
 
-            {/* COMPLETED */}
-            {selectedOrder.order_status ===
-              "processing" && (
+                                 </div>
+              </div>
+            )}
 
-                <div className="
-    mt-2
-    w-full
-    w-[290px]
-    mx-auto
-    bg-white
-    border
-    border-gray-300
-    shadow-xl
-    print-area
-    overflow-hidden
-    font-mono
-  ">
+            {pickupOrder && (
+  <div
+    onClick={() => setPickupOrder(null)}
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="
+        bg-white
+        w-[380px]
+        md:w-[430px]
+        rounded-xl
+        p-6
+        relative
+        shadow-2xl
+        border
+        border-gray-200
+      "
+    >
+      {/* CLOSE */}
+      <button
+        onClick={() => setPickupOrder(null)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
+      >
+        ✕
+      </button>
 
-                  {/* TOP */}
-                  <div className="
-      text-center
-      py-4
-      border-b
-      border-dashed
-    ">
+      {/* TITLE */}
+      <h2 className="text-3xl font-bold text-center text-gray-800">
+        RECEIPT
+      </h2>
 
-                    <img
-                      src={logo}
-                      alt="logo"
-                      className="
-          w-16
-          h-16
-          mx-auto
-          mb-2
-        "
-                    />
+      <p className="text-center text-sm text-gray-500 mt-1">
+        Pickup Order Confirmation
+      </p>
 
-                    <h2 className="
-        text-2xl
-        font-black
-        tracking-widest
-      ">
-
-                      BOOKIN
-
-                    </h2>
-
-                    <p className="text-xs mt-1">
-                      PROCESSING RECEIPT
-                    </p>
-
-                  </div>
-
-                  {/* COVER */}
-                  <div className="
-      flex
-      justify-center
-      py-5
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                      alt={selectedOrder.title}
-                      className="
-          w-24
-          h-36
+      {/* COVER */}
+      <img
+        src={`https://covers.openlibrary.org/b/id/${pickupOrder.cover}-L.jpg`}
+        alt={pickupOrder.title}
+        className="
+          w-36
+          h-52
           object-cover
-          shadow-md
-        "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="
-      p-4
-      text-[12px]
-      space-y-3
-    ">
-
-                    <div className="flex justify-between">
-                      <span>ORDER ID</span>
-                      <span>{selectedOrder.order_id}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>CUSTOMER</span>
-                      <span>{user?.name}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-  flex
-  justify-between
-  gap-5
-">
-
-                      <span>BOOK</span>
-
-                      <span className="text-right">
-                        {selectedOrder.title}
-                      </span>
-
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>STATUS</span>
-
-                      <span className="font-bold text-indigo-600">
-                        PROCESSING
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>PAYMENT</span>
-
-                      <span className="font-bold">
-                        SUCCESS
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-        flex
-        justify-between
-        text-lg
-        font-black
-      ">
-
-                      <span>TOTAL</span>
-
-                      <span>
-                        Rp
-                        {selectedOrder.amount?.toLocaleString("id-ID")}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="
-      text-center
-      py-5
-      border-t
-      border-dashed
-      text-xs
-    ">
-
-                    <p>
-                      Your order is being processed
-                    </p>
-
-                    <p className="mt-1">
-                      Thank you for shopping at BOOKIN
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        window.print()
-                      }
-                      className="
-          mt-4
-          border
-          border-black
-          px-5
-          py-2
-          text-sm
-          hover:bg-black
-          hover:text-white
-          transition
-        "
-                    >
-
-                      PRINT RECEIPT
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* SHIPPING RECEIPT */}
-            {selectedOrder.order_status ===
-              "shipping" && (
-
-                <div className="
-  mt-4
-  w-full
-  w-[290px]
-  mx-auto
-  bg-white
-  border
-  border-gray-300
-  shadow-none
-  print-area
-  overflow-hidden
-  font-mono
-">
-
-                  {/* TOP */}
-                  <div className="
-      text-center
-      py-6
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={logo}
-                      alt="logo"
-                      className="
-          w-16
-          h-16
+          rounded-lg
           mx-auto
-          mb-2
+          mt-6
+          shadow-lg
         "
-                    />
-
-                    <h2 className="
-        text-2xl
-        font-black
-        tracking-widest
-      ">
-
-                      BOOKIN
-
-                    </h2>
-
-                    <p className="text-xs mt-1">
-                      SHIPPING RECEIPT
-                    </p>
-
-                  </div>
-
-                  {/* COVER */}
-                  <div className="
-      flex
-      justify-center
-      py-5
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                      alt={selectedOrder.title}
-                      className="
-          w-24
-          h-36
-          object-cover
-          shadow-md
-        "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="
-  p-4
-  text-[12px]
-  space-y-3
-">
-
-                    <div className="flex justify-between">
-                      <span>ORDER ID</span>
-                      <span>{selectedOrder.order_id}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>CUSTOMER</span>
-                      <span>{user?.name}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between gap-5">
-                      <span>BOOK</span>
-
-                      <span className="text-right">
-                        {selectedOrder.title}
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>STATUS</span>
-
-                      <span className="font-bold">
-                        SHIPPING
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>PAYMENT</span>
-
-                      <span className="font-bold">
-                        SUCCESS
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>COURIER</span>
-
-                      <span>BOOKIN EXPRESS</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>TRACKING</span>
-
-                      <span>
-                        BK-
-                        {selectedOrder.id}
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-        flex
-        justify-between
-        text-lg
-        font-black
-      ">
-
-                      <span>TOTAL</span>
-
-                      <span>
-                        Rp
-                        {selectedOrder.amount?.toLocaleString("id-ID")}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="
-      text-center
-      py-5
-      border-t
-      border-dashed
-      text-xs
-    ">
-
-                    <p>
-                      Your package is on delivery
-                    </p>
-
-                    <p className="mt-1">
-                      Thank you for shopping
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        window.print()
-                      }
-                      className="
-          mt-2
-          border
-          border-black
-          px-4
-          py-1.5
-          text-sm
-          hover:bg-black
-          hover:text-white
-          transition
-        "
-                    >
-
-                      PRINT RECEIPT
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* COMPLETED RECEIPT */}
-            {selectedOrder.order_status ===
-              "completed" && (
-
-                <div className="
-    mt-2
-    w-full
-    w-[290px]
-    mx-auto
-    bg-white
-    border
-    border-gray-300
-    shadow-none
-    print-area
-overflow-hidden
-font-mono
-  ">
-
-                  {/* TOP */}
-                  <div className="
-      text-center
-      py-4
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={logo}
-                      alt="logo"
-                      className="
-          w-16
-          h-16
-          mx-auto
-          mb-2
-        "
-                    />
-
-                    <h2 className="
-        text-2xl
-        font-black
-        tracking-widest
-      ">
-
-                      BOOKIN
-
-                    </h2>
-
-                    <p className="text-xs mt-1">
-                      COMPLETED RECEIPT
-                    </p>
-
-                  </div>
-
-                  {/* COVER */}
-                  <div className="
-      flex
-      justify-center
-      py-5
-      border-b
-      border-dashed
-    ">
-
-                    <img
-                      src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
-                      alt={selectedOrder.title}
-                      className="
-          w-24
-          h-36
-          object-cover
-          shadow-md
-        "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="
-  p-4
-  text-[12px]
-  space-y-3
-">
-
-                    <div className="flex justify-between">
-                      <span>ORDER ID</span>
-                      <span>{selectedOrder.order_id}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>CUSTOMER</span>
-                      <span>{user?.name}</span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-  flex
-  justify-between
-  gap-5
-">
-                      <span>BOOK</span>
-
-                      <span className="text-right">
-                        {selectedOrder.title}
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="flex justify-between">
-                      <span>STATUS</span>
-
-                      <span className="font-bold">
-                        COMPLETED
-                      </span>
-                    </div>
-
-                    <div className="border-b border-dashed"></div>
-
-                    <div className="
-        flex
-        justify-between
-        text-lg
-        font-black
-      ">
-
-                      <span>TOTAL</span>
-
-                      <span>
-                        Rp
-                        {selectedOrder.amount?.toLocaleString("id-ID")}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="
-      text-center
-      py-5
-      border-t
-      border-dashed
-      text-xs
-    ">
-
-                    <p>
-                      Order completed successfully
-                    </p>
-
-                    <p className="mt-1">
-                      Thank you for shopping at BOOKIN
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        window.print()
-                      }
-                      className="
-          mt-4
-          border
-          border-black
-          px-5
-          py-2
-          text-sm
-          hover:bg-black
-          hover:text-white
-          transition
-        "
-                    >
-
-                      PRINT RECEIPT
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-          </div>
+      />
+
+      {/* BOOK TITLE */}
+      <h3 className="text-xl font-bold text-center mt-4 text-gray-800">
+        {pickupOrder.title}
+      </h3>
+
+      {/* STATUS */}
+      <div className="flex justify-center mt-3">
+        <span className="bg-emerald-100 text-emerald-600 px-4 py-2 rounded-full text-sm font-medium">
+          Ready for Pickup
+        </span>
+      </div>
+
+      {/* DETAIL */}
+      <div className="mt-6 space-y-4 text-sm">
+        <div className="flex justify-between">
+  <span className="text-gray-500">Name</span>
+
+  <span className="font-medium">
+    {user.name}
+  </span>
+</div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">Order ID</span>
+          <span className="font-medium">{pickupOrder.order_id}</span>
         </div>
-      )}
-      {/* FLOATING */}
-      <Floating />
+
+        <div className="flex justify-between">
+          <span className="text-gray-500">Total</span>
+          <span className="font-bold text-blue-600">
+            Rp {pickupOrder.amount?.toLocaleString("id-ID")}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-500">Type</span>
+          <span className="font-medium">Pickup</span>
+        </div>
+      </div>
+
+      {/* PRINT BUTTON */}
+      <button
+        onClick={() => window.print()}
+        className="
+          mt-6
+          w-full
+          bg-black
+          text-white
+          py-3
+          rounded-2xl
+          font-semibold
+          hover:bg-gray-800
+          transition
+        "
+      >
+        Print Receipt
+      </button>
     </div>
+  </div>
+)}
+{popup === "processing" && (
+  <div
+    onClick={() => setPopup(null)}
+    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+    >
+      {/* close button */}
+      <button
+        onClick={() => setPopup(null)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-black"
+      >
+        ✕
+      </button>
+
+      {/* badge */}
+      <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+        Processing
+      </span>
+
+      {/* title */}
+      <h2 className="text-lg font-semibold text-blue-600 mt-3">
+        Preparing Your Order
+      </h2>
+
+      {/* animation */}
+      <Lottie
+        animationData={processingAnim}
+        loop
+        autoplay
+        className="w-48 h-48 mx-auto"
+      />
+
+      {/* subtitle */}
+      <p className="text-sm text-gray-500 mt-2">
+        We are carefully packing your items. Please wait a moment.
+      </p>
+
+      {/* progress bar */}
+      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+        <div className="h-1 bg-blue-600 w-1/3 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+)}
+
+{popup === "shipping" && (
+  <div
+    onClick={() => setPopup(null)}
+    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+    >
+      {/* close button */}
+      <button
+        onClick={() => setPopup(null)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-black"
+      >
+        ✕
+      </button>
+
+      {/* badge */}
+      <span className="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full">
+        On Delivery
+      </span>
+
+      {/* title */}
+      <h2 className="text-lg font-semibold text-indigo-600 mt-3">
+        Your Order is On The Way
+      </h2>
+
+      {/* animation */}
+      <Lottie
+        animationData={shippingAnim}
+        loop
+        autoplay
+        className="w-48 h-48 mx-auto"
+      />
+
+      {/* subtitle */}
+      <p className="text-sm text-gray-500 mt-2">
+        Courier is delivering your package. Stay tuned!
+      </p>
+
+      {/* progress bar */}
+      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+        <div className="h-1 bg-indigo-600 w-2/3 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+)}
+            
+            {/* FLOATING */}
+            <Floating />
+          </div>
   );
 }
