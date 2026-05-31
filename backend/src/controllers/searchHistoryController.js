@@ -63,7 +63,8 @@ export const getSearchHistory = async (
         .eq("user_id", user_id)
         .order("created_at", {
           ascending: false,
-        });
+        })
+        .limit(10);
 
     if (error) {
       return res.status(500).json({

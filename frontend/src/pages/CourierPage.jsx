@@ -40,6 +40,16 @@ export default function CourierPage() {
   }, [profileMenuOpen]);
 
   const handleLogout = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (storedUser?.id) {
+      const key = `chatHistory_${storedUser.id}`;
+      const archiveKey = `chatArchive_${storedUser.id}`;
+      const history = localStorage.getItem(key);
+      if (history) {
+        localStorage.setItem(archiveKey, history);
+        localStorage.removeItem(key);
+      }
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setProfileMenuOpen(false);
@@ -52,26 +62,18 @@ export default function CourierPage() {
   };
 
   const copyOrderId = async (id) => {
+    try {
+      await navigator.clipboard.writeText(id);
 
-  try {
+      setNotif("Order ID copied!");
 
-    await navigator.clipboard.writeText(id);
-
-    setNotif("Order ID copied!");
-
-    setTimeout(() => {
-
-      setNotif("");
-
-    }, 2500);
-
-  } catch (err) {
-
-    console.log(err);
-
-  }
-
-};
+      setTimeout(() => {
+        setNotif("");
+      }, 2500);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -108,44 +110,20 @@ export default function CourierPage() {
 
   /* ================= FILTER ================= */
   const filteredOrders = orders.filter((order) => {
+    const keyword = search.toLowerCase();
 
-  const keyword = search.toLowerCase();
+    const matchSearch = order.title?.toLowerCase().includes(keyword) || order.address?.receiver_name?.toLowerCase().includes(keyword) || order.order_id?.toString().toLowerCase().includes(keyword);
 
-  const matchSearch = (
+    const matchFilter = activeFilter === "all" || order.order_status === activeFilter;
 
-    order.title?.toLowerCase().includes(keyword) ||
-
-    order.address?.receiver_name
-      ?.toLowerCase()
-      .includes(keyword) ||
-
-    order.order_id
-      ?.toString()
-      .toLowerCase()
-      .includes(keyword)
-
-  );
-
-  const matchFilter = (
-
-    activeFilter === "all" ||
-
-    order.order_status === activeFilter
-
-  );
-
-  return matchSearch && matchFilter;
-
-});
+    return matchSearch && matchFilter;
+  });
 
   return (
-
-  <>
-
-    {notif && (
-
-      <div
-        className="
+    <>
+      {notif && (
+        <div
+          className="
           fixed
           top-5
           left-1/2
@@ -153,10 +131,9 @@ export default function CourierPage() {
           z-[99999]
           animate-[fadeIn_.3s_ease]
         "
-      >
-
-        <div
-          className="
+        >
+          <div
+            className="
             bg-blue-600
             text-white
             px-6
@@ -167,21 +144,16 @@ export default function CourierPage() {
             font-semibold
             backdrop-blur-xl
           "
-        >
-
-          {notif}
-
+          >
+            {notif}
+          </div>
         </div>
+      )}
 
-      </div>
-
-    )}
-
-    <div className="min-h-screen bg-[#f4f7fb]">
-
-      {/* ───────── HEADER ───────── */}
-      <header
-        className="
+      <div className="min-h-screen bg-[#f4f7fb]">
+        {/* ───────── HEADER ───────── */}
+        <header
+          className="
         sticky
         top-0
         z-30
@@ -190,20 +162,20 @@ export default function CourierPage() {
         bg-white/85
         backdrop-blur-xl
       "
-      >
-        <div
-          className="
+        >
+          <div
+            className="
           flex
           items-center
           gap-2 md:gap-3
           px-3 md:px-5
           py-3
         "
-        >
-          {/* LEFT */}
-          <div className="flex items-center gap-3">
-            <div
-              className="
+          >
+            {/* LEFT */}
+            <div className="flex items-center gap-3">
+              <div
+                className="
               w-9
               h-9
               rounded-xl
@@ -216,29 +188,29 @@ export default function CourierPage() {
               shadow-md
               shadow-blue-500/20
             "
-            >
-              <FiTruck className="w-4 h-4 text-white" />
-            </div>
+              >
+                <FiTruck className="w-4 h-4 text-white" />
+              </div>
 
-            <span
-              className="
+              <span
+                className="
               font-black
               text-slate-800
               text-base
               hidden sm:block
               tracking-tight
             "
-            >
-              Courier Dashboard
-            </span>
-          </div>
+              >
+                Courier Dashboard
+              </span>
+            </div>
 
-          <div className="flex-1" />
+            <div className="flex-1" />
 
-          {/* SEARCH */}
-          <div className="relative hidden sm:block">
-            <FiSearch
-              className="
+            {/* SEARCH */}
+            <div className="relative hidden sm:block">
+              <FiSearch
+                className="
               absolute
               left-3
               top-1/2
@@ -247,14 +219,14 @@ export default function CourierPage() {
               h-4
               text-slate-400
             "
-            />
+              />
 
-            <input
-              type="text"
-              placeholder="Search data..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="
+              <input
+                type="text"
+                placeholder="Search data..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="
                 w-56
                 rounded-xl
                 border
@@ -269,14 +241,14 @@ export default function CourierPage() {
                 focus:bg-white
                 transition-all
               "
-            />
-          </div>
+              />
+            </div>
 
-          {/* PROFILE */}
-          <div className="relative" ref={profileMenuRef}>
-            <button
-              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-              className="
+            {/* PROFILE */}
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="
                 w-9
                 h-9
                 rounded-full
@@ -297,14 +269,14 @@ export default function CourierPage() {
                 transition-all
                 cursor-pointer
               "
-            >
-              {courierName}
-            </button>
+              >
+                {courierName}
+              </button>
 
-            {/* Profile Dropdown Menu */}
-            {profileMenuOpen && (
-              <div
-                className="
+              {/* Profile Dropdown Menu */}
+              {profileMenuOpen && (
+                <div
+                  className="
                 absolute
                 right-0
                 mt-2
@@ -316,14 +288,14 @@ export default function CourierPage() {
                 z-50
                 overflow-hidden
               "
-              >
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-semibold text-gray-800">Courier Profile</p>
-                </div>
+                >
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-800">Courier Profile</p>
+                  </div>
 
-                <button
-                  onClick={confirmLogout}
-                  className="
+                  <button
+                    onClick={confirmLogout}
+                    className="
                     w-full
                     px-4
                     py-3
@@ -336,27 +308,27 @@ export default function CourierPage() {
                     text-sm
                     font-semibold
                   "
-                >
-                  <FiLogOut className="text-lg" />
-                  Logout
-                </button>
-              </div>
-            )}
+                  >
+                    <FiLogOut className="text-lg" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* MOBILE SEARCH */}
-      <div
-        className="
+        {/* MOBILE SEARCH */}
+        <div
+          className="
         sm:hidden
         px-4
         pt-4
       "
-      >
-        <div className="relative">
-          <FiSearch
-            className="
+        >
+          <div className="relative">
+            <FiSearch
+              className="
             absolute
             left-3
             top-1/2
@@ -365,14 +337,14 @@ export default function CourierPage() {
             h-4
             text-slate-400
           "
-          />
+            />
 
-          <input
-            type="text"
-            placeholder="Search data..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="
+            <input
+              type="text"
+              placeholder="Search data..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="
               w-full
               rounded-xl
               border
@@ -385,36 +357,34 @@ export default function CourierPage() {
               outline-none
               focus:border-blue-400
             "
-          />
+            />
+          </div>
         </div>
-      </div>
 
-      {/* ───────── CONTENT ───────── */}
-      <div
-        className="
+        {/* ───────── CONTENT ───────── */}
+        <div
+          className="
         max-w-7xl
         mx-auto
         px-4
         md:px-6
         py-8
       "
-      >
-        {/* STATS */}
-        <div
-          className="
+        >
+          {/* STATS */}
+          <div
+            className="
           grid
           grid-cols-2
           lg:grid-cols-4
           gap-4
           mb-8
         "
-        >
-          {/* TOTAL */}
-          <div
-  onClick={() =>
-    setActiveFilter("all")
-  }
-  className={`
+          >
+            {/* TOTAL */}
+            <div
+              onClick={() => setActiveFilter("all")}
+              className={`
     bg-white
     rounded-3xl
     p-5
@@ -424,44 +394,40 @@ export default function CourierPage() {
     transition-all
     hover:scale-[1.02]
 
-    ${
-      activeFilter === "all"
-        ? "border-blue-500 ring-2 ring-blue-100"
-        : "border-gray-100"
-    }
+    ${activeFilter === "all" ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-100"}
   `}
->
-            <div
-              className="
+            >
+              <div
+                className="
               flex
               items-center
               justify-between
             "
-            >
-              <div>
-                <p
-                  className="
+              >
+                <div>
+                  <p
+                    className="
                   text-sm
                   text-gray-400
                 "
-                >
-                  Total Orders
-                </p>
+                  >
+                    Total Orders
+                  </p>
 
-                <h2
-                  className="
+                  <h2
+                    className="
                   text-3xl
                   font-black
                   text-gray-800
                   mt-2
                 "
-                >
-                  {orders.length}
-                </h2>
-              </div>
+                  >
+                    {orders.length}
+                  </h2>
+                </div>
 
-              <div
-                className="
+                <div
+                  className="
                 w-12
                 h-12
                 rounded-2xl
@@ -471,18 +437,16 @@ export default function CourierPage() {
                 items-center
                 justify-center
               "
-              >
-                <FiPackage className="text-xl" />
+                >
+                  <FiPackage className="text-xl" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* PROCESSING */}
-          <div
-  onClick={() =>
-    setActiveFilter("processing")
-  }
-  className={`
+            {/* PROCESSING */}
+            <div
+              onClick={() => setActiveFilter("processing")}
+              className={`
     bg-white
     rounded-3xl
     p-5
@@ -492,44 +456,40 @@ export default function CourierPage() {
     transition-all
     hover:scale-[1.02]
 
-    ${
-      activeFilter === "processing"
-        ? "border-indigo-500 ring-2 ring-indigo-100"
-        : "border-gray-100"
-    }
+    ${activeFilter === "processing" ? "border-indigo-500 ring-2 ring-indigo-100" : "border-gray-100"}
   `}
->
-            <div
-              className="
+            >
+              <div
+                className="
               flex
               items-center
               justify-between
             "
-            >
-              <div>
-                <p
-                  className="
+              >
+                <div>
+                  <p
+                    className="
                   text-sm
                   text-gray-400
                 "
-                >
-                  Processing
-                </p>
+                  >
+                    Processing
+                  </p>
 
-                <h2
-                  className="
+                  <h2
+                    className="
                   text-3xl
                   font-black
                   text-indigo-600
                   mt-2
                 "
-                >
-                  {orders.filter((o) => o.order_status === "processing").length}
-                </h2>
-              </div>
+                  >
+                    {orders.filter((o) => o.order_status === "processing").length}
+                  </h2>
+                </div>
 
-              <div
-                className="
+                <div
+                  className="
                 w-12
                 h-12
                 rounded-2xl
@@ -539,18 +499,16 @@ export default function CourierPage() {
                 items-center
                 justify-center
               "
-              >
-                <FiPackage className="text-xl" />
+                >
+                  <FiPackage className="text-xl" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* SHIPPING */}
-          <div
-  onClick={() =>
-    setActiveFilter("shipping")
-  }
-  className={`
+            {/* SHIPPING */}
+            <div
+              onClick={() => setActiveFilter("shipping")}
+              className={`
     bg-white
     rounded-3xl
     p-5
@@ -560,44 +518,40 @@ export default function CourierPage() {
     transition-all
     hover:scale-[1.02]
 
-    ${
-      activeFilter === "shipping"
-        ? "border-blue-500 ring-2 ring-blue-100"
-        : "border-gray-100"
-    }
+    ${activeFilter === "shipping" ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-100"}
   `}
->
-            <div
-              className="
+            >
+              <div
+                className="
               flex
               items-center
               justify-between
             "
-            >
-              <div>
-                <p
-                  className="
+              >
+                <div>
+                  <p
+                    className="
                   text-sm
                   text-gray-400
                 "
-                >
-                  Shipping
-                </p>
+                  >
+                    Shipping
+                  </p>
 
-                <h2
-                  className="
+                  <h2
+                    className="
                   text-3xl
                   font-black
                   text-blue-600
                   mt-2
                 "
-                >
-                  {orders.filter((o) => o.order_status === "shipping").length}
-                </h2>
-              </div>
+                  >
+                    {orders.filter((o) => o.order_status === "shipping").length}
+                  </h2>
+                </div>
 
-              <div
-                className="
+                <div
+                  className="
                 w-12
                 h-12
                 rounded-2xl
@@ -607,18 +561,16 @@ export default function CourierPage() {
                 items-center
                 justify-center
               "
-              >
-                <FiTruck className="text-xl" />
+                >
+                  <FiTruck className="text-xl" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* COMPLETED */}
-          <div
-  onClick={() =>
-    setActiveFilter("completed")
-  }
-  className={`
+            {/* COMPLETED */}
+            <div
+              onClick={() => setActiveFilter("completed")}
+              className={`
     bg-white
     rounded-3xl
     p-5
@@ -628,44 +580,40 @@ export default function CourierPage() {
     transition-all
     hover:scale-[1.02]
 
-    ${
-      activeFilter === "completed"
-        ? "border-green-500 ring-2 ring-green-100"
-        : "border-gray-100"
-    }
+    ${activeFilter === "completed" ? "border-green-500 ring-2 ring-green-100" : "border-gray-100"}
   `}
->
-            <div
-              className="
+            >
+              <div
+                className="
               flex
               items-center
               justify-between
             "
-            >
-              <div>
-                <p
-                  className="
+              >
+                <div>
+                  <p
+                    className="
                   text-sm
                   text-gray-400
                 "
-                >
-                  Completed
-                </p>
+                  >
+                    Completed
+                  </p>
 
-                <h2
-                  className="
+                  <h2
+                    className="
                   text-3xl
                   font-black
                   text-green-600
                   mt-2
                 "
-                >
-                  {orders.filter((o) => o.order_status === "completed").length}
-                </h2>
-              </div>
+                  >
+                    {orders.filter((o) => o.order_status === "completed").length}
+                  </h2>
+                </div>
 
-              <div
-                className="
+                <div
+                  className="
                 w-12
                 h-12
                 rounded-2xl
@@ -675,19 +623,19 @@ export default function CourierPage() {
                 items-center
                 justify-center
               "
-              >
-                <FiCheckCircle className="text-xl" />
+                >
+                  <FiCheckCircle className="text-xl" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ORDERS */}
-        <div className="grid gap-6">
-          {filteredOrders.map((order) => (
-            <div
-              key={order.id}
-              className="
+          {/* ORDERS */}
+          <div className="grid gap-6">
+            {filteredOrders.map((order) => (
+              <div
+                key={order.id}
+                className="
                 bg-white
                 rounded-4xl
                 shadow-sm
@@ -697,164 +645,156 @@ export default function CourierPage() {
                 border border-gray-100
                 p-5 md:p-6
               "
-            >
-              <div
-                className="
+              >
+                <div
+                  className="
                 flex
                 flex-col
                 lg:flex-row
                 gap-6
                 justify-between
               "
-              >
-                {/* LEFT */}
-                <div
-                  className="
+                >
+                  {/* LEFT */}
+                  <div
+                    className="
                   flex
                   flex-col
                   sm:flex-row
                   gap-5
                 "
-                >
-                  {/* COVER */}
-                  <img
-                    src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`}
-                    alt={order.title}
-                    className="
+                  >
+                    {/* COVER */}
+                    <img
+                      src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`}
+                      alt={order.title}
+                      className="
                       w-24 md:w-28
                       h-36 md:h-40
                       object-cover
                       rounded-3xl
                       shadow-md
                     "
-                  />
+                    />
 
-                  {/* INFO */}
-                  <div>
-                    <div className="mb-5">
-                      <h2
-                        className="
+                    {/* INFO */}
+                    <div>
+                      <div className="mb-5">
+                        <h2
+                          className="
                         text-xl md:text-2xl
                         font-black
                         text-gray-800
                         leading-tight
                       "
-                      >
-                        {order.title}
-                      </h2>
+                        >
+                          {order.title}
+                        </h2>
 
-                      <div
-  className="
+                        <div
+                          className="
   flex
   items-center
   gap-2
   mt-1
 "
->
+                        >
+                          <p className="text-gray-500">Order ID: {order.order_id}</p>
 
-  <p className="text-gray-500">
-    Order ID: {order.order_id}
-  </p>
-
-  <button
-    onClick={() =>
-      copyOrderId(order.order_id)
-    }
-    className="
+                          <button
+                            onClick={() => copyOrderId(order.order_id)}
+                            className="
       p-1.5
       rounded-lg
       hover:bg-blue-50
       text-blue-600
       transition
     "
-  >
+                          >
+                            <FiCopy className="text-sm" />
+                          </button>
+                        </div>
 
-    <FiCopy className="text-sm" />
-
-  </button>
-
-</div>
-
-                      <p
-                        className="
+                        <p
+                          className="
                         text-blue-600
                         font-black
                         mt-3
                         text-xl
                       "
-                      >
-                        Rp {order.amount?.toLocaleString("id-ID")}
-                      </p>
-                    </div>
+                        >
+                          Rp {order.amount?.toLocaleString("id-ID")}
+                        </p>
+                      </div>
 
-                    {/* CUSTOMER */}
-                    <div
-                      className="
+                      {/* CUSTOMER */}
+                      <div
+                        className="
                       space-y-3
                       text-sm
                     "
-                    >
-                      <div
-                        className="
+                      >
+                        <div
+                          className="
                         flex
                         items-center
                         gap-2
                         text-gray-700
                       "
-                      >
-                        <FiUser className="text-gray-400" />
+                        >
+                          <FiUser className="text-gray-400" />
 
-                        <span>{order.address?.receiver_name}</span>
-                      </div>
+                          <span>{order.address?.receiver_name}</span>
+                        </div>
 
-                      <div
-                        className="
+                        <div
+                          className="
                         flex
                         items-center
                         gap-2
                         text-gray-700
                       "
-                      >
-                        <FiPhone className="text-gray-400" />
+                        >
+                          <FiPhone className="text-gray-400" />
 
-                        <span>{order.address?.phone}</span>
-                      </div>
+                          <span>{order.address?.phone}</span>
+                        </div>
 
-                      <div
-                        className="
+                        <div
+                          className="
                         flex
                         items-start
                         gap-2
                         text-gray-700
                       "
-                      >
-                        <FiMapPin
-                          className="
+                        >
+                          <FiMapPin
+                            className="
                           mt-1
                           text-gray-400
                         "
-                        />
+                          />
 
-                        <span>{order.address?.full_address}</span>
+                          <span>{order.address?.full_address}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* RIGHT */}
-                <div
-                  className="
+                  {/* RIGHT */}
+                  <div
+                    className="
                   flex
                   flex-col
                   justify-between
                   gap-5
                 "
-                >
-                  {/* STATUS */}
-                  <div>
-                    {order.order_status === "processing" && (
-                      <div
-                        className="
+                  >
+                    {/* STATUS */}
+                    <div>
+                      {order.order_status === "processing" && (
+                        <div
+                          className="
                         bg-indigo-50
                         text-indigo-700
                         border border-indigo-200
@@ -868,15 +808,15 @@ export default function CourierPage() {
                         items-center
                         gap-2
                       "
-                      >
-                        <FiPackage />
-                        Processing
-                      </div>
-                    )}
+                        >
+                          <FiPackage />
+                          Processing
+                        </div>
+                      )}
 
-                    {order.order_status === "shipping" && (
-                      <div
-                        className="
+                      {order.order_status === "shipping" && (
+                        <div
+                          className="
                         bg-blue-50
                         text-blue-700
                         border border-blue-200
@@ -890,15 +830,15 @@ export default function CourierPage() {
                         items-center
                         gap-2
                       "
-                      >
-                        <FiTruck />
-                        Shipping
-                      </div>
-                    )}
+                        >
+                          <FiTruck />
+                          Shipping
+                        </div>
+                      )}
 
-                    {order.order_status === "completed" && (
-                      <div
-                        className="
+                      {order.order_status === "completed" && (
+                        <div
+                          className="
                         bg-green-50
                         text-green-700
                         border border-green-200
@@ -912,26 +852,26 @@ export default function CourierPage() {
                         items-center
                         gap-2
                       "
-                      >
-                        <FiCheckCircle />
-                        Completed
-                      </div>
-                    )}
-                  </div>
+                        >
+                          <FiCheckCircle />
+                          Completed
+                        </div>
+                      )}
+                    </div>
 
-                  {/* BUTTON */}
-                  <div
-                    className="
+                    {/* BUTTON */}
+                    <div
+                      className="
                     flex
                     flex-col
                     sm:flex-row
                     gap-3
                   "
-                  >
-                    {order.order_status === "processing" && (
-                      <button
-                        onClick={() => updateStatus(order.id, "shipping")}
-                        className="
+                    >
+                      {order.order_status === "processing" && (
+                        <button
+                          onClick={() => updateStatus(order.id, "shipping")}
+                          className="
                           bg-linear-to-r
                           from-blue-600
                           to-blue-700
@@ -945,15 +885,15 @@ export default function CourierPage() {
                           transition-all
                           shadow-lg
                         "
-                      >
-                        Start Delivery
-                      </button>
-                    )}
+                        >
+                          Start Delivery
+                        </button>
+                      )}
 
-                    {order.order_status === "shipping" && (
-                      <button
-                        onClick={() => updateStatus(order.id, "completed")}
-                        className="
+                      {order.order_status === "shipping" && (
+                        <button
+                          onClick={() => updateStatus(order.id, "completed")}
+                          className="
                           bg-linear-to-r
                           from-green-500
                           to-green-600
@@ -967,20 +907,20 @@ export default function CourierPage() {
                           transition-all
                           shadow-lg
                         "
-                      >
-                        Complete Order
-                      </button>
-                    )}
+                        >
+                          Complete Order
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* EMPTY */}
-          {filteredOrders.length === 0 && (
-            <div
-              className="
+            {/* EMPTY */}
+            {filteredOrders.length === 0 && (
+              <div
+                className="
               bg-white
               rounded-4xl
               p-12
@@ -988,9 +928,9 @@ export default function CourierPage() {
               border border-gray-100
               shadow-sm
             "
-            >
-              <div
-                className="
+              >
+                <div
+                  className="
                 w-24
                 h-24
                 rounded-full
@@ -1001,55 +941,55 @@ export default function CourierPage() {
                 mx-auto
                 mb-5
               "
-              >
-                <FiTruck
-                  className="
+                >
+                  <FiTruck
+                    className="
                   text-5xl
                   text-blue-400
                 "
-                />
-              </div>
+                  />
+                </div>
 
-              <h2
-                className="
+                <h2
+                  className="
                 text-3xl
                 font-black
                 text-gray-700
               "
-              >
-                No Orders Yet
-              </h2>
+                >
+                  No Orders Yet
+                </h2>
 
-              <p
-                className="
+                <p
+                  className="
                 text-gray-400
                 mt-3
                 text-lg
               "
-              >
-                Delivery orders will appear here.
-              </p>
-            </div>
-          )}
+                >
+                  Delivery orders will appear here.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* ═══════════ LOGOUT CONFIRMATION MODAL ═══════════ */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 shadow-2xl">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
-              <FiAlertCircle className="text-2xl text-red-600" />
-            </div>
+        {/* ═══════════ LOGOUT CONFIRMATION MODAL ═══════════ */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 shadow-2xl">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
+                <FiAlertCircle className="text-2xl text-red-600" />
+              </div>
 
-            <h3 className="text-center text-lg font-black text-gray-800 mb-2">Confirm Logout</h3>
+              <h3 className="text-center text-lg font-black text-gray-800 mb-2">Confirm Logout</h3>
 
-            <p className="text-center text-gray-600 text-sm mb-6">Are you sure you want to logout? You will need to login again to access the courier dashboard.</p>
+              <p className="text-center text-gray-600 text-sm mb-6">Are you sure you want to logout? You will need to login again to access the courier dashboard.</p>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="
                   flex-1
                   px-4
                   py-3
@@ -1061,13 +1001,13 @@ export default function CourierPage() {
                   hover:bg-gray-50
                   transition-colors
                 "
-              >
-                Cancel
-              </button>
+                >
+                  Cancel
+                </button>
 
-              <button
-                onClick={handleLogout}
-                className="
+                <button
+                  onClick={handleLogout}
+                  className="
                   flex-1
                   px-4
                   py-3
@@ -1078,16 +1018,14 @@ export default function CourierPage() {
                   hover:bg-red-700
                   transition-colors
                 "
-              >
-                Logout
-              </button>
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-   </div>
-
-</>
-
-);
+        )}
+      </div>
+    </>
+  );
 }

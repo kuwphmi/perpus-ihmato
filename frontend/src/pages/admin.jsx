@@ -39,35 +39,41 @@ const tabs = [
   { key: "pesanan", label: "Orders", icon: ShoppingCart },
 ];
 
-const ORDER_STATUSES = [
+const DELIVERY_STATUSES = [
   {
     key: "waiting_payment",
     label: "Waiting Payment",
-    color: "amber",
   },
-
   {
     key: "processing",
     label: "Processing",
-    color: "blue",
   },
-
   {
     key: "shipping",
     label: "Shipping",
-    color: "indigo",
   },
-
   {
     key: "completed",
     label: "Completed",
-    color: "emerald",
   },
+];
 
+const PICKUP_STATUSES = [
   {
-    key: "cancelled",
-    label: "Cancelled",
-    color: "rose",
+    key: "waiting_payment",
+    label: "Waiting Payment",
+  },
+  {
+    key: "processing",
+    label: "Processing",
+  },
+  {
+    key: "ready_pickup",
+    label: "Ready Pickup",
+  },
+  {
+    key: "completed",
+    label: "Picked Up",
   },
 ];
 
@@ -80,15 +86,19 @@ const statColorMap = {
 
 const getCurrentMonth = () => String(new Date().getMonth() + 1);
 const getCurrentYear = () => String(new Date().getFullYear());
+const getTabKey = (tab, bookView) => {
+  if (tab === "buku") {
+    return bookView === "loan" ? "borrowBooks" : "shopBooks";
+  }
 
-const tabToKey = {
-  buku: "books",
-  pinjaman: "loans",
-  anggota: "members",
-  pengembalian: "returns",
-  ajukan: "loanRequests",
-  perpanjangan: "extensionRequests",
-  pesanan: "orders",
+  return {
+    pinjaman: "loans",
+    anggota: "members",
+    pengembalian: "returns",
+    ajukan: "loanRequests",
+    perpanjangan: "extensionRequests",
+    pesanan: "orders",
+  }[tab];
 };
 
 const CACHE_TTL = 30_000;
@@ -131,6 +141,7 @@ export default function AdminPerpustakaan() {
   const [query, setQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderTypeFilter, setOrderTypeFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [selectedMonth] = useState(getCurrentMonth());
   const [selectedYear] = useState(getCurrentYear());
@@ -139,7 +150,8 @@ export default function AdminPerpustakaan() {
   const profileMenuRef = useRef(null);
   const [adminName, setAdminName] = useState("A");
   const [loadedTabs, setLoadedTabs] = useState({
-    books: false,
+    borrowBooks: false,
+    shopBooks: false,
     loans: false,
     members: false,
     returns: false,
@@ -148,7 +160,18 @@ export default function AdminPerpustakaan() {
     orders: false,
   });
 
-  const [bookForm, setBookForm] = useState({
+  const [bookView, setBookView] = useState("loan");
+
+  const [borrowForm, setBorrowForm] = useState({
+    title: "",
+    author: "",
+    category: "",
+    stock: "",
+    description: "",
+    cover: "",
+  });
+
+  const [shopForm, setShopForm] = useState({
     title: "",
     author: "",
     category: "",
@@ -159,7 +182,8 @@ export default function AdminPerpustakaan() {
   });
 
   const [data, setData] = useState({
-    books: [],
+    borrowBooks: [],
+    shopBooks: [],
     loans: [],
     members: [],
     returns: [],
@@ -201,6 +225,16 @@ export default function AdminPerpustakaan() {
   }, [profileMenuOpen]);
 
   const handleLogout = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (storedUser?.id) {
+      const key = `chatHistory_${storedUser.id}`;
+      const archiveKey = `chatArchive_${storedUser.id}`;
+      const history = localStorage.getItem(key);
+      if (history) {
+        localStorage.setItem(archiveKey, history);
+        localStorage.removeItem(key);
+      }
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setProfileMenuOpen(false);
@@ -254,6 +288,54 @@ export default function AdminPerpustakaan() {
     return res.json();
   };
 
+  const addBorrowBook = async () => {
+    try {
+      await fetchJson(`${API_BASE}/admin/borrow-books`, {
+        method: "POST",
+        body: JSON.stringify(borrowForm),
+      });
+
+      alert("Borrow book added");
+
+      loadTabData("buku");
+
+      setBorrowForm({
+        title: "",
+        author: "",
+        category: "",
+        stock: "",
+        description: "",
+        cover: "",
+      });
+    } catch {
+      alert("Failed to add borrow book");
+    }
+  };
+
+  const addShopBook = async () => {
+    try {
+      await fetchJson(`${API_BASE}/admin/books`, {
+        method: "POST",
+        body: JSON.stringify(shopForm),
+      });
+
+      alert("Shop book added");
+      loadTabData("buku");
+
+      setShopForm({
+        title: "",
+        author: "",
+        category: "",
+        stock: "",
+        price: "",
+        description: "",
+        cover: "",
+      });
+    } catch {
+      alert("Failed to add shop book");
+    }
+  };
+
   const loadDashboard = useCallback(async () => {
     setLoadingDashboard(true);
     try {
@@ -290,79 +372,100 @@ export default function AdminPerpustakaan() {
     }
   }, []);
 
-  const loadTabData = useCallback(async (tabKey) => {
-    const dataKey = tabToKey[tabKey];
-    if (!dataKey) return;
+  const loadTabData = useCallback(
+    async (tabKey) => {
+      const dataKey = getTabKey(tabKey, bookView);
+      if (!dataKey) return;
 
-    const cachedTab = getCachedTab(dataKey);
-    if (cachedTab) {
-      setData((prev) => ({
+      setLoadingTabs((prev) => ({
         ...prev,
-        [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
+        [dataKey]: true,
       }));
-      setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
-      return cachedTab;
-    }
 
-    setLoadingTabs((prev) => ({ ...prev, [dataKey]: true }));
-    try {
-      let result = [];
-
-      switch (tabKey) {
-        case "buku":
-          result = await fetchJson(`${API_BASE}/admin/books`);
-          break;
-        case "pinjaman":
-          result = await fetchJson(`${API_BASE}/admin/loans`);
-          break;
-        case "anggota":
-          result = await fetchJson(`${API_BASE}/admin/members`);
-          break;
-        case "pengembalian":
-          result = await fetchJson(`${API_BASE}/admin/returns`);
-          break;
-        case "ajukan":
-          result = await fetchJson(`${API_BASE}/admin/loan-requests`);
-          break;
-        case "perpanjangan":
-          result = await fetchJson(`${API_BASE}/admin/extension-requests`);
-          break;
-        case "pesanan":
-          result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
-          break;
-        default:
-          result = [];
+      const cachedTab = getCachedTab(dataKey);
+      if (cachedTab) {
+        setData((prev) => ({
+          ...prev,
+          [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
+        }));
+        setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
+        setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
+        return cachedTab;
       }
 
-      setCachedTab(dataKey, Array.isArray(result) ? result : []);
-      setData((prev) => ({
-        ...prev,
-        [dataKey]: Array.isArray(result) ? result : [],
-      }));
-      setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
-      return result;
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch tab data.");
-      return null;
-    } finally {
-      setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
-    }
-  }, []);
+      try {
+        let result = [];
+
+        switch (tabKey) {
+          case "buku":
+            result = bookView === "loan" ? await fetchJson(`${API_BASE}/admin/borrow-books`) : await fetchJson(`${API_BASE}/admin/books`);
+            break;
+
+          case "pinjaman":
+            result = await fetchJson(`${API_BASE}/admin/loans`);
+            break;
+
+          case "anggota":
+            result = await fetchJson(`${API_BASE}/admin/members`);
+            break;
+
+          case "pengembalian":
+            result = await fetchJson(`${API_BASE}/admin/returns`);
+            break;
+
+          case "ajukan":
+            result = await fetchJson(`${API_BASE}/admin/loan-requests`);
+            break;
+
+          case "perpanjangan":
+            result = await fetchJson(`${API_BASE}/admin/extension-requests`);
+            break;
+
+          case "pesanan":
+            result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
+            break;
+
+          default:
+            result = [];
+        }
+
+        setData((prev) => ({
+          ...prev,
+          [dataKey]: Array.isArray(result) ? result : [],
+        }));
+
+        setLoadedTabs((prev) => ({
+          ...prev,
+          [dataKey]: true,
+        }));
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch tab data.");
+      } finally {
+        setLoadingTabs((prev) => ({
+          ...prev,
+          [dataKey]: false,
+        }));
+      }
+    },
+    [bookView],
+  );
 
   const refreshCurrentView = useCallback(async () => {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
   }, [activeTab, loadDashboard, loadTabData]);
 
   useEffect(() => {
+    // initial load
     refreshCurrentView();
 
+    // auto refresh setiap 60 detik
     const interval = setInterval(() => {
       refreshCurrentView();
-    }, 60000); // 1 minute
+    }, 60000);
 
     return () => clearInterval(interval);
-  }, [activeTab, refreshCurrentView]);
+  }, [activeTab, bookView, refreshCurrentView]);
 
   const rejectLoanRequest = async (id) => {
     try {
@@ -423,19 +526,31 @@ export default function AdminPerpustakaan() {
     try {
       await fetchJson(`${API_BASE}/admin/orders/${id}/status`, {
         method: "PUT",
+
         body: JSON.stringify({
           order_status: status,
         }),
       });
 
-      await refreshCurrentView();
+      // UPDATE MODAL
+      setSelectedOrder((prev) => ({
+        ...prev,
+        order_status: status,
+      }));
 
-      if (selectedOrder?.id === id) {
-        setSelectedOrder((prev) => ({
-          ...prev,
-          order_status: status,
-        }));
-      }
+      // UPDATE TABLE
+      setData((prev) => ({
+        ...prev,
+
+        orders: prev.orders.map((o) =>
+          o.id === id
+            ? {
+                ...o,
+                order_status: status,
+              }
+            : o,
+        ),
+      }));
     } catch {
       alert("Failed to update order status.");
     }
@@ -462,10 +577,25 @@ export default function AdminPerpustakaan() {
     return "bg-slate-100 text-slate-700 border-slate-200";
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status, deliveryType) => {
     const s = String(status || "").toLowerCase();
-    const map = {
-      pending: "Pending",
+
+    // PICKUP
+    if (deliveryType === "pickup") {
+      const pickupMap = {
+        waiting_payment: "Waiting Payment",
+        processing: "Processing",
+        ready_pickup: "Ready Pickup",
+        completed: "Picked Up",
+        cancelled: "Cancelled",
+      };
+
+      return pickupMap[s] || status;
+    }
+
+    // DELIVERY
+    const deliveryMap = {
+      waiting_payment: "Waiting Payment",
       processing: "Processing",
       shipping: "Shipping",
       completed: "Completed",
@@ -474,11 +604,27 @@ export default function AdminPerpustakaan() {
       approved: "Approved",
       rejected: "Rejected",
     };
-    return map[s] || status;
+
+    return deliveryMap[s] || status;
   };
 
-  const Badge = ({ status }) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(status)}`}>{getStatusLabel(status)}</span>;
-
+  const Badge = ({ status, deliveryType }) => (
+    <span
+      className={`
+      inline-flex
+      items-center
+      rounded-full
+      border
+      px-2.5
+      py-0.5
+      text-xs
+      font-semibold
+      ${badgeClass(status)}
+    `}
+    >
+      {getStatusLabel(status, deliveryType)}
+    </span>
+  );
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
 
@@ -490,25 +636,34 @@ export default function AdminPerpustakaan() {
       );
 
     if (activeTab === "pinjaman") return data.loans.filter((x) => !["returned", "selesai"].includes(x.status?.toLowerCase())).filter(match);
-
     if (activeTab === "anggota") return data.members.filter(match);
-
     if (activeTab === "pengembalian") return data.returns.filter(match);
+    if (activeTab === "ajukan") {
+      console.log("loanRequests:", data.loanRequests);
 
-    if (activeTab === "ajukan")
       return data.loanRequests
         .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({ ...x, _type: "loan_request" }))
+        .map((x) => ({
+          ...x,
+          _type: "loan_request",
+        }))
         .filter(match);
+    }
 
-    if (activeTab === "perpanjangan")
+    if (activeTab === "perpanjangan") {
       return data.extensionRequests
         .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({ ...x, _type: "extension_request" }))
+        .map((x) => ({
+          ...x,
+          _type: "extension_request",
+        }))
         .filter(match);
+    }
 
     if (activeTab === "buku") {
-      return data.books.filter(match);
+      const books = bookView === "loan" ? data.borrowBooks : data.shopBooks;
+
+      return books.filter(match);
     }
 
     if (activeTab === "pesanan") {
@@ -523,282 +678,289 @@ export default function AdminPerpustakaan() {
   }, [activeTab, data, query, orderStatusFilter]);
 
   const getId = (row) => row.loan_id || row.id;
+  const columnsByTab = useMemo(
+    () => ({
+      buku:
+        bookView === "loan"
+          ? [
+              { key: "no", label: "No", render: (_, index) => index + 1 },
+              { key: "title", label: "Title" },
+              { key: "author", label: "Author" },
+              { key: "category", label: "Category" },
+              { key: "stock", label: "Stock" },
 
-  const columnsByTab = {
-    buku: [
-      {
-        key: "no",
-        label: "No",
-        render: (_, index) => index + 1,
-      },
-      { key: "title", label: "Title" },
-      { key: "author", label: "Author" },
-      { key: "category", label: "Category" },
-      { key: "stock", label: "Stock" },
-      {
-        key: "price",
-        label: "Price",
-        render: (row) => (row.price ? `Rp ${Number(row.price).toLocaleString("id-ID")}` : "-"),
-      },
-    ],
-    pinjaman: [
-      { key: "member_code", label: "ID" },
+              {
+                key: "type",
+                label: "Type",
+                render: () => <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Loan Book</span>,
+              },
+            ]
+          : [
+              { key: "no", label: "No", render: (_, index) => index + 1 },
+              { key: "title", label: "Title" },
+              { key: "author", label: "Author" },
+              { key: "category", label: "Category" },
+              { key: "stock", label: "Stock" },
 
-      { key: "member_name", label: "Member" },
+              {
+                key: "price",
+                label: "Price",
+                render: (row) => `Rp ${Number(row.price || 0).toLocaleString("id-ID")}`,
+              },
 
-      { key: "book_title", label: "Book" },
+              {
+                key: "type",
+                label: "Type",
+                render: () => <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Shop Book</span>,
+              },
+            ],
 
-      {
-        key: "loan_date",
-        label: "Loan Date",
+      pinjaman: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "loan_date",
+          label: "Loan Date",
+          render: (row) =>
+            row.loan_date
+              ? new Date(row.loan_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "-",
+        },
+        {
+          key: "due_date",
+          label: "Due Date",
+          render: (row) =>
+            row.due_date
+              ? new Date(row.due_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "-",
+        },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => markAsReturned(getId(row))} className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Complete
+              </button>
 
-        render: (row) =>
-          row.loan_date
-            ? new Date(row.loan_date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-            : "-",
-      },
+              <button type="button" onClick={() => printReceipt(row)} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Print
+              </button>
+            </div>
+          ),
+        },
+      ],
 
-      {
-        key: "due_date",
-        label: "Due Date",
+      anggota: [
+        { key: "member_code", label: "ID" },
+        { key: "name", label: "Name" },
+        { key: "email", label: "Email" },
+        { key: "nik", label: "NIK" },
+        { key: "phone", label: "Phone" },
+      ],
 
-        render: (row) =>
-          row.due_date
-            ? new Date(row.due_date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-            : "-",
-      },
+      pengembalian: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "return_date",
+          label: "Return Date",
+          render: (row) =>
+            row.return_date
+              ? new Date(row.return_date).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "-",
+        },
+      ],
 
-      {
-        key: "status",
-        label: "Status",
+      ajukan: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "request_date",
+          label: "Request Date",
+          render: (row) => (row.request_date ? new Date(row.request_date).toLocaleDateString("en-GB") : "-"),
+        },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => approveLoanRequest(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Approve
+              </button>
 
-        render: (row) => <Badge status={row.status} />,
-      },
+              <button type="button" onClick={() => rejectLoanRequest(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Reject
+              </button>
+            </div>
+          ),
+        },
+      ],
 
-      {
-        key: "action",
-        label: "Action",
+      perpanjangan: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        { key: "old_due_date", label: "Old Due Date" },
+        { key: "new_due_date", label: "New Due Date" },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => approveExtension(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Approve
+              </button>
 
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => markAsReturned(getId(row))}
-              className="
-      rounded-xl
-      bg-linear-to-r
-      from-blue-600
-      to-indigo-600
-      px-3
-      py-1.5
-      text-xs
-      font-semibold
-      text-white
-      shadow-lg
-      hover:scale-[1.02]
-      transition-all
-    "
-            >
-              Complete
+              <button type="button" onClick={() => rejectExtension(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Reject
+              </button>
+            </div>
+          ),
+        },
+      ],
+
+      pesanan: [
+        {
+          key: "order_id",
+          label: "Order No.",
+        },
+
+        {
+          key: "user_id",
+          label: "Buyer",
+        },
+
+        {
+          key: "title",
+          label: "Book",
+        },
+
+        {
+          key: "amount",
+          label: "Total",
+
+          render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
+        },
+
+        {
+          key: "created_at",
+          label: "Date",
+        },
+
+        {
+          key: "status",
+          label: "Status",
+
+          render: (row) => <Badge status={row.order_status} deliveryType={row.delivery_type} />,
+        },
+
+        {
+          key: "action",
+          label: "Action",
+
+          render: (row) => (
+            <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
+              Manage
             </button>
+          ),
+        },
+      ],
+    }),
+    [bookView],
+  );
 
-            <button
-              type="button"
-              onClick={() => printReceipt(row)}
-              className="
-      rounded-xl
-      bg-emerald-600
-      hover:bg-emerald-700
-      px-3
-      py-1.5
-      text-xs
-      font-semibold
-      text-white
-      transition-all
-    "
-            >
-              Print
-            </button>
-          </div>
-        ),
-      },
-    ],
-    anggota: [
-      { key: "member_code", label: "ID" },
-      { key: "name", label: "Name" },
-      { key: "email", label: "Email" },
-      { key: "nik", label: "NIK" },
-      { key: "phone", label: "Phone" },
-    ],
-    pengembalian: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "return_date",
-        label: "Return Date",
+  const getOrderSteps = (type) => {
+    if (type === "pickup") {
+      return [
+        {
+          key: "waiting_payment",
+          label: "Waiting Payment",
+          icon: Clock3,
+        },
 
-        render: (row) =>
-          row.return_date
-            ? new Date(row.return_date).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "-",
-      },
-    ],
+        {
+          key: "processing",
+          label: "Processing",
+          icon: RefreshCcw,
+        },
 
-    ajukan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      { key: "request_date", label: "Request Date" },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            {/* APPROVE BUTTON */}
-            <button type="button" onClick={() => approveLoanRequest(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors">
-              Approve
-            </button>
+        {
+          key: "ready_pickup",
+          label: "Ready Pickup",
+          icon: PackageCheck,
+        },
 
-            {/* REJECT BUTTON */}
-            <button type="button" onClick={() => rejectLoanRequest(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors">
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
-    perpanjangan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      { key: "old_due_date", label: "Old Due Date" },
-      { key: "new_due_date", label: "New Due Date" },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            {/* APPROVE BUTTON */}
-            <button type="button" onClick={() => approveExtension(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors">
-              Approve
-            </button>
+        {
+          key: "completed",
+          label: "Completed",
+          icon: CheckCircle2,
+        },
+      ];
+    }
 
-            {/* REJECT BUTTON */}
-            <button type="button" onClick={() => rejectExtension(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors">
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
-
-    pesanan: [
+    return [
       {
-        key: "order_id",
-        label: "Order No.",
+        key: "waiting_payment",
+        label: "Waiting Payment",
+        icon: Clock3,
       },
 
       {
-        key: "user_id",
-        label: "Buyer",
+        key: "processing",
+        label: "Processing",
+        icon: RefreshCcw,
       },
 
       {
-        key: "title",
-        label: "Book",
+        key: "shipping",
+        label: "Shipping",
+        icon: Truck,
       },
 
       {
-        key: "amount",
-        label: "Total",
-
-        render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
+        key: "completed",
+        label: "Completed",
+        icon: PackageCheck,
       },
-
-      {
-        key: "created_at",
-        label: "Date",
-      },
-
-      {
-        key: "status",
-        label: "Status",
-
-        render: (row) => <Badge status={row.order_status} />,
-      },
-
-      {
-        key: "action",
-        label: "Action",
-
-        render: (row) => (
-          <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
-            Manage
-          </button>
-        ),
-      },
-    ],
+    ];
   };
 
-  const orderSteps = [
-    {
-      key: "waiting_payment",
-      label: "Waiting Payment",
-      desc: "Waiting for payment",
-      icon: Clock3,
-    },
-
-    {
-      key: "processing",
-      label: "Processing",
-      desc: "Order is being processed",
-      icon: RefreshCcw,
-    },
-
-    {
-      key: "shipping",
-      label: "Shipping",
-      desc: "Package is on delivery",
-      icon: Truck,
-    },
-
-    {
-      key: "completed",
-      label: "Completed",
-      desc: "Package received successfully",
-      icon: PackageCheck,
-    },
-  ];
-
-  const getStepIndex = (status) => orderSteps.findIndex((s) => s.key === status?.toLowerCase());
-
   const OrderModal = ({ order, onClose }) => {
-    const currentStep = getStepIndex(order.order_status);
+    const orderSteps = getOrderSteps(order.delivery_type);
+    const currentStep = orderSteps.findIndex((s) => s.key === order.order_status?.toLowerCase());
     const nextStatus = currentStep < orderSteps.length - 1 ? orderSteps[currentStep + 1]?.key : null;
     const isCancelled = order.order_status?.toLowerCase() === "cancelled";
     return (
@@ -832,10 +994,25 @@ export default function AdminPerpustakaan() {
                 <div className="text-xs text-slate-400 mb-1">Date</div>
                 <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
               </div>
-              {order.address && (
+              {/* DELIVERY ADDRESS */}
+              {order.delivery_type === "delivery" && order.address && (
                 <div className="col-span-2 rounded-lg bg-slate-50 p-3">
                   <div className="text-xs text-slate-400 mb-1">Shipping Address</div>
+
                   <div className="font-semibold text-slate-800">{order.address}</div>
+                </div>
+              )}
+
+              {/* PICKUP ADDRESS */}
+              {order.delivery_type === "pickup" && (
+                <div className="col-span-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                  <div className="text-xs text-emerald-600 mb-1">Pickup Location</div>
+
+                  <div className="font-semibold text-emerald-800">BukuIn Library</div>
+
+                  <div className="text-sm text-emerald-700 mt-1">Jl. Ketintang, Surabaya</div>
+
+                  <div className="text-sm text-emerald-700">08.00 - 16.00 WIB</div>
                 </div>
               )}
             </div>
@@ -879,9 +1056,8 @@ export default function AdminPerpustakaan() {
             {nextStatus && !isCancelled && (
               <button
                 type="button"
-                onClick={() => {
-                  updateOrderStatus(order.id, nextStatus);
-                  onClose();
+                onClick={async () => {
+                  await updateOrderStatus(order.id, nextStatus);
                 }}
                 className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
@@ -891,9 +1067,8 @@ export default function AdminPerpustakaan() {
             {!["completed", "cancelled"].includes(order.order_status?.toLowerCase()) && (
               <button
                 type="button"
-                onClick={() => {
-                  updateOrderStatus(order.id, "cancelled");
-                  onClose();
+                onClick={async () => {
+                  await updateOrderStatus(order.id, "cancelled");
                 }}
                 className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-100 transition-colors"
               >
@@ -916,13 +1091,16 @@ export default function AdminPerpustakaan() {
       pending: orders.filter((o) => o.order_status?.toLowerCase() === "waiting_payment").length,
       processing: orders.filter((o) => o.order_status?.toLowerCase() === "processing").length,
       shipping: orders.filter((o) => o.order_status?.toLowerCase() === "shipping").length,
+
+      pickupReady: orders.filter((o) => o.order_status?.toLowerCase() === "ready_pickup").length,
       completed: orders.filter((o) => o.order_status?.toLowerCase() === "completed").length,
     };
   }, [data.orders]);
 
   const activeTabInfo = tabs.find((t) => t.key === activeTab);
-  const currentLoadingKey = tabToKey[activeTab];
+  const currentLoadingKey = getTabKey(activeTab, bookView);
   const isTabLoading = !!loadingTabs[currentLoadingKey];
+  const currentColumns = columnsByTab[activeTab] || [];
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] text-slate-900">
@@ -1104,6 +1282,16 @@ export default function AdminPerpustakaan() {
                 { label: "Pending", value: orderStats.pending, Icon: Clock3, bg: "bg-amber-50", text: "text-amber-700", iconColor: "text-amber-600" },
                 { label: "Processing", value: orderStats.processing, Icon: RefreshCcw, bg: "bg-blue-50", text: "text-blue-700", iconColor: "text-blue-600" },
                 { label: "Shipping", value: orderStats.shipping, Icon: Truck, bg: "bg-indigo-50", text: "text-indigo-700", iconColor: "text-indigo-600" },
+
+                {
+                  label: "Ready Pickup",
+                  value: orderStats.pickupReady,
+                  Icon: PackageCheck,
+                  bg: "bg-cyan-50",
+                  text: "text-cyan-700",
+                  iconColor: "text-cyan-600",
+                },
+
                 { label: "Completed", value: orderStats.completed, Icon: CheckCircle2, bg: "bg-emerald-50", text: "text-emerald-700", iconColor: "text-emerald-600" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-4 shadow-lg shadow-slate-200/40">
@@ -1126,7 +1314,33 @@ export default function AdminPerpustakaan() {
               >
                 All
               </button>
-              {ORDER_STATUSES.map((s) => (
+
+              {[
+                {
+                  key: "waiting_payment",
+                  label: "Waiting Payment",
+                },
+
+                {
+                  key: "processing",
+                  label: "Processing",
+                },
+
+                {
+                  key: "ready_pickup",
+                  label: "Ready Pickup",
+                },
+
+                {
+                  key: "shipping",
+                  label: "Shipping",
+                },
+
+                {
+                  key: "completed",
+                  label: "Completed",
+                },
+              ].map((s) => (
                 <button
                   type="button"
                   key={s.key}
@@ -1150,13 +1364,29 @@ export default function AdminPerpustakaan() {
 
           {activeTab === "buku" && (
             <div className="mb-6">
-              {/* HEADER */}
-              <h2 className="text-xl font-bold mb-3">Add New Book</h2>
+              <h2 className="text-xl font-bold mb-3">Manage Books</h2>
 
-              {/* BUTTON ADD BOOK */}
-              <button onClick={() => navigate("/admin/books/manage")} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition">
-                + Add Book
-              </button>
+              {/* SWITCH TAB */}
+              <div className="flex gap-3 mb-4">
+                <button onClick={() => setBookView("loan")} className={`px-4 py-2 rounded-xl font-semibold ${bookView === "loan" ? "bg-blue-600 text-white" : "bg-white border"}`}>
+                  Borrow Books
+                </button>
+
+                <button onClick={() => setBookView("shop")} className={`px-4 py-2 rounded-xl font-semibold ${bookView === "shop" ? "bg-emerald-600 text-white" : "bg-white border"}`}>
+                  Shop Books
+                </button>
+              </div>
+
+              {/* ADD BUTTON */}
+              {bookView === "loan" ? (
+                <button onClick={() => navigate("/admin/books/borrow/add")} className="bg-blue-600 text-white px-4 py-2 rounded-xl">
+                  + Add Borrow Book
+                </button>
+              ) : (
+                <button onClick={() => navigate("/admin/books/shop/add")} className="bg-emerald-600 text-white px-4 py-2 rounded-xl">
+                  + Add Shop Book
+                </button>
+              )}
             </div>
           )}
 
@@ -1165,7 +1395,7 @@ export default function AdminPerpustakaan() {
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    {columnsByTab[activeTab].map((col) => (
+                    {currentColumns.map((col) => (
                       <th key={col.key} className="px-4 py-4 text-xs font-bold uppercase tracking-wide text-slate-500">
                         {col.label}
                       </th>
@@ -1176,7 +1406,7 @@ export default function AdminPerpustakaan() {
                 <tbody className="divide-y divide-slate-100">
                   {loadingDashboard || isTabLoading ? (
                     <tr>
-                      <td colSpan={columnsByTab[activeTab].length} className="px-4 py-16 text-center">
+                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center">
                         <div className="inline-flex flex-col items-center gap-3 text-slate-400">
                           <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
                           <span className="text-sm font-medium">Loading data...</span>
@@ -1185,14 +1415,14 @@ export default function AdminPerpustakaan() {
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={columnsByTab[activeTab].length} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center text-slate-400">
                         No data found.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((row, index) => (
-                      <tr key={row.loan_id || row.id || Math.random()} className="hover:bg-slate-50/70 transition-colors">
-                        {columnsByTab[activeTab].map((col) => (
+                      <tr key={row.loan_id || row.id} className="hover:bg-slate-50/70 transition-colors">
+                        {currentColumns.map((col) => (
                           <td key={col.key} className="px-4 py-4 text-slate-700">
                             {col.render ? col.render(row, index) : (row[col.key] ?? "-")}
                           </td>
