@@ -61,11 +61,35 @@ export default function HalamanUtama() {
   };
 
   const navigate = useNavigate();
-  const handleDetail = (book) => {
-    navigate(`/detail-buku/${book.workKey}`, {
-      state: { book },
-    });
-  };
+  const handleDetail = async (book) => {
+  setSelectedBook(book);
+
+  setShowDetailPopup(true);
+
+  if (book.isLocal) {
+    setBookDescription(
+      book.description || "No description available"
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://openlibrary.org${book.workKey}.json`
+    );
+
+    const data = await res.json();
+
+    setBookDescription(
+      data.description?.value ||
+      data.description ||
+      "No description available"
+    );
+  } catch (err) {
+    console.log(err);
+    setBookDescription("No description available");
+  }
+};
 
   const fetchNotifications = async () => {
     try {
