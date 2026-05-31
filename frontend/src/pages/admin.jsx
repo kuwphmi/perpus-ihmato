@@ -1276,7 +1276,7 @@ export default function AdminPerpustakaan() {
           )}
 
           {activeTab === "pesanan" && (
-            <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-5">
+           <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-6">
               {[
                 { label: "Total Orders", value: orderStats.total, Icon: ShoppingCart, bg: "bg-slate-100", text: "text-slate-700", iconColor: "text-slate-600" },
                 { label: "Pending", value: orderStats.pending, Icon: Clock3, bg: "bg-amber-50", text: "text-amber-700", iconColor: "text-amber-600" },

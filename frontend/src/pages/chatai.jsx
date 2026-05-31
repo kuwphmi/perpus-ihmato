@@ -163,14 +163,15 @@ shadow-md
           </div>
 
           {/* TEXT */}
-          <div>
-            <h1 className="font-semibold text-[18px]">Liby</h1>
+<div className="flex-1">
+  <h1 className="font-bold text-[18px]">Liby</h1>
 
-            <p className="text-xs text-blue-100">Online • Ready to help you</p>
-            <p className="text-[11px] text-blue-100/80 max-w-sm mt-1">
-              Liby only answers library-related questions: find books, borrow, history, payments, profile, orders, and recommendations. Chat history is saved while you are logged in.
-            </p>
-          </div>
+  <p className="text-[11px] font-semibold text-blue-100/80 mt-1">
+    Liby only answers library-related questions: find books, borrow,
+    history, payments, profile, orders, and recommendations.
+    Chat history is saved while you are logged in.
+  </p>
+</div>
         </div>
       </div>
 
