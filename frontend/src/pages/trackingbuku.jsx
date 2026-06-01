@@ -126,62 +126,56 @@ export default function Trackingbuku() {
           o.order_status === activeFilter
       );
 
-      const handleFilterClick = (
-  status
-) => {
+  const handleFilterClick = (
+    status
+  ) => {
 
-  setActiveFilter(status);
+    setActiveFilter(status);
 
-  // khusus mobile
-  if (window.innerWidth < 768) {
+    // khusus mobile
+    if (window.innerWidth < 768) {
 
-    setTimeout(() => {
+      setTimeout(() => {
 
-      const section =
-  document.getElementById(
-    "orders-section"
-  );
+        const section =
+          document.getElementById(
+            "orders-section"
+          );
 
-if (section) {
+        if (section) {
 
-  const y =
-    section.getBoundingClientRect().top +
-    window.pageYOffset -
-    120;
+          const y =
+            section.getBoundingClientRect().top +
+            window.pageYOffset -
+            120;
 
-  window.scrollTo({
-    top: y,
-    behavior: "smooth",
-  });
+          window.scrollTo({
+            top: y,
+            behavior: "smooth",
+          });
 
-}
+        }
 
-    }, 100);
+      }, 100);
 
-  }
+    }
 
-};
+  };
 
-  const cancelOrder =
-    async (id) => {
+  const cancelOrder = async (id) => {
+    try {
+      await axios.delete(
+        `http://localhost:3000/api/payment/cancel/${id}`
+      );
 
-      try {
+      fetchOrders();
 
-        await axios.delete(
-          `http://localhost:3000/api/payment/${id}`
-        );
+      setSelectedOrder(null);
 
-        fetchOrders();
-
-        setSelectedOrder(null);
-
-      } catch (err) {
-
-        console.log(err);
-
-      }
-
-    };
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f7faff]">
@@ -352,7 +346,7 @@ if (section) {
       <section className="px-6 md:px-12 mt-8">
 
         <div
-  className="
+          className="
     max-w-7xl
     mx-auto
     grid
@@ -360,15 +354,15 @@ if (section) {
     md:grid-cols-5
     gap-5
   "
->
+        >
 
           {/* UNPAID */}
           <div
             onClick={() =>
-  handleFilterClick(
-    "waiting_payment"
-  )
-}
+              handleFilterClick(
+                "waiting_payment"
+              )
+            }
             className={`
         flex
         items-center
@@ -434,11 +428,11 @@ h-full
 
           {/* PROCESSING */}
           <div
-           onClick={() =>
-  handleFilterClick(
-    "processing"
-  )
-}
+            onClick={() =>
+              handleFilterClick(
+                "processing"
+              )
+            }
             className={`
               min-w-[150px]
 flex-shrink-0
@@ -504,10 +498,10 @@ flex-shrink-0
           {/* SHIPPING */}
           <div
             onClick={() =>
-  handleFilterClick(
-    "shipping"
-  )
-}
+              handleFilterClick(
+                "shipping"
+              )
+            }
             className={`
               p-7
 h-full
@@ -573,8 +567,8 @@ h-full
           {/* READY PICKUP */}
           <div
             onClick={() =>
-  handleFilterClick("ready_pickup")
-}
+              handleFilterClick("ready_pickup")
+            }
             className={`
               p-7
 h-full
@@ -636,10 +630,10 @@ h-full
           {/* COMPLETED */}
           <div
             onClick={() =>
-  handleFilterClick(
-    "completed"
-  )
-}
+              handleFilterClick(
+                "completed"
+              )
+            }
             className={`
               p-7
 h-full
@@ -717,18 +711,18 @@ h-full
           </div>
 
           {/* CONTENT */}
-<div
-  id="orders-section"
-  className="
+          <div
+            id="orders-section"
+            className="
     p-5
     md:p-8
     space-y-5
   "
->
+          >
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
-className="
+                className="
   flex
   flex-col
   md:flex-row
@@ -753,7 +747,10 @@ className="
 "
               >
                 <div className="flex items-center gap-5">
-                  <img src={`https://covers.openlibrary.org/b/id/${order.cover}-L.jpg`} alt={order.title} className="
+                  <img
+                    src={order.cover}
+                    alt={order.title}
+                    className="
   w-20
   h-28
   md:w-24
@@ -763,7 +760,7 @@ className="
   shadow
 ">
 
-</img>
+                  </img>
 
                   <div>
                     <h3 className="
@@ -779,12 +776,12 @@ className="
 
                 {/* RIGHT */}
                 <div className="flex flex-col items-start md:items-end gap-3">
-                 {order.order_status === "waiting_payment" && (
-  <div
-    onClick={() => setSelectedOrder(order)}
-    className="cursor-pointer flex flex-col gap-2"
-  >
-    <span className="
+                  {order.order_status === "waiting_payment" && (
+                    <div
+                      onClick={() => setSelectedOrder(order)}
+                      className="cursor-pointer flex flex-col gap-2"
+                    >
+                      <span className="
 bg-yellow-100
     text-yellow-600
       px-4
@@ -796,43 +793,43 @@ bg-yellow-100
      hover:bg-yellow-200
       transition
     ">
-      Waiting Payment
-    </span>
-  </div>
-)} 
-<div className="rounded-lg bg-slate-50 p-3">
-  <div className="text-xs text-slate-400 mb-1">
-    Delivery Method
-  </div>
+                        Waiting Payment
+                      </span>
+                    </div>
+                  )}
+                  <div className="rounded-lg bg-slate-50 p-3">
+                    <div className="text-xs text-slate-400 mb-1">
+                      Delivery Method
+                    </div>
 
-  <div className="font-semibold text-slate-800">
-    {order.delivery_type === "pickup"
-      ? "Pickup"
-      : "Delivery"}
-  </div>
-</div>
+                    <div className="font-semibold text-slate-800">
+                      {order.delivery_type === "pickup"
+                        ? "Pickup"
+                        : "Delivery"}
+                    </div>
+                  </div>
 
-{order.order_status === "processing" && (
-  <span
-    onClick={() => setPopup("processing")}
-    className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-indigo-200 transition"
-  >
-    Processing
-  </span>
-)}
+                  {order.order_status === "processing" && (
+                    <span
+                      onClick={() => setPopup("processing")}
+                      className="bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-indigo-200 transition"
+                    >
+                      Processing
+                    </span>
+                  )}
 
-{order.order_status === "shipping" && (
-  <span
-    onClick={() => setPopup("shipping")}
-    className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition"
-  >
-    Shipping
-  </span>
-)}
-{order.order_status === "ready_pickup" && (
-  <button
-    onClick={() => setPickupOrder(order)}
-    className="
+                  {order.order_status === "shipping" && (
+                    <span
+                      onClick={() => setPopup("shipping")}
+                      className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition"
+                    >
+                      Shipping
+                    </span>
+                  )}
+                  {order.order_status === "ready_pickup" && (
+                    <button
+                      onClick={() => setPickupOrder(order)}
+                      className="
       bg-emerald-100
       text-emerald-600
       px-4
@@ -844,13 +841,13 @@ bg-yellow-100
       hover:bg-emerald-200
       transition
     "
-  >
-    Ready Pickup
-  </button>
-)}
+                    >
+                      Ready Pickup
+                    </button>
+                  )}
 
                   {order.order_status === "completed" && (
-  <span className="
+                    <span className="
       bg-emerald-100
       text-emerald-600
       px-4
@@ -862,11 +859,11 @@ bg-yellow-100
       hover:bg-emerald-200
       transition
     "
-  onClick={() => setSelectedOrder(order)}
-  >
-    Completed
-  </span>
-)}
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      Completed
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -936,7 +933,7 @@ bg-yellow-100
             onClick={(e) =>
               e.stopPropagation()
             }
-           className="
+            className="
   bg-white
   w-[380px]
   md:w-[430px]
@@ -956,16 +953,16 @@ bg-yellow-100
 
             {/* COVER */}
             <img
-              src={`https://covers.openlibrary.org/b/id/${selectedOrder.cover}-L.jpg`}
+              src={selectedOrder.cover}
               alt={selectedOrder.title}
               className="
-  w-36
-  h-52
-  object-cover
-  rounded-lg
-  mx-auto
-  shadow-lg
-"
+    w-36
+    h-52
+    object-cover
+    rounded-lg
+    mx-auto
+    shadow-lg
+  "
             />
 
             {/* TITLE */}
@@ -1005,12 +1002,12 @@ bg-yellow-100
             {/* DETAIL */}
             <div className="mt-6 space-y-4 text-sm">
               <div className="flex justify-between">
-  <span className="text-gray-500">Name</span>
+                <span className="text-gray-500">Name</span>
 
-  <span className="font-medium">
-    {user.name}
-  </span>
-</div>
+                <span className="font-medium">
+                  {user.name}
+                </span>
+              </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-500">
@@ -1040,13 +1037,13 @@ bg-yellow-100
                 <span className="font-bold text-blue-600">
                   Rp {selectedOrder.amount?.toLocaleString("id-ID")}
                 </span>
-                
+
               </div>
               {/* PRINT BUTTON (ONLY COMPLETED) */}
-{selectedOrder.order_status === "completed" && (
-  <button
-    onClick={() => window.print()}
-    className="
+              {selectedOrder.order_status === "completed" && (
+                <button
+                  onClick={() => window.print()}
+                  className="
       mt-6
       w-full
       bg-black
@@ -1057,10 +1054,10 @@ bg-yellow-100
       hover:bg-gray-800
       transition
     "
-  >
-    Print Receipt
-  </button>
-)}
+                >
+                  Print Receipt
+                </button>
+              )}
 
             </div>
 
@@ -1112,12 +1109,11 @@ bg-yellow-100
 
                           onClose: function () {
 
-                            alert(
-                              "You closed the payment popup"
-                            );
+                            setSelectedOrder(null); // tutup modal detail order
+
+                            navigate("/trackingbuku"); // pindah ke tracking
 
                           },
-
                         }
 
                       );
@@ -1174,18 +1170,18 @@ bg-yellow-100
               )}
 
 
-                                 </div>
-              </div>
-            )}
+          </div>
+        </div>
+      )}
 
-            {pickupOrder && (
-  <div
-    onClick={() => setPickupOrder(null)}
-    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4"
-  >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="
+      {pickupOrder && (
+        <div
+          onClick={() => setPickupOrder(null)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="
         bg-white
         w-[380px]
         md:w-[430px]
@@ -1196,29 +1192,29 @@ bg-yellow-100
         border
         border-gray-200
       "
-    >
-      {/* CLOSE */}
-      <button
-        onClick={() => setPickupOrder(null)}
-        className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
-      >
-        ✕
-      </button>
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => setPickupOrder(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
+            >
+              ✕
+            </button>
 
-      {/* TITLE */}
-      <h2 className="text-3xl font-bold text-center text-gray-800">
-        RECEIPT
-      </h2>
+            {/* TITLE */}
+            <h2 className="text-3xl font-bold text-center text-gray-800">
+              RECEIPT
+            </h2>
 
-      <p className="text-center text-sm text-gray-500 mt-1">
-        Pickup Order Confirmation
-      </p>
+            <p className="text-center text-sm text-gray-500 mt-1">
+              Pickup Order Confirmation
+            </p>
 
-      {/* COVER */}
-      <img
-        src={`https://covers.openlibrary.org/b/id/${pickupOrder.cover}-L.jpg`}
-        alt={pickupOrder.title}
-        className="
+            {/* COVER */}
+            <img
+              src={`https://covers.openlibrary.org/b/id/${pickupOrder.cover}-L.jpg`}
+              alt={pickupOrder.title}
+              className="
           w-36
           h-52
           object-cover
@@ -1227,51 +1223,51 @@ bg-yellow-100
           mt-6
           shadow-lg
         "
-      />
+            />
 
-      {/* BOOK TITLE */}
-      <h3 className="text-xl font-bold text-center mt-4 text-gray-800">
-        {pickupOrder.title}
-      </h3>
+            {/* BOOK TITLE */}
+            <h3 className="text-xl font-bold text-center mt-4 text-gray-800">
+              {pickupOrder.title}
+            </h3>
 
-      {/* STATUS */}
-      <div className="flex justify-center mt-3">
-        <span className="bg-emerald-100 text-emerald-600 px-4 py-2 rounded-full text-sm font-medium">
-          Ready for Pickup
-        </span>
-      </div>
+            {/* STATUS */}
+            <div className="flex justify-center mt-3">
+              <span className="bg-emerald-100 text-emerald-600 px-4 py-2 rounded-full text-sm font-medium">
+                Ready for Pickup
+              </span>
+            </div>
 
-      {/* DETAIL */}
-      <div className="mt-6 space-y-4 text-sm">
-        <div className="flex justify-between">
-  <span className="text-gray-500">Name</span>
+            {/* DETAIL */}
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Name</span>
 
-  <span className="font-medium">
-    {user.name}
-  </span>
-</div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Order ID</span>
-          <span className="font-medium">{pickupOrder.order_id}</span>
-        </div>
+                <span className="font-medium">
+                  {user.name}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Order ID</span>
+                <span className="font-medium">{pickupOrder.order_id}</span>
+              </div>
 
-        <div className="flex justify-between">
-          <span className="text-gray-500">Total</span>
-          <span className="font-bold text-blue-600">
-            Rp {pickupOrder.amount?.toLocaleString("id-ID")}
-          </span>
-        </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Total</span>
+                <span className="font-bold text-blue-600">
+                  Rp {pickupOrder.amount?.toLocaleString("id-ID")}
+                </span>
+              </div>
 
-        <div className="flex justify-between">
-          <span className="text-gray-500">Type</span>
-          <span className="font-medium">Pickup</span>
-        </div>
-      </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Type</span>
+                <span className="font-medium">Pickup</span>
+              </div>
+            </div>
 
-      {/* PRINT BUTTON */}
-      <button
-        onClick={() => window.print()}
-        className="
+            {/* PRINT BUTTON */}
+            <button
+              onClick={() => window.print()}
+              className="
           mt-6
           w-full
           bg-black
@@ -1282,110 +1278,110 @@ bg-yellow-100
           hover:bg-gray-800
           transition
         "
-      >
-        Print Receipt
-      </button>
-    </div>
-  </div>
-)}
-{popup === "processing" && (
-  <div
-    onClick={() => setPopup(null)}
-    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-  >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
-    >
-      {/* close button */}
-      <button
-        onClick={() => setPopup(null)}
-        className="absolute top-3 right-3 text-gray-400 hover:text-black"
-      >
-        ✕
-      </button>
-
-      {/* badge */}
-      <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-        Processing
-      </span>
-
-      {/* title */}
-      <h2 className="text-lg font-semibold text-blue-600 mt-3">
-        Preparing Your Order
-      </h2>
-
-      {/* animation */}
-      <Lottie
-        animationData={processingAnim}
-        loop
-        autoplay
-        className="w-48 h-48 mx-auto"
-      />
-
-      {/* subtitle */}
-      <p className="text-sm text-gray-500 mt-2">
-        We are carefully packing your items. Please wait a moment.
-      </p>
-
-      {/* progress bar */}
-      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
-        <div className="h-1 bg-blue-600 w-1/3 rounded-full"></div>
-      </div>
-    </div>
-  </div>
-)}
-
-{popup === "shipping" && (
-  <div
-    onClick={() => setPopup(null)}
-    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-  >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
-    >
-      {/* close button */}
-      <button
-        onClick={() => setPopup(null)}
-        className="absolute top-3 right-3 text-gray-400 hover:text-black"
-      >
-        ✕
-      </button>
-
-      {/* badge */}
-      <span className="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full">
-        On Delivery
-      </span>
-
-      {/* title */}
-      <h2 className="text-lg font-semibold text-indigo-600 mt-3">
-        Your Order is On The Way
-      </h2>
-
-      {/* animation */}
-      <Lottie
-        animationData={shippingAnim}
-        loop
-        autoplay
-        className="w-48 h-48 mx-auto"
-      />
-
-      {/* subtitle */}
-      <p className="text-sm text-gray-500 mt-2">
-        Courier is delivering your package. Stay tuned!
-      </p>
-
-      {/* progress bar */}
-      <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
-        <div className="h-1 bg-indigo-600 w-2/3 rounded-full"></div>
-      </div>
-    </div>
-  </div>
-)}
-            
-            {/* FLOATING */}
-            <Floating />
+            >
+              Print Receipt
+            </button>
           </div>
+        </div>
+      )}
+      {popup === "processing" && (
+        <div
+          onClick={() => setPopup(null)}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+          >
+            {/* close button */}
+            <button
+              onClick={() => setPopup(null)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-black"
+            >
+              ✕
+            </button>
+
+            {/* badge */}
+            <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+              Processing
+            </span>
+
+            {/* title */}
+            <h2 className="text-lg font-semibold text-blue-600 mt-3">
+              Preparing Your Order
+            </h2>
+
+            {/* animation */}
+            <Lottie
+              animationData={processingAnim}
+              loop
+              autoplay
+              className="w-48 h-48 mx-auto"
+            />
+
+            {/* subtitle */}
+            <p className="text-sm text-gray-500 mt-2">
+              We are carefully packing your items. Please wait a moment.
+            </p>
+
+            {/* progress bar */}
+            <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+              <div className="h-1 bg-blue-600 w-1/3 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {popup === "shipping" && (
+        <div
+          onClick={() => setPopup(null)}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white w-[360px] rounded-3xl shadow-2xl p-6 text-center"
+          >
+            {/* close button */}
+            <button
+              onClick={() => setPopup(null)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-black"
+            >
+              ✕
+            </button>
+
+            {/* badge */}
+            <span className="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full">
+              On Delivery
+            </span>
+
+            {/* title */}
+            <h2 className="text-lg font-semibold text-indigo-600 mt-3">
+              Your Order is On The Way
+            </h2>
+
+            {/* animation */}
+            <Lottie
+              animationData={shippingAnim}
+              loop
+              autoplay
+              className="w-48 h-48 mx-auto"
+            />
+
+            {/* subtitle */}
+            <p className="text-sm text-gray-500 mt-2">
+              Courier is delivering your package. Stay tuned!
+            </p>
+
+            {/* progress bar */}
+            <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+              <div className="h-1 bg-indigo-600 w-2/3 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING */}
+      <Floating />
+    </div>
   );
 }

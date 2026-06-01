@@ -78,82 +78,86 @@ export default function Checkout() {
 
   };
 
-const handlePayment = async () => {
-  if (deliveryType === "delivery" && !selectedAddress) {
-    showNotif("Please add address first");
-    return;
-  }
+  const handlePayment = async () => {
+    if (deliveryType === "delivery" && !selectedAddress) {
+      showNotif("Please add address first");
+      return;
+    }
 
-  try {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
 
-    const userData = JSON.parse(localStorage.getItem("user"));
+      const userData = JSON.parse(localStorage.getItem("user"));
 
-    const res = await axios.post(
-      "http://localhost:3000/api/payment/create",
-      {
-        user_id: userData.id,
-        items,
-        address_id:
-          deliveryType === "delivery"
-            ? selectedAddress.id
-            : null,
-        delivery_type: deliveryType,
+      const res = await axios.post(
+        "http://localhost:3000/api/payment/create",
+        {
+          user_id: userData.id,
+          items,
+          address_id:
+            deliveryType === "delivery"
+              ? selectedAddress.id
+              : null,
+          delivery_type: deliveryType,
+        }
+      );
+
+      console.log("PAYMENT RESPONSE:", res.data);
+
+      const token = res.data.token;
+
+      if (!token) {
+        showNotif("Midtrans token failed");
+        return;
       }
-    );
 
-    console.log("PAYMENT RESPONSE:", res.data);
+      if (!window.snap) {
+        showNotif("Midtrans not loaded");
+        return;
+      }
 
-    const token = res.data.token;
+      window.snap.pay(token, {
+        onSuccess: function (result) {
+          console.log("SUCCESS:", result);
 
-    if (!token) {
-      showNotif("Midtrans token failed");
-      return;
+          showNotif("Payment successful");
+
+          setTimeout(() => {
+            navigate("/trackingbuku");
+          }, 1500);
+        },
+
+        onPending: function (result) {
+          console.log("PENDING:", result);
+
+          showNotif("Waiting for payment");
+
+          setTimeout(() => {
+            navigate("/trackingbuku");
+          }, 1500);
+        },
+
+        onError: function (result) {
+          console.log("ERROR:", result);
+          showNotif("Payment failed");
+        },
+
+ onClose: function () {
+  showNotif("Waiting for payment");
+
+  setTimeout(() => {
+    navigate("/trackingbuku");
+  }, 1500);
+},
+      });
+
+    } catch (err) {
+      console.log(err);
+      showNotif("Checkout failed");
+    } finally {
+      setIsLoading(false);
     }
-
-    if (!window.snap) {
-      showNotif("Midtrans not loaded");
-      return;
-    }
-
-    window.snap.pay(token, {
-      onSuccess: function (result) {
-        console.log("SUCCESS:", result);
-
-        showNotif("Payment successful");
-
-        setTimeout(() => {
-          navigate("/trackingbuku");
-        }, 1500);
-      },
-
-      onPending: function (result) {
-        console.log("PENDING:", result);
-
-        showNotif("Waiting for payment");
-
-        setTimeout(() => {
-          navigate("/trackingbuku");
-        }, 1500);
-      },
-
-      onError: function (result) {
-        console.log("ERROR:", result);
-        showNotif("Payment failed");
-      },
-
-      onClose: function () {
-        showNotif("Payment popup closed");
-      },
-    });
-
-  } catch (err) {
-    console.log(err);
-    showNotif("Checkout failed");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
 
   if (!items || items.length === 0) {
