@@ -2,51 +2,41 @@ import supabase from "../config/supabase.js";
 
 /* ================= SAVE FAVORITE GENRES ================= */
 
-export const saveFavGenres =
-  async (req, res) => {
+export const saveFavGenres = async (req, res) => {
+  const { user_id, categories } = req.body;
 
-    const {
-      user_id,
-      categories,
-    } = req.body;
-
-    try {
-
-      // bikin payload array
-      const payload =
-        categories.map(
-          (category) => ({
-            user_id,
-            category,
-          })
-        );
-
-      const { error } =
-        await supabase
-          .from("fav_genres")
-          .insert(payload);
-
-      if (error)
-        throw error;
-
-      res.json({
-        status: true,
-        message:
-          "Favorite genres saved",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
+  try {
+    if (!user_id || !Array.isArray(categories)) {
+      return res.status(400).json({
         status: false,
-        error: err.message,
+        message: "user_id or categories invalid",
       });
-
     }
 
-  };
+    const payload = categories.map((category) => ({
+      user_id,
+      category,
+    }));
+
+    const { error } = await supabase
+      .from("fav_genres")
+      .insert(payload);
+
+    if (error) throw error;
+
+    return res.json({
+      status: true,
+      message: "Favorite genres saved",
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      status: false,
+      error: err.message,
+    });
+  }
+};
 
 /* ================= DELETE OLD GENRES ================= */
 
