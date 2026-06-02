@@ -6,10 +6,14 @@ export default function Privacy() {
       <div className="max-w-3xl bg-white rounded-2xl shadow-md p-8">
         <h1 className="text-2xl font-bold mb-4">Kebijakan Privasi BookIn</h1>
 
+<<<<<<< HEAD
         <p className="text-sm text-gray-700 mb-3">
           Kami menghargai privasi Anda. Kebijakan ini menjelaskan bagaimana informasi pengguna dikumpulkan, digunakan,
           dan dilindungi oleh sistem perpustakaan BookIn.
         </p>
+=======
+        <p className="text-sm text-gray-700 mb-3">Kami menghargai privasi Anda. Kebijakan ini menjelaskan bagaimana informasi pengguna dikumpulkan, digunakan, dan dilindungi oleh sistem perpustakaan BookIn.</p>
+>>>>>>> 4d012e17f440b5368df25b390f7daaa5f76f4fe9
 
         <h3 className="font-semibold mt-3">Informasi yang Dikumpulkan</h3>
         <p className="text-sm text-gray-700 mb-2">Kami mengumpulkan data pendaftaran (nama, email, nomor telepon), serta data peminjaman buku.</p>
@@ -18,12 +22,19 @@ export default function Privacy() {
         <p className="text-sm text-gray-700 mb-2">Data digunakan untuk mengelola akun, memproses peminjaman/perpanjangan, dan mengirim notifikasi terkait layanan.</p>
 
         <h3 className="font-semibold mt-3">Keamanan</h3>
+<<<<<<< HEAD
         <p className="text-sm text-gray-700 mb-2">Kami menerapkan langkah teknis dan kebijakan untuk melindungi data. Namun mohon pastikan keamanan
         akun Anda sendiri (mis. jangan membagikan password).</p>
 
         <h3 className="font-semibold mt-3">Berbagi Data</h3>
         <p className="text-sm text-gray-700 mb-2">Kami tidak membagikan data pribadi ke pihak ketiga kecuali diperlukan oleh hukum atau untuk
         operasional layanan (mis. pengiriman buku fisik jika ada).</p>
+=======
+        <p className="text-sm text-gray-700 mb-2">Kami menerapkan langkah teknis dan kebijakan untuk melindungi data. Namun mohon pastikan keamanan akun Anda sendiri (mis. jangan membagikan password).</p>
+
+        <h3 className="font-semibold mt-3">Berbagi Data</h3>
+        <p className="text-sm text-gray-700 mb-2">Kami tidak membagikan data pribadi ke pihak ketiga kecuali diperlukan oleh hukum atau untuk operasional layanan (mis. pengiriman buku fisik jika ada).</p>
+>>>>>>> 4d012e17f440b5368df25b390f7daaa5f76f4fe9
 
         <div className="mt-6 flex justify-end">
           <Link to="/login" className="text-sm text-blue-700 hover:underline">
