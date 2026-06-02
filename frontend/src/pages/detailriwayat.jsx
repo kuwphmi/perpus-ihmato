@@ -17,8 +17,6 @@ export default function DetailRiwayat() {
       ? JSON.parse(storedUser)
       : null;
 
-  const realId =
-    id.replace("request-", "");
 
   const API_BASE =
     import.meta.env
@@ -34,13 +32,13 @@ export default function DetailRiwayat() {
     try {
 
       const res = await fetch(
-        `${API_BASE}/history/detail/${realId}`
+        `${API_BASE}/history/detail/${id}`
       );
 
-      const data =
-        await res.json();
+      const data = await res.json();
 
       setBook(data);
+      console.log(data);
 
     } catch (err) {
 
@@ -228,16 +226,16 @@ export default function DetailRiwayat() {
 
               {book.cover ? (
 
-                <img
-                  src={`https://covers.openlibrary.org/b/id/${book.cover}-L.jpg`}
-                  alt={book.title}
-                  className="
-                    w-56
-                    md:w-72
-                    rounded-3xl
-                    shadow-2xl
-                  "
-                />
+              <img
+                src={book.cover}
+                alt={book.title}
+                className="
+                  w-56
+                  md:w-72
+                  rounded-3xl
+                  shadow-2xl
+                "
+              />
 
               ) : (
 

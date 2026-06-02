@@ -491,6 +491,7 @@ const handlePinjam = (book) => {
                         author: selectedBook?.author,
                         cover: selectedBook?.cover,
                         cover_url: selectedBook?.cover_url,
+                        description: selectedBook?.description,
                         isLocal: selectedBook?.isLocal,
                         firstSentence: selectedBook?.firstSentence,
                         subjects: selectedBook?.subjects,

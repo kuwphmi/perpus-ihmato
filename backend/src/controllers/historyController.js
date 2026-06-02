@@ -29,13 +29,17 @@ export const getHistoryDetail = async (req, res) => {
 
       }
 
-      return res.json({
+          return res.json({
         ...data,
         id: `request-${data.id}`,
+
+        title: data.book_title,
+        cover: data.cover,
+        author: data.author,
+
         loan_date: data.request_date,
         due_date: null,
       });
-
     }
 
     // =========================

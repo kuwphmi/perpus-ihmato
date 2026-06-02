@@ -541,7 +541,14 @@ gap-3 md:gap-4
       "
                 >
                   {book.cover ? (
-                    <img src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`} alt={book.title} className="w-full h-full object-cover" />
+                    <img
+                      src={book.cover}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">No Cover</div>
                   )}
