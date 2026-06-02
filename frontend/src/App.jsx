@@ -16,7 +16,8 @@ import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import Notifikasi from "./pages/notifikasi";
-
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
 
 import GoogleSuccess from "./pages/googlesuccess";
 import SearchPage from "./pages/searchpage";
@@ -53,10 +54,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
   const navigate = useNavigate();
 
   return (
-    
     <>
-
-    
       <Routes>
         <Route path="/" element={<Beranda />} />
         <Route path="/login" element={<Login />} />
@@ -64,6 +62,8 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/google-success" element={<GoogleSuccess />} />
 
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         <Route
           path="/trackingbuku"
@@ -74,13 +74,13 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
         <Route
-  path="/ChooseGenre"
-  element={
-    <ProtectedRoute>
-      <ChooseGenre />
-    </ProtectedRoute>
-  }
-/>
+          path="/ChooseGenre"
+          element={
+            <ProtectedRoute>
+              <ChooseGenre />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/koleksi"
@@ -119,9 +119,7 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-
         <Route path="/detail-riwayat/:id" element={<DetailRiwayat />} />
-
 
         <Route path="/profil" element={<Profil />} />
 
@@ -145,7 +143,6 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
 
         <Route
           path="/notifikasi"
-
           element={
             <ProtectedRoute>
               <Notifikasi />
@@ -153,27 +150,18 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
           }
         />
 
-        <Route
-          path="/admin/books/borrow/add"
-          element={<ManageBooks />}
-        />
+        <Route path="/admin/books/borrow/add" element={<ManageBooks />} />
 
-        <Route
-          path="/admin/books/shop/:id"
-          element={<ManageOrder />}
-        />
+        <Route path="/admin/books/shop/:id" element={<ManageOrder />} />
 
         <Route path="/search" element={<SearchPage />} />
 
         <Route path="/admin" element={<AdminPerpustakaan />} />
-        <Route path="/courier" element={<CourierPage />}/>
+        <Route path="/courier" element={<CourierPage />} />
         <Route path="/genre/:name" element={<Genre />} />
       </Routes>
 
-      {location.pathname === "/koleksi" && (
-        <Floating onClick={() => navigate("/chatai")} />
-
-      )}
+      {location.pathname === "/koleksi" && <Floating onClick={() => navigate("/chatai")} />}
     </>
   );
 }
