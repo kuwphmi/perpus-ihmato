@@ -1,8 +1,19 @@
 import express from "express";
-import { getBuku } from "../controllers/bukuController.js";
+import {
+  getBorrowBooks,
+  getShopBooks,
+  getRecommendation,
+} from "../controllers/bukuController.js";
 
 const router = express.Router();
 
-router.get("/", getBuku);
+// Buku untuk dipinjam (borrow_books)
+router.get("/", getBorrowBooks);
+
+// Buku untuk dijual (books)
+router.get("/shop", getShopBooks);
+
+// Rekomendasi
+router.get("/recommendation/:userId", getRecommendation);
 
 export default router;

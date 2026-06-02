@@ -1,5 +1,3 @@
-// ================= MANAGEORDER.JSX =================
-
 import { useEffect, useState } from "react";
 import { Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";

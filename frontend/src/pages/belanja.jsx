@@ -48,24 +48,13 @@ const getBookCover = (book) => {
   // LOCAL BOOK
   if (book.isLocal) {
     if (!book.cover_url) return "/no-image.png";
-
-    // kalau sudah URL penuh (Supabase / internet)
     if (book.cover_url.startsWith("http")) {
       return book.cover_url;
     }
-
-    // kalau file upload lokal backend
     return `http://localhost:3000/uploads/${book.cover_url}`;
   }
-
-  // API BOOK (OpenLibrary)
-  if (book.cover) {
-    return `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`;
-  }
-
   return "/no-image.png";
 };
-
 
 export default function Belanja() {
   const [mode, setMode] = useState("default");
@@ -73,8 +62,6 @@ export default function Belanja() {
   const [genreBooks, setGenreBooks] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [terbaru, setTerbaru] = useState([]);
-  const [terlaris, setTerlaris] = useState([]);
   const [localBooks, setLocalBooks] = useState([]);
   const [search, setSearch] = useState("");
   // ================= SEARCH FILTER =================
@@ -86,11 +73,8 @@ export default function Belanja() {
     return books.filter((b) => normalize(b.title).includes(normalize(search)) || normalize(b.author).includes(normalize(search)));
   };
 
-  // gabungan semua buku
-  const allBooks = [...terbaru, ...terlaris];
-
   // hasil search
-  const filteredBooks = filterBooks(allBooks);
+  const filteredBooks = filterBooks(localBooks);
   const [cart, setCart] = useState([]);
 
   const [user, setUser] = useState({});
@@ -145,85 +129,53 @@ export default function Belanja() {
     }, 3000);
   };
   const genreMap = {
-    Art: "art",
-    "Science Fiction": "science fiction",
-    Fantasy: "fantasy",
-    Biographies: "biography",
-    Recipe: "cooking",
-    Romance: "romance",
-    Textbox: "textbook",
-    Children: "children",
-    Medicine: "medicine",
-    Religion: "religion",
-  };
+      Art: "art",
+      "Science Fiction": "science fiction",
+      Fantasy: "fantasy",
+      Biographies: "biographies",
+      Recipe: "recipe",
+      Romance: "romance",
+      Textbook: "textbook",
+      Children: "children",
+      Medicine: "medicine",
+      Religion: "religion",
+    };
 
   const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
-  const fetchGenreBooks = async (category) => {
-    if (activeCategory === category) {
-      setActiveCategory(null);
-      setGenreBooks([]);
+const fetchGenreBooks = async (category) => {
+  if (activeCategory === category) {
+    setActiveCategory(null);
+    setGenreBooks([]);
+    setMode("default");
+    return;
+  }
 
-      return;
-    }
-    try {
-      const query = genreMap[category] || category.toLowerCase();
+  const query =
+    genreMap[category] ||
+    category.toLowerCase();
 
-      const res = await fetch(`https://openlibrary.org/search.json?subject=${query}&limit=12`);
+  const localGenreBooks = localBooks.filter(
+    (book) =>
+      normalize(book.category) ===
+      normalize(query)
+  );
 
-      const data = await res.json();
+  setGenreBooks(localGenreBooks);
+  setActiveCategory(category);
+  setMode("genre");
 
-      const books = data.docs.map((item) => ({
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price: (((item.cover_i || 1) * 137) % 100000) + 50000,
-        stock: ((item.cover_i || 1) % 15) + 5,
-      }));
-
-      // FILTER LOCAL BOOKS BERDASARKAN GENRE
-      const localGenreBooks = localBooks.filter(
-        (book) =>
-          normalize(book.category) ===
-          normalize(query)
-      );
-
-      // GABUNGKAN
-      const mergedGenreBooks = [
-        ...localGenreBooks,
-        ...books,
-      ];
-
-      // HAPUS DUPLIKAT
-      const uniqueGenreBooks =
-        mergedGenreBooks.filter(
-          (book, index, self) =>
-            index ===
-            self.findIndex(
-              (b) =>
-                b.title === book.title &&
-                b.author === book.author
-            )
-        );
-
-      setGenreBooks(uniqueGenreBooks);
-      setActiveCategory(category);
-
-      setTimeout(() => {
-        genreSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 100);
-    } catch (err) {
-      console.log("error genre:", err);
-    }
-  };
-
+  setTimeout(() => {
+    genreSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, 100);
+};
   /* ================= FETCH DATA ================= */
   useEffect(() => {
      // FETCH LOCAL BOOKS
-   fetch("http://localhost:3000/api/buku")
+   fetch("http://localhost:3000/api/buku/shop")
     .then((res) => res.json())
     .then((localData) => {
       console.log("LOCAL DATA:", localData);
@@ -249,47 +201,6 @@ export default function Belanja() {
     });
       console.log("LOCAL FORMATTED:", localBooksFormatted);
       setLocalBooks(localBooksFormatted);
-
-    // BUKU TERBARU
-    fetch("https://openlibrary.org/search.json?q=new&limit=8")
-        .then((res) => res.json())
-        .then((data) => {
-          const apiBooks = data.docs.map((item) => ({
-            workKey: item.key,
-            title: item.title ?? "-",
-            author: item.author_name?.[0] ?? "-",
-            cover: item.cover_i ?? null,
-            price:
-              ((item.cover_i || 1) * 137) % 100000 + 50000,
-            stock:
-              ((item.cover_i || 1) % 15) + 5,
-          }));
-          console.log("API NEW:", apiBooks);
-          setTerbaru([
-            ...localBooksFormatted,
-            ...apiBooks,
-          ]);
-        });
-    // BUKU TERLARIS
-    fetch("https://openlibrary.org/search.json?q=bestseller&limit=8")
-        .then((res) => res.json())
-        .then((data) => {
-          const apiBooks = data.docs.map((item) => ({
-            workKey: item.key,
-            title: item.title ?? "-",
-            author: item.author_name?.[0] ?? "-",
-            cover: item.cover_i ?? null,
-            price:
-              ((item.cover_i || 1) * 137) % 100000 + 50000,
-            stock:
-              ((item.cover_i || 1) % 15) + 5,
-          }));
-          console.log("API BESTSELLER:", apiBooks);
-          setTerlaris([
-            ...apiBooks,
-            ...localBooksFormatted,
-          ]);
-        });
     });
     }, []);
 
@@ -359,26 +270,6 @@ const handleSearch = async () => {
       }
     );
 
-    // FETCH BOOKS // 
-
-    const res = await fetch(
-      `https://openlibrary.org/search.json?q=${search}&limit=12`
-    );
-
-    const data = await res.json();
-
-    const apiBooks = data.docs.map((item) => ({
-        workKey: item.key,
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price:
-          ((item.cover_i || 1) * 137) %
-            100000 +
-          50000,
-        stock:
-          ((item.cover_i || 1) % 15) + 5,
-      }));
 
       // FILTER LOCAL BOOKS
     const filteredLocalBooks = localBooks.filter(
@@ -390,25 +281,8 @@ const handleSearch = async () => {
             normalize(search)
           )
       );
-
-      // GABUNGKAN
-      const mergedBooks = [
-        ...filteredLocalBooks,
-        ...apiBooks,
-      ];
-
-      // HAPUS DUPLIKAT
-      const uniqueBooks = mergedBooks.filter(
-        (book, index, self) =>
-          index ===
-          self.findIndex(
-            (b) =>
-              b.title === book.title &&
-              b.author === book.author
-          )
-      );
    
-    setSearchResults(uniqueBooks);
+    setSearchResults(filteredLocalBooks);
     setMode("search");
 
     setTimeout(() => {
@@ -459,7 +333,7 @@ const handleSearch = async () => {
     },
 
     {
-      name: "Textbox",
+      name: "Textbook",
       icon: <FiBook />,
     },
 
@@ -807,47 +681,40 @@ const handleSearch = async () => {
       </section>
 
       {/* ================= GENRE RESULT ================= */}
-      {activeCategory && (
-        <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
-          <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">Genre: {activeCategory}</h2>
+{activeCategory && (
+  <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
+    <div className="flex gap-5 overflow-x-auto">
+      {genreBooks.map((book, index) => (
+        <div key={index} className="min-w-[250px]">
+          <BookCard
+            workKey={book.workKey}
+            title={book.title}
+            author={book.author}
+            cover={book.cover}
+            isLocal={book.isLocal}
+            cover_url={book.cover_url}
+            price={book.price}
+            stock={book.stock}
+            cart={cart}
+            setCart={setCart}
+            setIsBuyOpen={setIsBuyOpen}
+            setSelectedBook={setSelectedBook}
+            showNotif={showNotif}
+          />
+        </div>
+      ))}
+    </div>
+  </section>
+)}
 
-          <div className="flex gap-5 overflow-x-auto">
-            {genreBooks.map((book, index) => (
-              <div key={index} className="min-w-[250px]">
-                <BookCard
-                  workKey={book.workKey}
-                  title={book.title}
-                  author={book.author}
-                  cover={book.cover}
-                  isLocal={book.isLocal}
-                  cover_url={book.cover_url}
-                  price={book.price}
-                  stock={book.stock}
-                  cart={cart}
-                  setCart={setCart}
-                  setIsBuyOpen={setIsBuyOpen}
-                  setSelectedBook={setSelectedBook}
-                  showNotif={showNotif}
-                />
-              </div>
-            ))}
-          </div>
-           </section>
-      )}
-      
 {mode === "search" ? (
-  <section
-    ref={genreSectionRef}
-    className="px-6 md:px-20 pb-14 mt-10"
-  >
+  <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
     <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
       Search: "{search}"
     </h2>
 
     {searchResults.length === 0 ? (
-      <div className="text-center text-gray-500">
-        Book not found.
-      </div>
+      <div className="text-center text-gray-500">Book not found.</div>
     ) : (
       <div className="flex gap-5 overflow-x-auto">
         {searchResults.map((book, index) => (
@@ -875,35 +742,33 @@ const handleSearch = async () => {
     )}
   </section>
 ) : (
-  <>
-    <BukuTerlaris
-      data={filterBooks(terlaris)}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
+  <section className="px-6 md:px-20 pb-14 mt-10">
+    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
+      All Books
+    </h2>
 
-    <section className="px-4 md:px-20 pb-14">
-      <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl shadow-2xl bg-black">
-        <img
-          src={banner5}
-          className="w-full h-auto object-contain"
-          alt="Banner"
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+      {filterBooks(localBooks).map((book, index) => (
+        <BookCard
+          key={index}
+          workKey={book.workKey}
+          title={book.title}
+          author={book.author}
+          cover={book.cover}
+          isLocal={book.isLocal}
+          cover_url={book.cover_url}
+          price={book.price}
+          stock={book.stock}
+          localdescription={book.description}
+          cart={cart}
+          setCart={setCart}
+          setIsBuyOpen={setIsBuyOpen}
+          setSelectedBook={setSelectedBook}
+          showNotif={showNotif}
         />
-      </div>
-    </section>
-
-    <BukuTerbaru
-      data={filterBooks(terbaru)}
-      cart={cart}
-      setCart={setCart}
-      setIsBuyOpen={setIsBuyOpen}
-      setSelectedBook={setSelectedBook}
-      showNotif={showNotif}
-    />
-  </>
+      ))}
+    </div>
+  </section>
 )}
  
 
@@ -999,35 +864,11 @@ function BookCard({
 
   const imageSrc = getImageSrc();
 
-  const fetchDescription = async () => {
-    try {
-      if (isLocal) {
-        setDescription(localdescription || "No description available.");
-        return;
-      }
-
-      if (!workKey) {
-        setDescription("Description not available.");
-        return;
-      }
-
-    const res = await fetch(
-        `https://openlibrary.org${workKey}.json`
-      );
-
-    const data = await res.json();
-
-      if (typeof data.description === "string") {
-        setDescription(data.description);
-      } else if (data.description?.value) {
-        setDescription(data.description.value);
-      } else {
-        setDescription("Description not available.");
-      }
-    } catch (err) {
-      setDescription("Failed to load description.");
-    }
-  };
+ const fetchDescription = async () => {
+  setDescription(
+    localdescription || "No description available."
+  );
+};
 
   // ================= HANDLE BUY =================
   const handleBuy = () => {
