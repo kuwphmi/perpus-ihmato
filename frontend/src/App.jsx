@@ -16,6 +16,8 @@ import ChatAI from "./pages/chatai";
 import Floating from "./pages/floating";
 import Favorit from "./pages/favorite";
 import Notifikasi from "./pages/notifikasi";
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
 
 
 import GoogleSuccess from "./pages/googlesuccess";
@@ -64,6 +66,8 @@ function MainApp({ cart, setCart, ProtectedRoute }) {
         <Route path="/google-success" element={<GoogleSuccess />} />
 
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         <Route
           path="/trackingbuku"

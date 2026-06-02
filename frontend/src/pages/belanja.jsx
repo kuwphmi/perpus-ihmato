@@ -58,11 +58,6 @@ const getBookCover = (book) => {
     return `http://localhost:3000/uploads/${book.cover_url}`;
   }
 
-  // API BOOK (OpenLibrary)
-  if (book.cover) {
-    return `https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`;
-  }
-
   return "/no-image.png";
 };
 
@@ -160,138 +155,53 @@ export default function Belanja() {
   const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
-  const fetchGenreBooks = async (category) => {
-    if (activeCategory === category) {
-      setActiveCategory(null);
-      setGenreBooks([]);
+const fetchGenreBooks = async (category) => {
+  try {
+    const localGenreBooks = localBooks.filter(
+      (book) =>
+        normalize(book.category) === normalize(category)
+    );
 
-      return;
-    }
+    const mergedGenreBooks = [...localGenreBooks];
+
+    const uniqueGenreBooks = mergedGenreBooks.filter(
+      (book, index, self) =>
+        index ===
+        self.findIndex(
+          (b) =>
+            b.title === book.title &&
+            b.author === book.author
+        )
+    );
+
+    setGenreBooks(uniqueGenreBooks);
+    setActiveCategory(category);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+  /* ================= FETCH DATA ================= */
+useEffect(() => {
+  const fetchCart = async () => {
     try {
-      const query = genreMap[category] || category.toLowerCase();
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return;
 
-      const res = await fetch(`https://openlibrary.org/search.json?subject=${query}&limit=12`);
-
-      const data = await res.json();
-
-      const books = data.docs.map((item) => ({
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price: (((item.cover_i || 1) * 137) % 100000) + 50000,
-        stock: ((item.cover_i || 1) % 15) + 5,
-      }));
-
-      // FILTER LOCAL BOOKS BERDASARKAN GENRE
-      const localGenreBooks = localBooks.filter(
-        (book) =>
-          normalize(book.category) ===
-          normalize(query)
+      const res = await axios.get(
+        `http://localhost:3000/api/cart/${user.id}`
       );
 
-      // GABUNGKAN
-      const mergedGenreBooks = [
-        ...localGenreBooks,
-        ...books,
-      ];
-
-      // HAPUS DUPLIKAT
-      const uniqueGenreBooks =
-        mergedGenreBooks.filter(
-          (book, index, self) =>
-            index ===
-            self.findIndex(
-              (b) =>
-                b.title === book.title &&
-                b.author === book.author
-            )
-        );
-
-      setGenreBooks(uniqueGenreBooks);
-      setActiveCategory(category);
-
-      setTimeout(() => {
-        genreSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 100);
+      setCart(res.data.data);
     } catch (err) {
-      console.log("error genre:", err);
+      console.log("Gagal fetch cart", err);
     }
   };
 
-  /* ================= FETCH DATA ================= */
-  useEffect(() => {
-     // FETCH LOCAL BOOKS
-   fetch("http://localhost:3000/api/buku")
-    .then((res) => res.json())
-    .then((localData) => {
-      console.log("LOCAL DATA:", localData);
-     const booksArray = Array.isArray(localData.data)
-        ? localData.data
-        : Array.isArray(localData)
-        ? localData
-        : [];
-    const localBooksFormatted = booksArray.map((item) => {
-      console.log("LOCAL ITEM:", item);
-
-      return {
-        workKey: `local-${item.id}`,
-        title: item.title || "-",
-        author: item.author || "-",
-        cover_url: item.cover || null,
-        isLocal: true,
-        category: item.category || "other",
-        description: item.description || "No description available.",
-        price: item.price || 50000,
-        stock: item.stock || 0,
-      };
-    });
-      console.log("LOCAL FORMATTED:", localBooksFormatted);
-      setLocalBooks(localBooksFormatted);
-
-    // BUKU TERBARU
-    fetch("https://openlibrary.org/search.json?q=new&limit=8")
-        .then((res) => res.json())
-        .then((data) => {
-          const apiBooks = data.docs.map((item) => ({
-            workKey: item.key,
-            title: item.title ?? "-",
-            author: item.author_name?.[0] ?? "-",
-            cover: item.cover_i ?? null,
-            price:
-              ((item.cover_i || 1) * 137) % 100000 + 50000,
-            stock:
-              ((item.cover_i || 1) % 15) + 5,
-          }));
-          console.log("API NEW:", apiBooks);
-          setTerbaru([
-            ...localBooksFormatted,
-            ...apiBooks,
-          ]);
-        });
-    // BUKU TERLARIS
-    fetch("https://openlibrary.org/search.json?q=bestseller&limit=8")
-        .then((res) => res.json())
-        .then((data) => {
-          const apiBooks = data.docs.map((item) => ({
-            workKey: item.key,
-            title: item.title ?? "-",
-            author: item.author_name?.[0] ?? "-",
-            cover: item.cover_i ?? null,
-            price:
-              ((item.cover_i || 1) * 137) % 100000 + 50000,
-            stock:
-              ((item.cover_i || 1) % 15) + 5,
-          }));
-          console.log("API BESTSELLER:", apiBooks);
-          setTerlaris([
-            ...apiBooks,
-            ...localBooksFormatted,
-          ]);
-        });
-    });
-    }, []);
+  fetchCart();
+}, []);
 
   /* ================= FETCH CART ================= */
   useEffect(() => {
@@ -349,83 +259,42 @@ export default function Belanja() {
 
 const handleSearch = async () => {
   if (!search.trim()) return;
+
+  setIsSearching(true);
+
   try {
-    setIsSearching(true);
-      await axios.post("http://localhost:3000/api/search-history", {
-        user_id: user.id,
-        keyword: search,
-        source: "belanja",
-
-      }
-    );
-
-    // FETCH BOOKS // 
-
-    const res = await fetch(
-      `https://openlibrary.org/search.json?q=${search}&limit=12`
-    );
-
-    const data = await res.json();
-
-    const apiBooks = data.docs.map((item) => ({
-        workKey: item.key,
-        title: item.title ?? "-",
-        author: item.author_name?.[0] ?? "-",
-        cover: item.cover_i ?? null,
-        price:
-          ((item.cover_i || 1) * 137) %
-            100000 +
-          50000,
-        stock:
-          ((item.cover_i || 1) % 15) + 5,
-      }));
-
-      // FILTER LOCAL BOOKS
+    // FETCH LOCAL
     const filteredLocalBooks = localBooks.filter(
-        (book) =>
-          normalize(book.title).includes(
-            normalize(search)
-          ) ||
-          normalize(book.author).includes(
-            normalize(search)
-          )
-      );
+      (book) =>
+        normalize(book.title).includes(normalize(search)) ||
+        normalize(book.author).includes(normalize(search))
+    );
 
-      // GABUNGKAN
-      const mergedBooks = [
-        ...filteredLocalBooks,
-        ...apiBooks,
-      ];
+    // FETCH API
+const mergedBooks = [...filteredLocalBooks];
 
-      // HAPUS DUPLIKAT
-      const uniqueBooks = mergedBooks.filter(
-        (book, index, self) =>
-          index ===
-          self.findIndex(
-            (b) =>
-              b.title === book.title &&
-              b.author === book.author
-          )
-      );
-   
+    const uniqueBooks = mergedBooks.filter(
+      (book, index, self) =>
+        index ===
+        self.findIndex(
+          (b) => b.title === book.title && b.author === book.author
+        )
+    );
+
     setSearchResults(uniqueBooks);
     setMode("search");
 
     setTimeout(() => {
-
-      genreSectionRef.current
-      ?.scrollIntoView({
+      genreSectionRef.current?.scrollIntoView({
         behavior: "smooth",
       });
-       }, 100);
-
+    }, 100);
   } catch (err) {
     console.log(err);
   } finally {
-
     setIsSearching(false);
   }
-  };
+};
 
   const categories = [
     {
@@ -977,57 +846,57 @@ function BookCard({
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   
-  const getImageSrc = () => {
-    // LOCAL BOOK
-    if (isLocal) {
-      if (!cover_url) return "/no-image.png";
+const getImageSrc = () => {
+  if (isLocal) {
+    if (!cover_url) return "/no-image.png";
 
-      if (cover_url.startsWith("http")) {
-        return cover_url;
-      }
-
-      return `http://localhost:3000/uploads/${cover_url}`;
+    if (cover_url.startsWith("http")) {
+      return cover_url;
     }
 
-    // API BOOK (OpenLibrary)
-    if (cover) {
-      return `https://covers.openlibrary.org/b/id/${cover}-M.jpg`;
-    }
+    return `http://localhost:3000/uploads/${cover_url}`;
+  }
 
-    return "/no-image.png";
-  };
+  return "/no-image.png";
+};
 
-  const imageSrc = getImageSrc();
+const getImage = (book) => {
+  if (!book.cover_url) return "/no-image.png";
+  if (book.cover_url.startsWith("http")) return book.cover_url;
+  return `http://localhost:3000/uploads/${book.cover_url}`;
+};
 
-  const fetchDescription = async () => {
-    try {
-      if (isLocal) {
-        setDescription(localdescription || "No description available.");
-        return;
-      }
+const fetchDescription = async () => {
+  if (isLocal) {
+    setDescription(localdescription || "No description available.");
+    return;
+  }
 
-      if (!workKey) {
-        setDescription("Description not available.");
-        return;
-      }
+  if (!workKey) {
+    setDescription("Description not available.");
+    return;
+  }
 
-    const res = await fetch(
-        `https://openlibrary.org${workKey}.json`
-      );
-
+  try {
+    const res = await fetch(`https://openlibrary.org${workKey}.json`);
     const data = await res.json();
 
-      if (typeof data.description === "string") {
-        setDescription(data.description);
-      } else if (data.description?.value) {
-        setDescription(data.description.value);
-      } else {
-        setDescription("Description not available.");
-      }
-    } catch (err) {
-      setDescription("Failed to load description.");
+    if (typeof data.description === "string") {
+      setDescription(data.description);
+    } else if (data.description?.value) {
+      setDescription(data.description.value);
+    } else if (data.first_sentence) {
+      setDescription(data.first_sentence);
+    } else {
+      setDescription("Description not available.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setDescription("Failed to load description.");
+  }
+};
+
+const imageSrc = getImageSrc();
 
   // ================= HANDLE BUY =================
   const handleBuy = () => {
