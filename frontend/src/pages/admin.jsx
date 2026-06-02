@@ -88,9 +88,7 @@ const getCurrentMonth = () => String(new Date().getMonth() + 1);
 const getCurrentYear = () => String(new Date().getFullYear());
 const getTabKey = (tab, bookView) => {
   if (tab === "buku") {
-    return bookView === "loan"
-      ? "borrowBooks"
-      : "shopBooks";
+    return bookView === "loan" ? "borrowBooks" : "shopBooks";
   }
 
   return {
@@ -227,6 +225,16 @@ export default function AdminPerpustakaan() {
   }, [profileMenuOpen]);
 
   const handleLogout = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (storedUser?.id) {
+      const key = `chatHistory_${storedUser.id}`;
+      const archiveKey = `chatArchive_${storedUser.id}`;
+      const history = localStorage.getItem(key);
+      if (history) {
+        localStorage.setItem(archiveKey, history);
+        localStorage.removeItem(key);
+      }
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setProfileMenuOpen(false);
@@ -280,7 +288,6 @@ export default function AdminPerpustakaan() {
     return res.json();
   };
 
-
   const addBorrowBook = async () => {
     try {
       await fetchJson(`${API_BASE}/admin/borrow-books`, {
@@ -305,7 +312,6 @@ export default function AdminPerpustakaan() {
     }
   };
 
-
   const addShopBook = async () => {
     try {
       await fetchJson(`${API_BASE}/admin/books`, {
@@ -329,7 +335,6 @@ export default function AdminPerpustakaan() {
       alert("Failed to add shop book");
     }
   };
-
 
   const loadDashboard = useCallback(async () => {
     setLoadingDashboard(true);
@@ -367,85 +372,84 @@ export default function AdminPerpustakaan() {
     }
   }, []);
 
-  const loadTabData = useCallback(async (tabKey) => {
-    const dataKey = getTabKey(tabKey, bookView);
-    if (!dataKey) return;
+  const loadTabData = useCallback(
+    async (tabKey) => {
+      const dataKey = getTabKey(tabKey, bookView);
+      if (!dataKey) return;
 
-    setLoadingTabs((prev) => ({
-      ...prev,
-      [dataKey]: true,
-    }));
-
-    const cachedTab = getCachedTab(dataKey);
-    if (cachedTab) {
-      setData((prev) => ({
-        ...prev,
-        [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
-      }));
-      setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
-      setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
-      return cachedTab;
-    }
-
-    try {
-      let result = [];
-
-      switch (tabKey) {
-        case "buku":
-          result =
-            bookView === "loan"
-              ? await fetchJson(`${API_BASE}/admin/borrow-books`)
-              : await fetchJson(`${API_BASE}/admin/books`);
-          break;
-
-        case "pinjaman":
-          result = await fetchJson(`${API_BASE}/admin/loans`);
-          break;
-
-        case "anggota":
-          result = await fetchJson(`${API_BASE}/admin/members`);
-          break;
-
-        case "pengembalian":
-          result = await fetchJson(`${API_BASE}/admin/returns`);
-          break;
-
-        case "ajukan":
-          result = await fetchJson(`${API_BASE}/admin/loan-requests`);
-          break;
-
-        case "perpanjangan":
-          result = await fetchJson(`${API_BASE}/admin/extension-requests`);
-          break;
-
-        case "pesanan":
-          result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
-          break;
-
-        default:
-          result = [];
-      }
-
-      setData((prev) => ({
-        ...prev,
-        [dataKey]: Array.isArray(result) ? result : [],
-      }));
-
-      setLoadedTabs((prev) => ({
+      setLoadingTabs((prev) => ({
         ...prev,
         [dataKey]: true,
       }));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch tab data.");
-    } finally {
-      setLoadingTabs((prev) => ({
-        ...prev,
-        [dataKey]: false,
-      }));
-    }
-  }, [bookView]);
 
+      const cachedTab = getCachedTab(dataKey);
+      if (cachedTab) {
+        setData((prev) => ({
+          ...prev,
+          [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
+        }));
+        setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
+        setLoadingTabs((prev) => ({ ...prev, [dataKey]: false }));
+        return cachedTab;
+      }
+
+      try {
+        let result = [];
+
+        switch (tabKey) {
+          case "buku":
+            result = bookView === "loan" ? await fetchJson(`${API_BASE}/admin/borrow-books`) : await fetchJson(`${API_BASE}/admin/books`);
+            break;
+
+          case "pinjaman":
+            result = await fetchJson(`${API_BASE}/admin/loans`);
+            break;
+
+          case "anggota":
+            result = await fetchJson(`${API_BASE}/admin/members`);
+            break;
+
+          case "pengembalian":
+            result = await fetchJson(`${API_BASE}/admin/returns`);
+            break;
+
+          case "ajukan":
+            result = await fetchJson(`${API_BASE}/admin/loan-requests`);
+            break;
+
+          case "perpanjangan":
+            result = await fetchJson(`${API_BASE}/admin/extension-requests`);
+            break;
+
+          case "pesanan":
+            result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
+            break;
+
+          default:
+            result = [];
+        }
+
+        setData((prev) => ({
+          ...prev,
+          [dataKey]: Array.isArray(result) ? result : [],
+        }));
+
+        setLoadedTabs((prev) => ({
+          ...prev,
+          [dataKey]: true,
+        }));
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch tab data.");
+      } finally {
+        setLoadingTabs((prev) => ({
+          ...prev,
+          [dataKey]: false,
+        }));
+      }
+    },
+    [bookView],
+  );
 
   const refreshCurrentView = useCallback(async () => {
     await Promise.all([loadDashboard(), loadTabData(activeTab)]);
@@ -462,7 +466,6 @@ export default function AdminPerpustakaan() {
 
     return () => clearInterval(interval);
   }, [activeTab, bookView, refreshCurrentView]);
-
 
   const rejectLoanRequest = async (id) => {
     try {
@@ -519,23 +522,15 @@ export default function AdminPerpustakaan() {
     }
   };
 
-  const updateOrderStatus = async (
-    id,
-    status
-  ) => {
-
+  const updateOrderStatus = async (id, status) => {
     try {
+      await fetchJson(`${API_BASE}/admin/orders/${id}/status`, {
+        method: "PUT",
 
-      await fetchJson(
-        `${API_BASE}/admin/orders/${id}/status`,
-        {
-          method: "PUT",
-
-          body: JSON.stringify({
-            order_status: status,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          order_status: status,
+        }),
+      });
 
       // UPDATE MODAL
       setSelectedOrder((prev) => ({
@@ -550,21 +545,15 @@ export default function AdminPerpustakaan() {
         orders: prev.orders.map((o) =>
           o.id === id
             ? {
-              ...o,
-              order_status: status,
-            }
-            : o
+                ...o,
+                order_status: status,
+              }
+            : o,
         ),
       }));
-
     } catch {
-
-      alert(
-        "Failed to update order status."
-      );
-
+      alert("Failed to update order status.");
     }
-
   };
 
   const handlePrint = () => {
@@ -588,68 +577,38 @@ export default function AdminPerpustakaan() {
     return "bg-slate-100 text-slate-700 border-slate-200";
   };
 
-  const getStatusLabel = (
-    status,
-    deliveryType
-  ) => {
-
-    const s =
-      String(status || "")
-        .toLowerCase();
+  const getStatusLabel = (status, deliveryType) => {
+    const s = String(status || "").toLowerCase();
 
     // PICKUP
-    if (
-      deliveryType === "pickup"
-    ) {
+    if (deliveryType === "pickup") {
       const pickupMap = {
-        waiting_payment:
-          "Waiting Payment",
-        processing:
-          "Processing",
-        ready_pickup:
-          "Ready Pickup",
-        completed:
-          "Picked Up",
-        cancelled:
-          "Cancelled",
+        waiting_payment: "Waiting Payment",
+        processing: "Processing",
+        ready_pickup: "Ready Pickup",
+        completed: "Picked Up",
+        cancelled: "Cancelled",
       };
 
-      return (
-        pickupMap[s] || status
-      );
+      return pickupMap[s] || status;
     }
 
     // DELIVERY
     const deliveryMap = {
-      waiting_payment:
-        "Waiting Payment",
-      processing:
-        "Processing",
-      shipping:
-        "Shipping",
-      completed:
-        "Completed",
-      cancelled:
-        "Cancelled",
-      returned:
-        "Returned",
-      approved:
-        "Approved",
-      rejected:
-        "Rejected",
+      waiting_payment: "Waiting Payment",
+      processing: "Processing",
+      shipping: "Shipping",
+      completed: "Completed",
+      cancelled: "Cancelled",
+      returned: "Returned",
+      approved: "Approved",
+      rejected: "Rejected",
     };
 
-    return (
-      deliveryMap[s] || status
-    );
-
+    return deliveryMap[s] || status;
   };
 
-  const Badge = ({
-    status,
-    deliveryType,
-  }) => (
-
+  const Badge = ({ status, deliveryType }) => (
     <span
       className={`
       inline-flex
@@ -663,14 +622,8 @@ export default function AdminPerpustakaan() {
       ${badgeClass(status)}
     `}
     >
-
-      {getStatusLabel(
-        status,
-        deliveryType
-      )}
-
+      {getStatusLabel(status, deliveryType)}
     </span>
-
   );
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -689,12 +642,7 @@ export default function AdminPerpustakaan() {
       console.log("loanRequests:", data.loanRequests);
 
       return data.loanRequests
-        .filter(
-          (x) =>
-            !["approved", "rejected"].includes(
-              x.status?.toLowerCase()
-            )
-        )
+        .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
         .map((x) => ({
           ...x,
           _type: "loan_request",
@@ -704,12 +652,7 @@ export default function AdminPerpustakaan() {
 
     if (activeTab === "perpanjangan") {
       return data.extensionRequests
-        .filter(
-          (x) =>
-            !["approved", "rejected"].includes(
-              x.status?.toLowerCase()
-            )
-        )
+        .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
         .map((x) => ({
           ...x,
           _type: "extension_request",
@@ -718,14 +661,10 @@ export default function AdminPerpustakaan() {
     }
 
     if (activeTab === "buku") {
-      const books =
-        bookView === "loan"
-          ? data.borrowBooks
-          : data.shopBooks;
+      const books = bookView === "loan" ? data.borrowBooks : data.shopBooks;
 
       return books.filter(match);
     }
-
 
     if (activeTab === "pesanan") {
       let orders = data.orders;
@@ -739,275 +678,232 @@ export default function AdminPerpustakaan() {
   }, [activeTab, data, query, orderStatusFilter]);
 
   const getId = (row) => row.loan_id || row.id;
-  const columnsByTab = useMemo(() => ({
-    buku:
-      bookView === "loan"
-        ? [
-          { key: "no", label: "No", render: (_, index) => index + 1 },
-          { key: "title", label: "Title" },
-          { key: "author", label: "Author" },
-          { key: "category", label: "Category" },
-          { key: "stock", label: "Stock" },
+  const columnsByTab = useMemo(
+    () => ({
+      buku:
+        bookView === "loan"
+          ? [
+              { key: "no", label: "No", render: (_, index) => index + 1 },
+              { key: "title", label: "Title" },
+              { key: "author", label: "Author" },
+              { key: "category", label: "Category" },
+              { key: "stock", label: "Stock" },
 
-          {
-            key: "type",
-            label: "Type",
-            render: () => (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                Loan Book
-              </span>
-            ),
-          },
-        ]
-        : [
-          { key: "no", label: "No", render: (_, index) => index + 1 },
-          { key: "title", label: "Title" },
-          { key: "author", label: "Author" },
-          { key: "category", label: "Category" },
-          { key: "stock", label: "Stock" },
+              {
+                key: "type",
+                label: "Type",
+                render: () => <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Loan Book</span>,
+              },
+            ]
+          : [
+              { key: "no", label: "No", render: (_, index) => index + 1 },
+              { key: "title", label: "Title" },
+              { key: "author", label: "Author" },
+              { key: "category", label: "Category" },
+              { key: "stock", label: "Stock" },
 
-          {
-            key: "price",
-            label: "Price",
-            render: (row) =>
-              `Rp ${Number(
-                row.price || 0
-              ).toLocaleString("id-ID")}`,
-          },
+              {
+                key: "price",
+                label: "Price",
+                render: (row) => `Rp ${Number(row.price || 0).toLocaleString("id-ID")}`,
+              },
 
-          {
-            key: "type",
-            label: "Type",
-            render: () => (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                Shop Book
-              </span>
-            ),
-          },
-        ],
+              {
+                key: "type",
+                label: "Type",
+                render: () => <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Shop Book</span>,
+              },
+            ],
 
-    pinjaman: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "loan_date",
-        label: "Loan Date",
-        render: (row) =>
-          row.loan_date
-            ? new Date(row.loan_date).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            : "-",
-      },
-      {
-        key: "due_date",
-        label: "Due Date",
-        render: (row) =>
-          row.due_date
-            ? new Date(row.due_date).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            : "-",
-      },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => markAsReturned(getId(row))}
-              className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Complete
+      pinjaman: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "loan_date",
+          label: "Loan Date",
+          render: (row) =>
+            row.loan_date
+              ? new Date(row.loan_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "-",
+        },
+        {
+          key: "due_date",
+          label: "Due Date",
+          render: (row) =>
+            row.due_date
+              ? new Date(row.due_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "-",
+        },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => markAsReturned(getId(row))} className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Complete
+              </button>
+
+              <button type="button" onClick={() => printReceipt(row)} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Print
+              </button>
+            </div>
+          ),
+        },
+      ],
+
+      anggota: [
+        { key: "member_code", label: "ID" },
+        { key: "name", label: "Name" },
+        { key: "email", label: "Email" },
+        { key: "nik", label: "NIK" },
+        { key: "phone", label: "Phone" },
+      ],
+
+      pengembalian: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "return_date",
+          label: "Return Date",
+          render: (row) =>
+            row.return_date
+              ? new Date(row.return_date).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "-",
+        },
+      ],
+
+      ajukan: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        {
+          key: "request_date",
+          label: "Request Date",
+          render: (row) => (row.request_date ? new Date(row.request_date).toLocaleDateString("en-GB") : "-"),
+        },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => approveLoanRequest(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Approve
+              </button>
+
+              <button type="button" onClick={() => rejectLoanRequest(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Reject
+              </button>
+            </div>
+          ),
+        },
+      ],
+
+      perpanjangan: [
+        { key: "member_code", label: "ID" },
+        { key: "member_name", label: "Member" },
+        { key: "book_title", label: "Book" },
+        { key: "old_due_date", label: "Old Due Date" },
+        { key: "new_due_date", label: "New Due Date" },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => <Badge status={row.status} />,
+        },
+        {
+          key: "action",
+          label: "Action",
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => approveExtension(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Approve
+              </button>
+
+              <button type="button" onClick={() => rejectExtension(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+                Reject
+              </button>
+            </div>
+          ),
+        },
+      ],
+
+      pesanan: [
+        {
+          key: "order_id",
+          label: "Order No.",
+        },
+
+        {
+          key: "user_id",
+          label: "Buyer",
+        },
+
+        {
+          key: "title",
+          label: "Book",
+        },
+
+        {
+          key: "amount",
+          label: "Total",
+
+          render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
+        },
+
+        {
+          key: "created_at",
+          label: "Date",
+        },
+
+        {
+          key: "status",
+          label: "Status",
+
+          render: (row) => <Badge status={row.order_status} deliveryType={row.delivery_type} />,
+        },
+
+        {
+          key: "action",
+          label: "Action",
+
+          render: (row) => (
+            <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
+              Manage
             </button>
-
-            <button
-              type="button"
-              onClick={() => printReceipt(row)}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Print
-            </button>
-          </div>
-        ),
-      },
-    ],
-
-    anggota: [
-      { key: "member_code", label: "ID" },
-      { key: "name", label: "Name" },
-      { key: "email", label: "Email" },
-      { key: "nik", label: "NIK" },
-      { key: "phone", label: "Phone" },
-    ],
-
-    pengembalian: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "return_date",
-        label: "Return Date",
-        render: (row) =>
-          row.return_date
-            ? new Date(row.return_date).toLocaleString("en-GB", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-            : "-",
-      },
-    ],
-
-    ajukan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      {
-        key: "request_date",
-        label: "Request Date",
-        render: (row) =>
-          row.request_date
-            ? new Date(row.request_date).toLocaleDateString("en-GB")
-            : "-",
-      },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => approveLoanRequest(getId(row))}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Approve
-            </button>
-
-            <button
-              type="button"
-              onClick={() => rejectLoanRequest(getId(row))}
-              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
-
-    perpanjangan: [
-      { key: "member_code", label: "ID" },
-      { key: "member_name", label: "Member" },
-      { key: "book_title", label: "Book" },
-      { key: "old_due_date", label: "Old Due Date" },
-      { key: "new_due_date", label: "New Due Date" },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => <Badge status={row.status} />,
-      },
-      {
-        key: "action",
-        label: "Action",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => approveExtension(getId(row))}
-              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Approve
-            </button>
-
-            <button
-              type="button"
-              onClick={() => rejectExtension(getId(row))}
-              className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Reject
-            </button>
-          </div>
-        ),
-      },
-    ],
-
-
-    pesanan: [
-      {
-        key: "order_id",
-        label: "Order No.",
-      },
-
-      {
-        key: "user_id",
-        label: "Buyer",
-      },
-
-      {
-        key: "title",
-        label: "Book",
-      },
-
-      {
-        key: "amount",
-        label: "Total",
-
-        render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
-      },
-
-      {
-        key: "created_at",
-        label: "Date",
-      },
-
-      {
-        key: "status",
-        label: "Status",
-
-        render: (row) => (
-          <Badge
-            status={row.order_status}
-            deliveryType={row.delivery_type}
-          />
-        ),
-      },
-
-      {
-        key: "action",
-        label: "Action",
-
-        render: (row) => (
-          <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
-            Manage
-          </button>
-        ),
-      },
-    ],
-  }), [bookView]);
+          ),
+        },
+      ],
+    }),
+    [bookView],
+  );
 
   const getOrderSteps = (type) => {
-
     if (type === "pickup") {
-
       return [
         {
           key: "waiting_payment",
@@ -1064,11 +960,7 @@ export default function AdminPerpustakaan() {
 
   const OrderModal = ({ order, onClose }) => {
     const orderSteps = getOrderSteps(order.delivery_type);
-    const currentStep = orderSteps.findIndex(
-      (s) =>
-        s.key ===
-        order.order_status?.toLowerCase()
-    );
+    const currentStep = orderSteps.findIndex((s) => s.key === order.order_status?.toLowerCase());
     const nextStatus = currentStep < orderSteps.length - 1 ? orderSteps[currentStep + 1]?.key : null;
     const isCancelled = order.order_status?.toLowerCase() === "cancelled";
     return (
@@ -1103,49 +995,26 @@ export default function AdminPerpustakaan() {
                 <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
               </div>
               {/* DELIVERY ADDRESS */}
-              {
-                order.delivery_type === "delivery" &&
-                order.address && (
-                  <div className="col-span-2 rounded-lg bg-slate-50 p-3">
+              {order.delivery_type === "delivery" && order.address && (
+                <div className="col-span-2 rounded-lg bg-slate-50 p-3">
+                  <div className="text-xs text-slate-400 mb-1">Shipping Address</div>
 
-                    <div className="text-xs text-slate-400 mb-1">
-                      Shipping Address
-                    </div>
-
-                    <div className="font-semibold text-slate-800">
-                      {order.address}
-                    </div>
-
-                  </div>
-                )
-              }
+                  <div className="font-semibold text-slate-800">{order.address}</div>
+                </div>
+              )}
 
               {/* PICKUP ADDRESS */}
-              {
-                order.delivery_type === "pickup" && (
+              {order.delivery_type === "pickup" && (
+                <div className="col-span-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                  <div className="text-xs text-emerald-600 mb-1">Pickup Location</div>
 
-                  <div className="col-span-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                  <div className="font-semibold text-emerald-800">BukuIn Library</div>
 
-                    <div className="text-xs text-emerald-600 mb-1">
-                      Pickup Location
-                    </div>
+                  <div className="text-sm text-emerald-700 mt-1">Jl. Ketintang, Surabaya</div>
 
-                    <div className="font-semibold text-emerald-800">
-                      BukuIn Library
-                    </div>
-
-                    <div className="text-sm text-emerald-700 mt-1">
-                      Jl. Ketintang, Surabaya
-                    </div>
-
-                    <div className="text-sm text-emerald-700">
-                      08.00 - 16.00 WIB
-                    </div>
-
-                  </div>
-
-                )
-              }
+                  <div className="text-sm text-emerald-700">08.00 - 16.00 WIB</div>
+                </div>
+              )}
             </div>
 
             {!isCancelled && (
@@ -1162,8 +1031,9 @@ export default function AdminPerpustakaan() {
                       return (
                         <div key={step.key} className="relative flex items-start gap-3 pl-10">
                           <div
-                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
-                              } ${active ? "ring-4 ring-blue-100" : ""}`}
+                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
+                              done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
+                            } ${active ? "ring-4 ring-blue-100" : ""}`}
                           >
                             {done ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                           </div>
@@ -1187,12 +1057,7 @@ export default function AdminPerpustakaan() {
               <button
                 type="button"
                 onClick={async () => {
-
-                  await updateOrderStatus(
-                    order.id,
-                    nextStatus
-                  );
-
+                  await updateOrderStatus(order.id, nextStatus);
                 }}
                 className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
@@ -1203,12 +1068,7 @@ export default function AdminPerpustakaan() {
               <button
                 type="button"
                 onClick={async () => {
-
-                  await updateOrderStatus(
-                    order.id,
-                    "cancelled"
-                  );
-
+                  await updateOrderStatus(order.id, "cancelled");
                 }}
                 className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-100 transition-colors"
               >
@@ -1230,17 +1090,9 @@ export default function AdminPerpustakaan() {
       total: orders.length,
       pending: orders.filter((o) => o.order_status?.toLowerCase() === "waiting_payment").length,
       processing: orders.filter((o) => o.order_status?.toLowerCase() === "processing").length,
-      shipping: orders.filter(
-        (o) =>
-          o.order_status?.toLowerCase() ===
-          "shipping"
-      ).length,
+      shipping: orders.filter((o) => o.order_status?.toLowerCase() === "shipping").length,
 
-      pickupReady: orders.filter(
-        (o) =>
-          o.order_status?.toLowerCase() ===
-          "ready_pickup"
-      ).length,
+      pickupReady: orders.filter((o) => o.order_status?.toLowerCase() === "ready_pickup").length,
       completed: orders.filter((o) => o.order_status?.toLowerCase() === "completed").length,
     };
   }, [data.orders]);
@@ -1424,7 +1276,7 @@ export default function AdminPerpustakaan() {
           )}
 
           {activeTab === "pesanan" && (
-            <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-5">
+           <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-6">
               {[
                 { label: "Total Orders", value: orderStats.total, Icon: ShoppingCart, bg: "bg-slate-100", text: "text-slate-700", iconColor: "text-slate-600" },
                 { label: "Pending", value: orderStats.pending, Icon: Clock3, bg: "bg-amber-50", text: "text-amber-700", iconColor: "text-amber-600" },
@@ -1454,59 +1306,51 @@ export default function AdminPerpustakaan() {
           )}
 
           {activeTab === "pesanan" && (
-   <div className="mb-4 flex flex-wrap gap-2">
-  <button
-    type="button"
-    onClick={() => setOrderStatusFilter("all")}
-    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-      orderStatusFilter === "all"
-        ? "bg-slate-800 text-white"
-        : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-    }`}
-  >
-    All
-  </button>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setOrderStatusFilter("all")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${orderStatusFilter === "all" ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+              >
+                All
+              </button>
 
-  {[
-    {
-      key: "waiting_payment",
-      label: "Waiting Payment",
-    },
+              {[
+                {
+                  key: "waiting_payment",
+                  label: "Waiting Payment",
+                },
 
-    {
-      key: "processing",
-      label: "Processing",
-    },
+                {
+                  key: "processing",
+                  label: "Processing",
+                },
 
-    {
-      key: "ready_pickup",
-      label: "Ready Pickup",
-    },
+                {
+                  key: "ready_pickup",
+                  label: "Ready Pickup",
+                },
 
-    {
-      key: "shipping",
-      label: "Shipping",
-    },
+                {
+                  key: "shipping",
+                  label: "Shipping",
+                },
 
-    {
-      key: "completed",
-      label: "Completed",
-    },
-  ].map((s) => (
-    <button
-      type="button"
-      key={s.key}
-      onClick={() => setOrderStatusFilter(s.key)}
-      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-        orderStatusFilter === s.key
-          ? "bg-slate-800 text-white"
-          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-      }`}
-    >
-      {s.label}
-    </button>
-  ))}
-</div>
+                {
+                  key: "completed",
+                  label: "Completed",
+                },
+              ].map((s) => (
+                <button
+                  type="button"
+                  key={s.key}
+                  onClick={() => setOrderStatusFilter(s.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${orderStatusFilter === s.key ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           )}
 
           <div className="mb-4 sm:hidden">
@@ -1519,56 +1363,30 @@ export default function AdminPerpustakaan() {
           </div>
 
           {activeTab === "buku" && (
-
-
             <div className="mb-6">
-
-              <h2 className="text-xl font-bold mb-3">
-                Manage Books
-              </h2>
+              <h2 className="text-xl font-bold mb-3">Manage Books</h2>
 
               {/* SWITCH TAB */}
               <div className="flex gap-3 mb-4">
-
-                <button
-                  onClick={() => setBookView("loan")}
-                  className={`px-4 py-2 rounded-xl font-semibold ${bookView === "loan"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white border"
-                    }`}
-                >
+                <button onClick={() => setBookView("loan")} className={`px-4 py-2 rounded-xl font-semibold ${bookView === "loan" ? "bg-blue-600 text-white" : "bg-white border"}`}>
                   Borrow Books
                 </button>
 
-                <button
-                  onClick={() => setBookView("shop")}
-                  className={`px-4 py-2 rounded-xl font-semibold ${bookView === "shop"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-white border"
-                    }`}
-                >
+                <button onClick={() => setBookView("shop")} className={`px-4 py-2 rounded-xl font-semibold ${bookView === "shop" ? "bg-emerald-600 text-white" : "bg-white border"}`}>
                   Shop Books
                 </button>
-
               </div>
 
               {/* ADD BUTTON */}
               {bookView === "loan" ? (
-                <button
-                  onClick={() => navigate("/admin/books/borrow/add")}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-xl"
-                >
+                <button onClick={() => navigate("/admin/books/borrow/add")} className="bg-blue-600 text-white px-4 py-2 rounded-xl">
                   + Add Borrow Book
                 </button>
               ) : (
-                <button
-                  onClick={() => navigate("/admin/books/shop/add")}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded-xl"
-                >
+                <button onClick={() => navigate("/admin/books/shop/add")} className="bg-emerald-600 text-white px-4 py-2 rounded-xl">
                   + Add Shop Book
                 </button>
               )}
-
             </div>
           )}
 

@@ -105,45 +105,30 @@ export default function ChooseGenre() {
   };
 
   const handleContinue = async () => {
-
-  if (selectedGenres.length < 3) {
-
-    alert(
-      "Please select at least 3 genres"
-    );
-
-    return;
-
-  }
-
   try {
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    const user =
-      JSON.parse(
-        localStorage.getItem("user")
-      );
+    if (!user?.id) {
+      alert("User not found");
+      return;
+    }
 
-    // save genre baru
-await axios.post(
-  "http://localhost:3000/api/fav-genres",
-  {
-    user_id: user.id,
-    genres: selectedGenres,
-  }
-);
+    if (!Array.isArray(selectedGenres)) {
+      alert("Genres invalid");
+      return;
+    }
+
+    await axios.post("http://localhost:3000/api/fav-genres", {
+      user_id: user.id,
+      genres: selectedGenres, // ✅ FIX DI SINI
+    });
 
     navigate("/koleksi");
 
   } catch (err) {
-
-    console.log(err);
-
-    alert(
-      "Failed save favorite genres"
-    );
-
+    console.log(err.response?.data || err.message);
+    alert("Failed save favorite genres");
   }
-
 };
 
   return (

@@ -21,18 +21,23 @@ export const createTransaction = async (req, res) => {
       return sum + item.price * (item.qty || 1);
     }, 0);
 
-    const parameter = {
-      transaction_details: {
-        order_id,
-        gross_amount,
-      },
-      item_details: items.map((item) => ({
-        id: item.book_key,
-        price: item.price,
-        quantity: item.qty || 1,
-        name: item.title,
-      })),
-    };
+const parameter = {
+  transaction_details: {
+    order_id,
+    gross_amount,
+  },
+
+  item_details: items.map((item) => ({
+    id: item.book_key,
+    price: item.price,
+    quantity: item.qty || 1,
+    name: item.title,
+  })),
+
+  callbacks: {
+    finish: "http://localhost:5173/trackingorder",
+  },
+};
 
     const transaction = await snap.createTransaction(parameter);
 
