@@ -39,51 +39,6 @@ const tabs = [
   { key: "pesanan", label: "Orders", icon: ShoppingCart },
 ];
 
-const DELIVERY_STATUSES = [
-  {
-    key: "waiting_payment",
-    label: "Waiting Payment",
-  },
-  {
-    key: "processing",
-    label: "Processing",
-  },
-  {
-    key: "shipping",
-    label: "Shipping",
-  },
-  {
-    key: "completed",
-    label: "Completed",
-  },
-];
-
-const PICKUP_STATUSES = [
-  {
-    key: "waiting_payment",
-    label: "Waiting Payment",
-  },
-  {
-    key: "processing",
-    label: "Processing",
-  },
-  {
-    key: "ready_pickup",
-    label: "Ready Pickup",
-  },
-  {
-    key: "completed",
-    label: "Picked Up",
-  },
-];
-
-const statColorMap = {
-  blue: "text-blue-600 bg-blue-50",
-  indigo: "text-indigo-600 bg-indigo-50",
-  emerald: "text-emerald-600 bg-emerald-50",
-  amber: "text-amber-600 bg-amber-50",
-};
-
 const getCurrentMonth = () => String(new Date().getMonth() + 1);
 const getCurrentYear = () => String(new Date().getFullYear());
 const getTabKey = (tab, bookView) => {
@@ -141,13 +96,13 @@ export default function AdminPerpustakaan() {
   const [query, setQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderTypeFilter, setOrderTypeFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [selectedMonth] = useState(getCurrentMonth());
   const [selectedYear] = useState(getCurrentYear());
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const profileMenuRef = useRef(null);
+  const coverInputRef = useRef(null); // Ref untuk mereset input file
   const [adminName, setAdminName] = useState("A");
   const [loadedTabs, setLoadedTabs] = useState({
     borrowBooks: false,
@@ -168,7 +123,7 @@ export default function AdminPerpustakaan() {
     category: "",
     stock: "",
     description: "",
-    cover: "",
+    cover: "", // Akan disi file objek
   });
 
   const [shopForm, setShopForm] = useState({
@@ -178,7 +133,7 @@ export default function AdminPerpustakaan() {
     stock: "",
     price: "",
     description: "",
-    cover: "",
+    cover: "", // Akan disi file objek
   });
 
   const [data, setData] = useState({
@@ -202,7 +157,6 @@ export default function AdminPerpustakaan() {
 
   const navigate = useNavigate();
 
-  // Get admin name from localStorage on mount
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.name) {
@@ -210,7 +164,6 @@ export default function AdminPerpustakaan() {
     }
   }, []);
 
-  // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
@@ -246,38 +199,21 @@ export default function AdminPerpustakaan() {
     setShowLogoutConfirm(true);
   };
 
-  const addBook = async () => {
-    try {
-      await fetchJson(`${API_BASE}/admin/books`, {
-        method: "POST",
-        body: JSON.stringify(bookForm),
-      });
-
-      alert("Book added successfully");
-
-      loadTabData("buku");
-
-      setBookForm({
-        title: "",
-        author: "",
-        category: "",
-        stock: "",
-        price: "",
-        description: "",
-        cover: "",
-      });
-    } catch {
-      alert("Failed to add book");
-    }
-  };
-
+  // Diperbarui untuk mendukung FormData (upload file)
   const fetchJson = async (url, options = {}) => {
+    const isFormData = options.body instanceof FormData;
+    const headers = {
+      Accept: "application/json",
+      ...(options.headers || {}),
+    };
+
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
       ...options,
+      headers,
     });
 
     if (!res.ok) {
@@ -290,23 +226,17 @@ export default function AdminPerpustakaan() {
 
   const addBorrowBook = async () => {
     try {
+      const formData = new FormData();
+      Object.keys(borrowForm).forEach((key) => formData.append(key, borrowForm[key]));
+
       await fetchJson(`${API_BASE}/admin/borrow-books`, {
         method: "POST",
-        body: JSON.stringify(borrowForm),
+        body: formData,
       });
-
-      alert("Borrow book added");
-
-      loadTabData("buku");
-
-      setBorrowForm({
-        title: "",
-        author: "",
-        category: "",
-        stock: "",
-        description: "",
-        cover: "",
-      });
+      alert("Borrow book added successfully");
+      loadTabData("buku", true);
+      setBorrowForm({ title: "", author: "", category: "", stock: "", description: "", cover: "" });
+      if (coverInputRef.current) coverInputRef.current.value = ""; // Reset file input
     } catch {
       alert("Failed to add borrow book");
     }
@@ -314,33 +244,27 @@ export default function AdminPerpustakaan() {
 
   const addShopBook = async () => {
     try {
+      const formData = new FormData();
+      Object.keys(shopForm).forEach((key) => formData.append(key, shopForm[key]));
+
       await fetchJson(`${API_BASE}/admin/books`, {
         method: "POST",
-        body: JSON.stringify(shopForm),
+        body: formData,
       });
-
-      alert("Shop book added");
-      loadTabData("buku");
-
-      setShopForm({
-        title: "",
-        author: "",
-        category: "",
-        stock: "",
-        price: "",
-        description: "",
-        cover: "",
-      });
+      alert("Shop book added successfully");
+      loadTabData("buku", true);
+      setShopForm({ title: "", author: "", category: "", stock: "", price: "", description: "", cover: "" });
+      if (coverInputRef.current) coverInputRef.current.value = ""; // Reset file input
     } catch {
       alert("Failed to add shop book");
     }
   };
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (force = false) => {
     setLoadingDashboard(true);
     try {
       const cachedDashboard = getCachedDashboard();
-      if (cachedDashboard) {
+      if (!force && cachedDashboard) {
         setData((prev) => ({
           ...prev,
           summary: {
@@ -365,7 +289,6 @@ export default function AdminPerpustakaan() {
       return dashboard;
     } catch (err) {
       console.error(err);
-      alert("Failed to fetch dashboard data.");
       return null;
     } finally {
       setLoadingDashboard(false);
@@ -373,7 +296,7 @@ export default function AdminPerpustakaan() {
   }, []);
 
   const loadTabData = useCallback(
-    async (tabKey) => {
+    async (tabKey, force = false) => {
       const dataKey = getTabKey(tabKey, bookView);
       if (!dataKey) return;
 
@@ -383,7 +306,7 @@ export default function AdminPerpustakaan() {
       }));
 
       const cachedTab = getCachedTab(dataKey);
-      if (cachedTab) {
+      if (!force && cachedTab) {
         setData((prev) => ({
           ...prev,
           [dataKey]: Array.isArray(cachedTab) ? cachedTab : [],
@@ -395,36 +318,28 @@ export default function AdminPerpustakaan() {
 
       try {
         let result = [];
-
         switch (tabKey) {
           case "buku":
             result = bookView === "loan" ? await fetchJson(`${API_BASE}/admin/borrow-books`) : await fetchJson(`${API_BASE}/admin/books`);
             break;
-
           case "pinjaman":
             result = await fetchJson(`${API_BASE}/admin/loans`);
             break;
-
           case "anggota":
             result = await fetchJson(`${API_BASE}/admin/members`);
             break;
-
           case "pengembalian":
             result = await fetchJson(`${API_BASE}/admin/returns`);
             break;
-
           case "ajukan":
             result = await fetchJson(`${API_BASE}/admin/loan-requests`);
             break;
-
           case "perpanjangan":
             result = await fetchJson(`${API_BASE}/admin/extension-requests`);
             break;
-
           case "pesanan":
             result = await fetchJson(`${API_BASE}/admin/orders`).catch(() => []);
             break;
-
           default:
             result = [];
         }
@@ -433,14 +348,10 @@ export default function AdminPerpustakaan() {
           ...prev,
           [dataKey]: Array.isArray(result) ? result : [],
         }));
-
-        setLoadedTabs((prev) => ({
-          ...prev,
-          [dataKey]: true,
-        }));
+        setCachedTab(dataKey, result);
+        setLoadedTabs((prev) => ({ ...prev, [dataKey]: true }));
       } catch (err) {
         console.error(err);
-        alert("Failed to fetch tab data.");
       } finally {
         setLoadingTabs((prev) => ({
           ...prev,
@@ -451,108 +362,93 @@ export default function AdminPerpustakaan() {
     [bookView],
   );
 
-  const refreshCurrentView = useCallback(async () => {
-    await Promise.all([loadDashboard(), loadTabData(activeTab)]);
-  }, [activeTab, loadDashboard, loadTabData]);
+  const refreshCurrentView = useCallback(
+    async (force = false) => {
+      Promise.all([loadDashboard(force), loadTabData(activeTab, force)]);
+    },
+    [activeTab, loadDashboard, loadTabData],
+  );
 
   useEffect(() => {
-    // initial load
     refreshCurrentView();
-
-    // auto refresh setiap 60 detik
     const interval = setInterval(() => {
       refreshCurrentView();
     }, 60000);
-
     return () => clearInterval(interval);
   }, [activeTab, bookView, refreshCurrentView]);
 
+  const getId = (row) => row.loan_id || row.id;
+
   const rejectLoanRequest = async (id) => {
+    setData((prev) => ({ ...prev, loanRequests: prev.loanRequests.map((req) => (getId(req) === id ? { ...req, status: "rejected" } : req)) }));
     try {
-      await fetchJson(`${API_BASE}/admin/loan-requests/${id}/reject`, {
-        method: "POST",
-      });
-      await refreshCurrentView();
+      await fetchJson(`${API_BASE}/admin/loan-requests/${id}/reject`, { method: "POST" });
+      refreshCurrentView(true);
     } catch {
       alert("Failed to reject request.");
-    }
-  };
-
-  const rejectExtension = async (id) => {
-    try {
-      await fetchJson(`${API_BASE}/admin/extension-requests/${id}/reject`, {
-        method: "POST",
-      });
-      await refreshCurrentView();
-    } catch {
-      alert("Failed to reject extension.");
+      refreshCurrentView(true);
     }
   };
 
   const approveLoanRequest = async (id) => {
+    setData((prev) => ({ ...prev, loanRequests: prev.loanRequests.map((req) => (getId(req) === id ? { ...req, status: "approved" } : req)) }));
     try {
-      await fetchJson(`${API_BASE}/admin/loan-requests/${id}/approve`, {
-        method: "POST",
-      });
-      await refreshCurrentView();
+      await fetchJson(`${API_BASE}/admin/loan-requests/${id}/approve`, { method: "POST" });
+      refreshCurrentView(true);
     } catch {
       alert("Failed to approve request.");
+      refreshCurrentView(true);
     }
   };
 
-  const markAsReturned = async (id) => {
+  const rejectExtension = async (id) => {
+    setData((prev) => ({ ...prev, extensionRequests: prev.extensionRequests.map((req) => (getId(req) === id ? { ...req, status: "rejected" } : req)) }));
     try {
-      await fetchJson(`${API_BASE}/admin/loans/${id}/return`, {
-        method: "POST",
-      });
-      await refreshCurrentView();
+      await fetchJson(`${API_BASE}/admin/extension-requests/${id}/reject`, { method: "POST" });
+      refreshCurrentView(true);
     } catch {
-      alert("Failed to update return.");
+      alert("Failed to reject extension.");
+      refreshCurrentView(true);
     }
   };
 
   const approveExtension = async (id) => {
+    setData((prev) => ({ ...prev, extensionRequests: prev.extensionRequests.map((req) => (getId(req) === id ? { ...req, status: "approved" } : req)) }));
     try {
-      await fetchJson(`${API_BASE}/admin/extension-requests/${id}/approve`, {
-        method: "POST",
-      });
-      await refreshCurrentView();
+      await fetchJson(`${API_BASE}/admin/extension-requests/${id}/approve`, { method: "POST" });
+      refreshCurrentView(true);
     } catch {
       alert("Failed to approve extension.");
+      refreshCurrentView(true);
+    }
+  };
+
+  const markAsReturned = async (id) => {
+    setData((prev) => ({ ...prev, loans: prev.loans.map((loan) => (getId(loan) === id ? { ...loan, status: "returned" } : loan)) }));
+    try {
+      await fetchJson(`${API_BASE}/admin/loans/${id}/return`, { method: "POST" });
+      refreshCurrentView(true);
+    } catch {
+      alert("Failed to update return.");
+      refreshCurrentView(true);
     }
   };
 
   const updateOrderStatus = async (id, status) => {
+    setSelectedOrder((prev) => ({ ...prev, order_status: status }));
+    setData((prev) => ({
+      ...prev,
+      orders: prev.orders.map((o) => (o.id === id ? { ...o, order_status: status } : o)),
+    }));
     try {
       await fetchJson(`${API_BASE}/admin/orders/${id}/status`, {
         method: "PUT",
-
-        body: JSON.stringify({
-          order_status: status,
-        }),
+        body: JSON.stringify({ order_status: status }),
       });
-
-      // UPDATE MODAL
-      setSelectedOrder((prev) => ({
-        ...prev,
-        order_status: status,
-      }));
-
-      // UPDATE TABLE
-      setData((prev) => ({
-        ...prev,
-
-        orders: prev.orders.map((o) =>
-          o.id === id
-            ? {
-                ...o,
-                order_status: status,
-              }
-            : o,
-        ),
-      }));
+      refreshCurrentView(true);
     } catch {
       alert("Failed to update order status.");
+      refreshCurrentView(true);
     }
   };
 
@@ -563,24 +459,16 @@ export default function AdminPerpustakaan() {
 
   const badgeClass = (status) => {
     const s = String(status || "").toLowerCase();
-
-    if (s.includes("approved") || s.includes("selesai") || s.includes("returned") || s.includes("completed")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-
-    if (s.includes("pending") || s.includes("menunggu")) return "bg-amber-100 text-amber-700 border-amber-200";
-
-    if (s.includes("rejected") || s.includes("ditolak") || s.includes("cancelled")) return "bg-rose-100 text-rose-700 border-rose-200";
-
-    if (s.includes("processing") || s.includes("diproses")) return "bg-blue-100 text-blue-700 border-blue-200";
-
-    if (s.includes("shipping") || s.includes("dikirim")) return "bg-indigo-100 text-indigo-700 border-indigo-200";
-
+    if (s.includes("approved") || s.includes("finished") || s.includes("returned") || s.includes("completed")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    if (s.includes("pending") || s.includes("waiting")) return "bg-amber-100 text-amber-700 border-amber-200";
+    if (s.includes("rejected") || s.includes("denied") || s.includes("cancelled")) return "bg-rose-100 text-rose-700 border-rose-200";
+    if (s.includes("processing") || s.includes("processed")) return "bg-blue-100 text-blue-700 border-blue-200";
+    if (s.includes("shipping") || s.includes("shipped")) return "bg-indigo-100 text-indigo-700 border-indigo-200";
     return "bg-slate-100 text-slate-700 border-slate-200";
   };
 
   const getStatusLabel = (status, deliveryType) => {
     const s = String(status || "").toLowerCase();
-
-    // PICKUP
     if (deliveryType === "pickup") {
       const pickupMap = {
         waiting_payment: "Waiting Payment",
@@ -589,11 +477,8 @@ export default function AdminPerpustakaan() {
         completed: "Picked Up",
         cancelled: "Cancelled",
       };
-
       return pickupMap[s] || status;
     }
-
-    // DELIVERY
     const deliveryMap = {
       waiting_payment: "Waiting Payment",
       processing: "Processing",
@@ -604,30 +489,13 @@ export default function AdminPerpustakaan() {
       approved: "Approved",
       rejected: "Rejected",
     };
-
     return deliveryMap[s] || status;
   };
 
-  const Badge = ({ status, deliveryType }) => (
-    <span
-      className={`
-      inline-flex
-      items-center
-      rounded-full
-      border
-      px-2.5
-      py-0.5
-      text-xs
-      font-semibold
-      ${badgeClass(status)}
-    `}
-    >
-      {getStatusLabel(status, deliveryType)}
-    </span>
-  );
+  const Badge = ({ status, deliveryType }) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(status)}`}>{getStatusLabel(status, deliveryType)}</span>;
+
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-
     const match = (item) =>
       Object.values(item).some((v) =>
         String(v ?? "")
@@ -638,31 +506,23 @@ export default function AdminPerpustakaan() {
     if (activeTab === "pinjaman") return data.loans.filter((x) => !["returned", "selesai"].includes(x.status?.toLowerCase())).filter(match);
     if (activeTab === "anggota") return data.members.filter(match);
     if (activeTab === "pengembalian") return data.returns.filter(match);
-    if (activeTab === "ajukan") {
-      console.log("loanRequests:", data.loanRequests);
 
+    if (activeTab === "ajukan") {
       return data.loanRequests
         .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({
-          ...x,
-          _type: "loan_request",
-        }))
+        .map((x) => ({ ...x, _type: "loan_request" }))
         .filter(match);
     }
 
     if (activeTab === "perpanjangan") {
       return data.extensionRequests
         .filter((x) => !["approved", "rejected"].includes(x.status?.toLowerCase()))
-        .map((x) => ({
-          ...x,
-          _type: "extension_request",
-        }))
+        .map((x) => ({ ...x, _type: "extension_request" }))
         .filter(match);
     }
 
     if (activeTab === "buku") {
       const books = bookView === "loan" ? data.borrowBooks : data.shopBooks;
-
       return books.filter(match);
     }
 
@@ -675,9 +535,8 @@ export default function AdminPerpustakaan() {
     }
 
     return [];
-  }, [activeTab, data, query, orderStatusFilter]);
+  }, [activeTab, data, query, orderStatusFilter, bookView]);
 
-  const getId = (row) => row.loan_id || row.id;
   const columnsByTab = useMemo(
     () => ({
       buku:
@@ -688,7 +547,6 @@ export default function AdminPerpustakaan() {
               { key: "author", label: "Author" },
               { key: "category", label: "Category" },
               { key: "stock", label: "Stock" },
-
               {
                 key: "type",
                 label: "Type",
@@ -701,13 +559,11 @@ export default function AdminPerpustakaan() {
               { key: "author", label: "Author" },
               { key: "category", label: "Category" },
               { key: "stock", label: "Stock" },
-
               {
                 key: "price",
                 label: "Price",
                 render: (row) => `Rp ${Number(row.price || 0).toLocaleString("id-ID")}`,
               },
-
               {
                 key: "type",
                 label: "Type",
@@ -722,42 +578,23 @@ export default function AdminPerpustakaan() {
         {
           key: "loan_date",
           label: "Loan Date",
-          render: (row) =>
-            row.loan_date
-              ? new Date(row.loan_date).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
+          render: (row) => (row.loan_date ? new Date(row.loan_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"),
         },
         {
           key: "due_date",
           label: "Due Date",
-          render: (row) =>
-            row.due_date
-              ? new Date(row.due_date).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
+          render: (row) => (row.due_date ? new Date(row.due_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"),
         },
-        {
-          key: "status",
-          label: "Status",
-          render: (row) => <Badge status={row.status} />,
-        },
+        { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
         {
           key: "action",
           label: "Action",
           render: (row) => (
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => markAsReturned(getId(row))} className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => markAsReturned(getId(row))} className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all">
                 Complete
               </button>
-
-              <button type="button" onClick={() => printReceipt(row)} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => printReceipt(row)} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 active:scale-95 transition-all">
                 Print
               </button>
             </div>
@@ -780,16 +617,7 @@ export default function AdminPerpustakaan() {
         {
           key: "return_date",
           label: "Return Date",
-          render: (row) =>
-            row.return_date
-              ? new Date(row.return_date).toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "-",
+          render: (row) => (row.return_date ? new Date(row.return_date).toLocaleString("en-GB", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"),
         },
       ],
 
@@ -802,21 +630,16 @@ export default function AdminPerpustakaan() {
           label: "Request Date",
           render: (row) => (row.request_date ? new Date(row.request_date).toLocaleDateString("en-GB") : "-"),
         },
-        {
-          key: "status",
-          label: "Status",
-          render: (row) => <Badge status={row.status} />,
-        },
+        { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
         {
           key: "action",
           label: "Action",
           render: (row) => (
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => approveLoanRequest(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => approveLoanRequest(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 active:scale-95 transition-all">
                 Approve
               </button>
-
-              <button type="button" onClick={() => rejectLoanRequest(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => rejectLoanRequest(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 active:scale-95 transition-all">
                 Reject
               </button>
             </div>
@@ -830,21 +653,16 @@ export default function AdminPerpustakaan() {
         { key: "book_title", label: "Book" },
         { key: "old_due_date", label: "Old Due Date" },
         { key: "new_due_date", label: "New Due Date" },
-        {
-          key: "status",
-          label: "Status",
-          render: (row) => <Badge status={row.status} />,
-        },
+        { key: "status", label: "Status", render: (row) => <Badge status={row.status} /> },
         {
           key: "action",
           label: "Action",
           render: (row) => (
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => approveExtension(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => approveExtension(getId(row))} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 active:scale-95 transition-all">
                 Approve
               </button>
-
-              <button type="button" onClick={() => rejectExtension(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">
+              <button type="button" onClick={() => rejectExtension(getId(row))} className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 active:scale-95 transition-all">
                 Reject
               </button>
             </div>
@@ -853,46 +671,21 @@ export default function AdminPerpustakaan() {
       ],
 
       pesanan: [
-        {
-          key: "order_id",
-          label: "Order No.",
-        },
-
-        {
-          key: "user_id",
-          label: "Buyer",
-        },
-
-        {
-          key: "title",
-          label: "Book",
-        },
-
+        { key: "order_id", label: "Order No." },
+        { key: "user_id", label: "Buyer" },
+        { key: "title", label: "Book" },
         {
           key: "amount",
           label: "Total",
-
           render: (row) => (row.amount ? `Rp ${Number(row.amount).toLocaleString("id-ID")}` : "-"),
         },
-
-        {
-          key: "created_at",
-          label: "Date",
-        },
-
-        {
-          key: "status",
-          label: "Status",
-
-          render: (row) => <Badge status={row.order_status} deliveryType={row.delivery_type} />,
-        },
-
+        { key: "created_at", label: "Date" },
+        { key: "status", label: "Status", render: (row) => <Badge status={row.order_status} deliveryType={row.delivery_type} /> },
         {
           key: "action",
           label: "Action",
-
           render: (row) => (
-            <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 transition-colors">
+            <button type="button" onClick={() => setSelectedOrder(row)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 active:scale-95 transition-all">
               Manage
             </button>
           ),
@@ -905,56 +698,17 @@ export default function AdminPerpustakaan() {
   const getOrderSteps = (type) => {
     if (type === "pickup") {
       return [
-        {
-          key: "waiting_payment",
-          label: "Waiting Payment",
-          icon: Clock3,
-        },
-
-        {
-          key: "processing",
-          label: "Processing",
-          icon: RefreshCcw,
-        },
-
-        {
-          key: "ready_pickup",
-          label: "Ready Pickup",
-          icon: PackageCheck,
-        },
-
-        {
-          key: "completed",
-          label: "Completed",
-          icon: CheckCircle2,
-        },
+        { key: "waiting_payment", label: "Waiting Payment", icon: Clock3 },
+        { key: "processing", label: "Processing", icon: RefreshCcw },
+        { key: "ready_pickup", label: "Ready Pickup", icon: PackageCheck },
+        { key: "completed", label: "Completed", icon: CheckCircle2 },
       ];
     }
-
     return [
-      {
-        key: "waiting_payment",
-        label: "Waiting Payment",
-        icon: Clock3,
-      },
-
-      {
-        key: "processing",
-        label: "Processing",
-        icon: RefreshCcw,
-      },
-
-      {
-        key: "shipping",
-        label: "Shipping",
-        icon: Truck,
-      },
-
-      {
-        key: "completed",
-        label: "Completed",
-        icon: PackageCheck,
-      },
+      { key: "waiting_payment", label: "Waiting Payment", icon: Clock3 },
+      { key: "processing", label: "Processing", icon: RefreshCcw },
+      { key: "shipping", label: "Shipping", icon: Truck },
+      { key: "completed", label: "Completed", icon: PackageCheck },
     ];
   };
 
@@ -988,91 +742,19 @@ export default function AdminPerpustakaan() {
               </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Total</div>
-                <div className="font-bold text-blue-700">{order.amount ? `Rp ${Number(order.amount).toLocaleString("id-ID")}` : "-"}</div>{" "}
+                <div className="font-bold text-blue-700">{order.amount ? `Rp ${Number(order.amount).toLocaleString("id-ID")}` : "-"}</div>
               </div>
               <div className="rounded-lg bg-slate-50 p-3">
                 <div className="text-xs text-slate-400 mb-1">Date</div>
                 <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
               </div>
-              {/* DELIVERY ADDRESS */}
-              {order.delivery_type === "delivery" && order.address && (
-                <div className="col-span-2 rounded-lg bg-slate-50 p-3">
-                  <div className="text-xs text-slate-400 mb-1">Shipping Address</div>
-
-                  <div className="font-semibold text-slate-800">{order.address}</div>
-                </div>
-              )}
-
-              {/* PICKUP ADDRESS */}
-              {order.delivery_type === "pickup" && (
-                <div className="col-span-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
-                  <div className="text-xs text-emerald-600 mb-1">Pickup Location</div>
-
-                  <div className="font-semibold text-emerald-800">BukuIn Library</div>
-
-                  <div className="text-sm text-emerald-700 mt-1">Jl. Ketintang, Surabaya</div>
-
-                  <div className="text-sm text-emerald-700">08.00 - 16.00 WIB</div>
-                </div>
-              )}
             </div>
-
-            {!isCancelled && (
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Order Tracking</div>
-                <div className="relative">
-                  <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-slate-200"></div>
-                  <div className="space-y-3">
-                    {orderSteps.map((step, idx) => {
-                      const done = idx <= currentStep;
-                      const active = idx === currentStep;
-                      const StepIcon = step.icon;
-
-                      return (
-                        <div key={step.key} className="relative flex items-start gap-3 pl-10">
-                          <div
-                            className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
-                              done ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300 text-slate-400"
-                            } ${active ? "ring-4 ring-blue-100" : ""}`}
-                          >
-                            {done ? <CheckCircle2 className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
-                          </div>
-                          <div className={`pt-0.5 ${done ? "opacity-100" : "opacity-40"}`}>
-                            <div className={`text-sm font-semibold ${active ? "text-blue-700" : "text-slate-700"}`}>{step.label}</div>
-                            <div className="text-xs text-slate-400">{step.desc}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isCancelled && <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700 font-medium text-center">This order has been cancelled</div>}
           </div>
 
           <div className="border-t border-slate-100 px-6 py-4 flex gap-3 flex-wrap">
             {nextStatus && !isCancelled && (
-              <button
-                type="button"
-                onClick={async () => {
-                  await updateOrderStatus(order.id, nextStatus);
-                }}
-                className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
+              <button type="button" onClick={() => updateOrderStatus(order.id, nextStatus)} className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
                 Move to: {orderSteps.find((s) => s.key === nextStatus)?.label}
-              </button>
-            )}
-            {!["completed", "cancelled"].includes(order.order_status?.toLowerCase()) && (
-              <button
-                type="button"
-                onClick={async () => {
-                  await updateOrderStatus(order.id, "cancelled");
-                }}
-                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-100 transition-colors"
-              >
-                Cancel
               </button>
             )}
             <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
@@ -1084,282 +766,110 @@ export default function AdminPerpustakaan() {
     );
   };
 
-  const orderStats = useMemo(() => {
-    const orders = data.orders;
-    return {
-      total: orders.length,
-      pending: orders.filter((o) => o.order_status?.toLowerCase() === "waiting_payment").length,
-      processing: orders.filter((o) => o.order_status?.toLowerCase() === "processing").length,
-      shipping: orders.filter((o) => o.order_status?.toLowerCase() === "shipping").length,
-
-      pickupReady: orders.filter((o) => o.order_status?.toLowerCase() === "ready_pickup").length,
-      completed: orders.filter((o) => o.order_status?.toLowerCase() === "completed").length,
-    };
-  }, [data.orders]);
-
-  const activeTabInfo = tabs.find((t) => t.key === activeTab);
-  const currentLoadingKey = getTabKey(activeTab, bookView);
-  const isTabLoading = !!loadingTabs[currentLoadingKey];
-  const currentColumns = columnsByTab[activeTab] || [];
-
   return (
-    <div className="min-h-screen bg-[#f4f7fb] text-slate-900">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-        * {
-          font-family: 'Inter', sans-serif;
-        }
-
-        body {
-          background: #f4f7fb;
-        }
-
-        .sidebar-item {
-          transition: all .2s ease;
-          position: relative;
-        }
-
-        .sidebar-item.active {
-          background: linear-gradient(135deg, #2563eb, #1d4ed8);
-          color: white;
-          box-shadow: 0 10px 25px rgba(37,99,235,.18);
-        }
-
-        .sidebar-item:hover:not(.active) {
-          background: #eff6ff;
-          color: #2563eb;
-        }
-
-        ::-webkit-scrollbar {
-          width: 5px;
-          height: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 999px;
-        }
-      `}</style>
-
-      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl">
-        <div className="flex items-center gap-4 px-6 py-3">
-          <button type="button" onClick={() => setSidebarOpen((p) => !p)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 transition-colors lg:hidden">
-            <Menu className="w-5 h-5" />
+    <div className="flex h-screen w-full bg-slate-50 text-slate-900 font-sans">
+      <aside className={`${sidebarOpen ? "w-64" : "w-20"} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col z-20`}>
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
+          {sidebarOpen && <span className="font-bold text-xl text-blue-600 tracking-tight">BukuIn Admin</span>}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors mx-auto">
+            <Menu size={20} />
           </button>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <LayoutDashboard className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-black text-slate-800 text-lg hidden sm:block">Library Dashboard</span>
-          </div>
-
-          <div className="flex-1" />
-
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search data..."
-              className="w-64 rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm outline-none focus:border-blue-400 focus:bg-white transition-colors"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="flex items-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all"
-          >
-            <Printer className="w-4 h-4" />
-            Print
-          </button>
-
-          <div className="relative" ref={profileMenuRef}>
-            <button
-              type="button"
-              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-              className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 ring-2 ring-white hover:shadow-xl transition-all cursor-pointer"
-            >
-              {adminName}
-            </button>
-
-            {/* Profile Dropdown Menu */}
-            {profileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-semibold text-gray-800">Admin Profile</p>
-                </div>
-
-                <button type="button" onClick={confirmLogout} className="w-full px-4 py-3 flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors text-sm font-semibold">
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-      </header>
-
-      <div className="flex">
-        <aside className={`${sidebarOpen ? "w-72" : "w-20"} shrink-0 transition-all duration-300 h-[calc(100vh-53px)] sticky top-13.25 overflow-hidden border-r border-slate-200/70 bg-white/90 backdrop-blur-xl flex flex-col select-none`}>
-          <div className="flex-1 overflow-y-auto py-4 px-3">
-            <div className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Navigation</div>
-
-            {tabs.map((tab) => (
+        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-3">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
               <button
                 key={tab.key}
-                type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`sidebar-item w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold mb-2 text-left ${activeTab === tab.key ? "active" : "text-slate-600"} ${!sidebarOpen ? "justify-center px-0" : ""}`}
-                title={tab.label}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive ? "bg-blue-50 text-blue-700 font-semibold shadow-sm" : "text-slate-600 hover:bg-slate-100"} ${!sidebarOpen && "justify-center"}`}
+                title={!sidebarOpen ? tab.label : undefined}
               >
-                <div className="shrink-0">
-                  <tab.icon size={18} strokeWidth={2.2} />
-                </div>
-
-                <span className={`truncate transition-all duration-300 ${sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}>{tab.label}</span>
+                <Icon size={20} className={isActive ? "text-blue-600" : "text-slate-400"} />
+                {sidebarOpen && <span className="truncate">{tab.label}</span>}
               </button>
-            ))}
+            );
+          })}
+        </nav>
+      </aside>
+
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shrink-0">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative w-full max-w-md hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search records..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              />
+            </div>
           </div>
 
-          <div className="border-t border-slate-100 p-3">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen((p) => !p)}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2.5 text-xs font-semibold text-blue-600 hover:from-blue-100 hover:to-indigo-100 transition-all shadow-sm"
-            >
-              {sidebarOpen ? (
-                <>
-                  <ChevronLeft className="w-4 h-4" />
-                  Collapse
-                </>
-              ) : (
-                <>
-                  <ChevronRight className="w-4 h-4" />
-                  Expand
-                </>
-              )}
+          <div className="flex items-center gap-3">
+            <button onClick={() => refreshCurrentView(true)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2" title="Refresh Data">
+              <RefreshCcw size={18} className={loadingDashboard ? "animate-spin" : ""} />
             </button>
-          </div>
-        </aside>
-
-        <main className="flex-1 min-w-0 p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">{activeTabInfo?.label}</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage all library data with a modern dashboard.</p>
-          </div>
-
-          {activeTab !== "pesanan" && (
-            <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: "Total Loans", value: data.summary.total_loans, Icon: TrendingUp, color: "blue" },
-                { label: "Total Members", value: data.summary.total_members, Icon: UserCheck, color: "indigo" },
-                { label: "Returned", value: data.summary.total_returns, Icon: RotateCw, color: "emerald" },
-                { label: "Total Requests", value: data.summary.total_requests, Icon: ClipboardCheck, color: "amber" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-5 shadow-lg shadow-slate-200/40 hover:-translate-y-1 hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between mb-3">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color === "blue" ? "bg-blue-50 text-blue-600" : stat.color === "indigo" ? "bg-indigo-50 text-indigo-600" : stat.color === "emerald" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}
-                    >
-                      <stat.Icon className="w-5 h-5" />
-                    </div>
-                    <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${statColorMap[stat.color]}`}>Data</span>
-                  </div>
-                  <div className="text-3xl font-black text-slate-900">{stat.value ?? 0}</div>
-                  <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "pesanan" && (
-           <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-6">
-              {[
-                { label: "Total Orders", value: orderStats.total, Icon: ShoppingCart, bg: "bg-slate-100", text: "text-slate-700", iconColor: "text-slate-600" },
-                { label: "Pending", value: orderStats.pending, Icon: Clock3, bg: "bg-amber-50", text: "text-amber-700", iconColor: "text-amber-600" },
-                { label: "Processing", value: orderStats.processing, Icon: RefreshCcw, bg: "bg-blue-50", text: "text-blue-700", iconColor: "text-blue-600" },
-                { label: "Shipping", value: orderStats.shipping, Icon: Truck, bg: "bg-indigo-50", text: "text-indigo-700", iconColor: "text-indigo-600" },
-
-                {
-                  label: "Ready Pickup",
-                  value: orderStats.pickupReady,
-                  Icon: PackageCheck,
-                  bg: "bg-cyan-50",
-                  text: "text-cyan-700",
-                  iconColor: "text-cyan-600",
-                },
-
-                { label: "Completed", value: orderStats.completed, Icon: CheckCircle2, bg: "bg-emerald-50", text: "text-emerald-700", iconColor: "text-emerald-600" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-4 shadow-lg shadow-slate-200/40">
-                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${stat.bg} ${stat.iconColor} mb-2`}>
-                    <stat.Icon className="w-5 h-5" />
-                  </div>
-                  <div className={`text-2xl font-black ${stat.text}`}>{stat.value}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "pesanan" && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setOrderStatusFilter("all")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${orderStatusFilter === "all" ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
-              >
-                All
+            <button onClick={handlePrint} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Print Monthly Report">
+              <Printer size={18} />
+            </button>
+            <div className="w-px h-6 bg-slate-200 mx-2"></div>
+            <div className="relative" ref={profileMenuRef}>
+              <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm ring-2 ring-white">
+                {adminName}
               </button>
-
-              {[
-                {
-                  key: "waiting_payment",
-                  label: "Waiting Payment",
-                },
-
-                {
-                  key: "processing",
-                  label: "Processing",
-                },
-
-                {
-                  key: "ready_pickup",
-                  label: "Ready Pickup",
-                },
-
-                {
-                  key: "shipping",
-                  label: "Shipping",
-                },
-
-                {
-                  key: "completed",
-                  label: "Completed",
-                },
-              ].map((s) => (
-                <button
-                  type="button"
-                  key={s.key}
-                  onClick={() => setOrderStatusFilter(s.key)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${orderStatusFilter === s.key ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
-                >
-                  {s.label}
-                </button>
-              ))}
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden z-50 py-1">
+                  <button onClick={confirmLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors text-left font-medium">
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </header>
 
-          <div className="mb-4 sm:hidden">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search data..."
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400 transition-colors"
-            />
+        <div className="flex-1 overflow-auto bg-slate-50/50 p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+                <BookOpen size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Total Loans</p>
+                <h4 className="text-2xl font-bold text-slate-900">{data.summary.total_loans || 0}</h4>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600">
+                <Users size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Members</p>
+                <h4 className="text-2xl font-bold text-slate-900">{data.summary.total_members || 0}</h4>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600">
+                <RotateCcw size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Returns</p>
+                <h4 className="text-2xl font-bold text-slate-900">{data.summary.total_returns || 0}</h4>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+                <ShoppingCart size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Pending Orders</p>
+                <h4 className="text-2xl font-bold text-slate-900">{data.summary.pending_orders || 0}</h4>
+              </div>
+            </div>
           </div>
 
           {activeTab === "buku" && (
@@ -1390,81 +900,70 @@ export default function AdminPerpustakaan() {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-slate-200/40">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    {currentColumns.map((col) => (
-                      <th key={col.key} className="px-4 py-4 text-xs font-bold uppercase tracking-wide text-slate-500">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto min-h-100">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    {columnsByTab[activeTab]?.map((col, i) => (
+                      <th key={i} className="px-6 py-4 font-semibold text-slate-700 whitespace-nowrap">
                         {col.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
-
                 <tbody className="divide-y divide-slate-100">
-                  {loadingDashboard || isTabLoading ? (
-                    <tr>
-                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center">
-                        <div className="inline-flex flex-col items-center gap-3 text-slate-400">
-                          <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
-                          <span className="text-sm font-medium">Loading data...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={currentColumns.length} className="px-4 py-16 text-center text-slate-400">
-                        No data found.
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map((row, index) => (
-                      <tr key={row.loan_id || row.id} className="hover:bg-slate-50/70 transition-colors">
-                        {currentColumns.map((col) => (
-                          <td key={col.key} className="px-4 py-4 text-slate-700">
-                            {col.render ? col.render(row, index) : (row[col.key] ?? "-")}
+                  {filtered.length > 0 ? (
+                    filtered.map((row, rowIndex) => (
+                      <tr key={getId(row) || rowIndex} className="hover:bg-slate-50/80 transition-colors group">
+                        {columnsByTab[activeTab]?.map((col, colIndex) => (
+                          <td key={colIndex} className="px-6 py-4 text-slate-600">
+                            {col.render ? col.render(row, rowIndex) : row[col.key] || "-"}
                           </td>
                         ))}
                       </tr>
                     ))
+                  ) : (
+                    <tr>
+                      <td colSpan={columnsByTab[activeTab]?.length || 1} className="px-6 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3 text-slate-400">
+                          <ClipboardCheck className="w-10 h-10 text-slate-300" />
+                          <p className="text-base font-medium">No records found</p>
+                        </div>
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {!loadingDashboard && !isTabLoading && filtered.length > 0 && <div className="mt-3 text-xs text-slate-400 text-right">Showing {filtered.length} data</div>}
-        </main>
-      </div>
-
-      {/* ═══════════ LOGOUT CONFIRMATION MODAL ═══════════ */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 shadow-2xl">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="border-t border-slate-200 bg-slate-50 px-6 py-3 text-xs text-slate-500 flex justify-between items-center">
+              <span>Showing {filtered.length} entries</span>
             </div>
+          </div>
+        </div>
+      </main>
 
-            <h3 className="text-center text-lg font-black text-gray-800 mb-2">Confirm Logout</h3>
-
-            <p className="text-center text-gray-600 text-sm mb-6">Are you sure you want to logout? You will need to login again to access the library dashboard.</p>
-
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center space-y-6">
+            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+              <LogOut size={28} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Confirm Logout</h3>
+              <p className="text-slate-500 text-sm px-4">Are you sure you want to log out?</p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">
                 Cancel
               </button>
-
-              <button type="button" onClick={handleLogout} className="flex-1 px-4 py-3 rounded-2xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors">
-                Logout
+              <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-colors">
+                Yes, Logout
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {selectedOrder && <OrderModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
     </div>
   );
 }

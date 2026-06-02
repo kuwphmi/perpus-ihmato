@@ -128,79 +128,70 @@ export default function Belanja() {
     }, 3000);
   };
   const genreMap = {
-      Art: "art",
-      "Science Fiction": "science fiction",
-      Fantasy: "fantasy",
-      Biographies: "biographies",
-      Recipe: "recipe",
-      Romance: "romance",
-      Textbook: "textbook",
-      Children: "children",
-      Medicine: "medicine",
-      Religion: "religion",
-    };
+    Art: "art",
+    "Science Fiction": "science fiction",
+    Fantasy: "fantasy",
+    Biographies: "biographies",
+    Recipe: "recipe",
+    Romance: "romance",
+    Textbook: "textbook",
+    Children: "children",
+    Medicine: "medicine",
+    Religion: "religion",
+  };
 
   const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
-const fetchGenreBooks = (category) => {
-  if (activeCategory === category) {
-    setActiveCategory(null);
-    setGenreBooks([]);
-    setMode("default");
-    return;
-  }
+  const fetchGenreBooks = (category) => {
+    if (activeCategory === category) {
+      setActiveCategory(null);
+      setGenreBooks([]);
+      setMode("default");
+      return;
+    }
 
-  const query =
-    genreMap[category] ||
-    category.toLowerCase();
+    const query = genreMap[category] || category.toLowerCase();
 
-  const localGenreBooks = localBooks.filter(
-    (book) =>
-      normalize(book.category).includes(normalize(query))
-  );
+    const localGenreBooks = localBooks.filter((book) => normalize(book.category).includes(normalize(query)));
 
-  setGenreBooks(localGenreBooks);
-  setActiveCategory(category);
-  setMode("genre");
+    setGenreBooks(localGenreBooks);
+    setActiveCategory(category);
+    setMode("genre");
 
-  setTimeout(() => {
-    genreSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, 100);
-};
+    setTimeout(() => {
+      genreSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+  };
   /* ================= FETCH DATA ================= */
   useEffect(() => {
-     // FETCH LOCAL BOOKS
-   fetch("http://localhost:3000/api/buku/shop")
-    .then((res) => res.json())
-    .then((localData) => {
-      console.log("LOCAL DATA:", localData);
-     const booksArray = Array.isArray(localData.data)
-        ? localData.data
-        : Array.isArray(localData)
-        ? localData
-        : [];
-    const localBooksFormatted = booksArray.map((item) => {
-      console.log("LOCAL ITEM:", item);
+    // FETCH LOCAL BOOKS
+    fetch("http://localhost:3000/api/buku/shop")
+      .then((res) => res.json())
+      .then((localData) => {
+        console.log("LOCAL DATA:", localData);
+        const booksArray = Array.isArray(localData.data) ? localData.data : Array.isArray(localData) ? localData : [];
+        const localBooksFormatted = booksArray.map((item) => {
+          console.log("LOCAL ITEM:", item);
 
-      return {
-        workKey: `local-${item.id}`,
-        title: item.title || "-",
-        author: item.author || "-",
-        cover_url: item.cover || null,
-        isLocal: true,
-        category: item.category || "other",
-        description: item.description || "No description available.",
-        price: item.price || 50000,
-        stock: item.stock || 0,
-      };
-    });
-      console.log("LOCAL FORMATTED:", localBooksFormatted);
-      setLocalBooks(localBooksFormatted);
-    });
-    }, []);
+          return {
+            workKey: `local-${item.id}`,
+            title: item.title || "-",
+            author: item.author || "-",
+            cover_url: item.cover || null,
+            isLocal: true,
+            category: item.category || "other",
+            description: item.description || "No description available.",
+            price: item.price || 50000,
+            stock: item.stock || 0,
+          };
+        });
+        console.log("LOCAL FORMATTED:", localBooksFormatted);
+        setLocalBooks(localBooksFormatted);
+      });
+  }, []);
 
   /* ================= FETCH CART ================= */
   useEffect(() => {
@@ -256,43 +247,33 @@ const fetchGenreBooks = (category) => {
 
   /* ================= SEARCH ================= */
 
-const handleSearch = async () => {
-  if (!search.trim()) return;
-  setIsSearching(true);
+  const handleSearch = async () => {
+    if (!search.trim()) return;
+    setIsSearching(true);
 
-  try {
+    try {
       await axios.post("http://localhost:3000/api/search-history", {
         user_id: user.id,
         keyword: search,
         source: "belanja",
-
-      }
-    );
-      // FILTER LOCAL BOOKS
-    const filteredLocalBooks = localBooks.filter(
-        (book) =>
-          normalize(book.title).includes(
-            normalize(search)
-          ) ||
-          normalize(book.author).includes(
-            normalize(search)
-          )
-      );
-   
-    setSearchResults(filteredLocalBooks);
-    setMode("search");
-
-    setTimeout(() => {
-      genreSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
       });
-    }, 100);
-  } catch (err) {
-    console.log(err);
-  } finally {
-    setIsSearching(false);
-  }
-};
+      // FILTER LOCAL BOOKS
+      const filteredLocalBooks = localBooks.filter((book) => normalize(book.title).includes(normalize(search)) || normalize(book.author).includes(normalize(search)));
+
+      setSearchResults(filteredLocalBooks);
+      setMode("search");
+
+      setTimeout(() => {
+        genreSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const categories = [
     {
@@ -533,7 +514,6 @@ const handleSearch = async () => {
                 <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
                   {user.profile_image ? <img src={user.profile_image} alt="profile" className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
-
               </button>
 
               {/* DROPDOWN */}
@@ -674,98 +654,93 @@ const handleSearch = async () => {
       </section>
 
       {/* ================= GENRE RESULT ================= */}
-{activeCategory && (
-  <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
-    <div className="flex gap-5 overflow-x-auto">
-      {genreBooks.map((book, index) => (
-        <div key={index} className="min-w-[250px]">
-          <BookCard
-            workKey={book.workKey}
-            title={book.title}
-            author={book.author}
-            isLocal={book.isLocal}
-            cover_url={book.cover_url}
-            price={book.price}
-            stock={book.stock}
-            cart={cart}
-            setCart={setCart}
-            setIsBuyOpen={setIsBuyOpen}
-            setSelectedBook={setSelectedBook}
-            showNotif={showNotif}
-          />
-        </div>
-      ))}
-    </div>
-  </section>
-)}
-
-{mode === "search" ? (
-  <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      Search: "{search}"
-    </h2>
-
-    {searchResults.length === 0 ? (
-      <div className="text-center text-gray-500">Book not found.</div>
-    ) : (
-      <div className="flex gap-5 overflow-x-auto">
-        {searchResults.map((book, index) => (
-          <div key={index} className="min-w-[250px]">
-            <BookCard
-              workKey={book.workKey}
-              title={book.title}
-              author={book.author}
-              isLocal={book.isLocal}
-              cover_url={book.cover_url}
-              price={book.price}
-              stock={book.stock}
-              localdescription={book.description}
-              category={book.category}
-              cart={cart}
-              setCart={setCart}
-              setIsBuyOpen={setIsBuyOpen}
-              setSelectedBook={setSelectedBook}
-              showNotif={showNotif}
-            />
+      {activeCategory && (
+        <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
+          <div className="flex gap-5 overflow-x-auto">
+            {genreBooks.map((book, index) => (
+              <div key={index} className="min-w-62.5">
+                <BookCard
+                  workKey={book.workKey}
+                  title={book.title}
+                  author={book.author}
+                  isLocal={book.isLocal}
+                  cover_url={book.cover_url}
+                  price={book.price}
+                  stock={book.stock}
+                  cart={cart}
+                  setCart={setCart}
+                  setIsBuyOpen={setIsBuyOpen}
+                  setSelectedBook={setSelectedBook}
+                  showNotif={showNotif}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    )}
-  </section>
-) : (
-  <section className="px-6 md:px-20 pb-14 mt-10">
-    <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">
-      All Books
-    </h2>
+        </section>
+      )}
 
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-      {filterBooks(localBooks).map((book, index) => (
-        <BookCard
-          key={index}
-          workKey={book.workKey}
-          title={book.title}
-          author={book.author}
-          isLocal={book.isLocal}
-          cover_url={book.cover_url}
-          price={book.price}
-          stock={book.stock}
-          localdescription={book.description}
-          cart={cart}
-          setCart={setCart}
-          setIsBuyOpen={setIsBuyOpen}
-          setSelectedBook={setSelectedBook}
-          showNotif={showNotif}
-        />
-      ))}
-    </div>
-  </section>
-)}
- 
+      {mode === "search" ? (
+        <section ref={genreSectionRef} className="px-6 md:px-20 pb-14 mt-10">
+          <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">Search: "{search}"</h2>
+
+          {searchResults.length === 0 ? (
+            <div className="text-center text-gray-500">Book not found.</div>
+          ) : (
+            <div className="flex gap-5 overflow-x-auto">
+              {searchResults.map((book, index) => (
+                <div key={index} className="min-w-62.5">
+                  <BookCard
+                    workKey={book.workKey}
+                    title={book.title}
+                    author={book.author}
+                    isLocal={book.isLocal}
+                    cover_url={book.cover_url}
+                    price={book.price}
+                    stock={book.stock}
+                    localdescription={book.description}
+                    category={book.category}
+                    cart={cart}
+                    setCart={setCart}
+                    setIsBuyOpen={setIsBuyOpen}
+                    setSelectedBook={setSelectedBook}
+                    showNotif={showNotif}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="px-6 md:px-20 pb-14 mt-10">
+          <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">All Books</h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            {filterBooks(localBooks).map((book, index) => (
+              <BookCard
+                key={index}
+                workKey={book.workKey}
+                title={book.title}
+                author={book.author}
+                isLocal={book.isLocal}
+                cover_url={book.cover_url}
+                price={book.price}
+                stock={book.stock}
+                localdescription={book.description}
+                cart={cart}
+                setCart={setCart}
+                setIsBuyOpen={setIsBuyOpen}
+                setSelectedBook={setSelectedBook}
+                showNotif={showNotif}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* FLOATING AI */}
-<div className="fixed bottom-6 right-6 z-50">
-  <Floating />
-</div>
+      <div className="fixed bottom-6 right-6 z-50">
+        <Floating />
+      </div>
 
       {/* FOOTER */}
       <footer className="mt-20 bg-gray-900 text-white">
@@ -811,21 +786,7 @@ const handleSearch = async () => {
 }
 
 /* ================= BOOK CARD ================= */
-function BookCard({
-  workKey,
-  title,
-  author,
-  price,
-  stock,
-  isLocal,
-  cover_url,
-  localdescription,
-  cart,
-  setCart,
-  setIsBuyOpen,
-  setSelectedBook,
-  showNotif = () => {},
-}){
+function BookCard({ workKey, title, author, price, stock, isLocal, cover_url, localdescription, cart, setCart, setIsBuyOpen, setSelectedBook, showNotif = () => {} }) {
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
@@ -859,7 +820,6 @@ function BookCard({
             price,
             qty: 1,
             cover: imageSrc,
-
           },
         ],
       },
@@ -867,11 +827,8 @@ function BookCard({
   };
   // ================= TAMBAH KERANJANG =================
   const tambahKeKeranjang = async () => {
-
-  try {
-     const user =
-      JSON.parse(
-        localStorage.getItem("user"));
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user) {
         return showNotif("Please login first");
@@ -886,24 +843,19 @@ function BookCard({
         stock,
       };
 
+      await axios.post("http://localhost:3000/api/cart", payload);
 
-     await axios.post("http://localhost:3000/api/cart", payload);
+      // REFRESH CART
+      const cartRes = await axios.get(`http://localhost:3000/api/cart/${user.id}`);
 
-     // REFRESH CART
-     const cartRes = await axios.get(
-      `http://localhost:3000/api/cart/${user.id}`
-     );
+      setCart(cartRes.data.data || []);
 
-     setCart(cartRes.data.data || []);
-
-    showNotif("Success add to cart");
-
-  } catch (err) {
-    console.log(err);
-    showNotif("Failed to add cart");
-  }
-};
-
+      showNotif("Success add to cart");
+    } catch (err) {
+      console.log(err);
+      showNotif("Failed to add cart");
+    }
+  };
 
   return (
     <>
@@ -912,19 +864,7 @@ function BookCard({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-9999 px-4" onClick={() => setShowDetail(false)}>
           <div className="bg-white w-[88%] max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-fadeIn" onClick={(e) => e.stopPropagation()}>
             {/* COVER */}
-            <div className="h-52 md:h-64 bg-blue-100">
-            {imageSrc ? (
-            <img
-              src={imageSrc}
-              className="w-full h-full object-cover"
-              alt={title}
-            />
-          ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  No Cover
-                </div>
-              )}
-              </div>
+            <div className="h-52 md:h-64 bg-blue-100">{imageSrc ? <img src={imageSrc} className="w-full h-full object-cover" alt={title} /> : <div className="w-full h-full flex items-center justify-center">No Cover</div>}</div>
 
             {/* CONTENT */}
             <div className="p-5">
@@ -959,14 +899,11 @@ function BookCard({
               </div>
 
               {/* BUTTON */}
-<div className="flex gap-2">
-
-  <button
-    type="button"
-    onClick={() =>
-      tambahKeKeranjang()
-    }
-    className="
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => tambahKeKeranjang()}
+                  className="
       flex-1
       border
       border-blue-600
@@ -978,13 +915,13 @@ function BookCard({
       font-medium
       transition
     "
-  >
-    Cart
-  </button>
+                >
+                  Cart
+                </button>
 
-  <button
-    onClick={handleBuy}
-    className="
+                <button
+                  onClick={handleBuy}
+                  className="
       flex-1
       bg-blue-600
       hover:bg-blue-700
@@ -995,11 +932,10 @@ function BookCard({
       font-semibold
       transition
     "
-  >
-    Buy
-  </button>
-
-</div>
+                >
+                  Buy
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1020,22 +956,10 @@ function BookCard({
 
       {/* ================= CARD ================= */}
 
-      <div className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 w-[250px] flex flex-col">
-
-        <div className="relative h-52 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
-          <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-semibold text-blue-700 shadow">
-            Bestseller
-          </div>
-            {imageSrc ? (
-            <img
-              src={imageSrc}
-              
-              className="w-full h-full object-cover"
-              alt={title}
-            />
-          ) : (
-            <div className="text-xs text-gray-400">No Cover</div>
-          )}
+      <div className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 w-62.5 flex flex-col">
+        <div className="relative h-52 bg-linear-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
+          <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-semibold text-blue-700 shadow">Bestseller</div>
+          {imageSrc ? <img src={imageSrc} className="w-full h-full object-cover" alt={title} /> : <div className="text-xs text-gray-400">No Cover</div>}
         </div>
 
         <div className="p-4 flex flex-col h-52.5">
@@ -1183,7 +1107,6 @@ function BukuTerbaru({ data, cart, setCart, setIsBuyOpen, setSelectedBook, showN
           ))}
         </div>
       </section>
-
     </>
   );
 }

@@ -83,34 +83,34 @@ function Beranda() {
   ];
 
   const features = [
-  {
-    icon: <FiTrendingDown className="text-2xl text-white" />,
-    title: "Cost-Effective Operations",
-    desc: "Manage your library without complicated infrastructure such as servers or dedicated rooms.",
-  },
-  {
-    icon: <FiUser className="text-2xl text-white" />,
-    title: "Easy to Use",
-    desc: "Designed to be simple and comfortable for everyone across multiple devices.",
-  },
-  {
-    icon: <FiBookOpen className="text-2xl text-white" />,
-    title: "Complete & Diverse Collection",
-    desc: "A wide variety of content is available to meet your reading needs.",
-  },
-  {
-    icon: <FiShield className="text-2xl text-white" />,
-    title: "Reliable Full Support",
-    desc: "Supported by a professional team ready to assist your operations smoothly.",
-  },
-];
+    {
+      icon: <FiTrendingDown className="text-2xl text-white" />,
+      title: "Cost-Effective Operations",
+      desc: "Manage your library without complicated infrastructure such as servers or dedicated rooms.",
+    },
+    {
+      icon: <FiUser className="text-2xl text-white" />,
+      title: "Easy to Use",
+      desc: "Designed to be simple and comfortable for everyone across multiple devices.",
+    },
+    {
+      icon: <FiBookOpen className="text-2xl text-white" />,
+      title: "Complete & Diverse Collection",
+      desc: "A wide variety of content is available to meet your reading needs.",
+    },
+    {
+      icon: <FiShield className="text-2xl text-white" />,
+      title: "Reliable Full Support",
+      desc: "Supported by a professional team ready to assist your operations smoothly.",
+    },
+  ];
 
- const stats = [
-  { value: "10,000+", label: "Book Collections" },
-  { value: "5,000+", label: "Active Users" },
-  { value: "200+", label: "Libraries" },
-  { value: "99%", label: "User Satisfaction" },
-];
+  const stats = [
+    { value: "10,000+", label: "Book Collections" },
+    { value: "5,000+", label: "Active Users" },
+    { value: "200+", label: "Libraries" },
+    { value: "99%", label: "User Satisfaction" },
+  ];
 
   useEffect(() => {
     if (isLoading) {
@@ -161,13 +161,7 @@ function Beranda() {
                   setTimeout(() => setIsClicking(false), 500);
                 }}
                 className={`text-sm font-medium transition-colors ${
-                  activeSection === item.id
-                    ? scrolled
-                      ? "text-blue-700 font-semibold"
-                      : "text-white font-semibold"
-                    : scrolled
-                      ? "text-gray-600 hover:text-blue-700"
-                      : "text-white/90 hover:text-white"
+                  activeSection === item.id ? (scrolled ? "text-blue-700 font-semibold" : "text-white font-semibold") : scrolled ? "text-gray-600 hover:text-blue-700" : "text-white/90 hover:text-white"
                 }`}
               >
                 {item.label}
@@ -183,10 +177,7 @@ function Beranda() {
 
           {/* Mobile */}
           <div className="md:hidden flex items-center gap-2">
-            <button
-              onClick={() => navigate("/login")}
-              className={`${scrolled ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-blue-700 hover:bg-slate-100"} text-xs font-medium px-4 py-1.5 rounded-full transition-all`}
-            >
+            <button onClick={() => navigate("/login")} className={`${scrolled ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-blue-700 hover:bg-slate-100"} text-xs font-medium px-4 py-1.5 rounded-full transition-all`}>
               Login
             </button>
             <button onClick={() => setMenuOpen(true)} className={`text-2xl ${scrolled ? "text-blue-700" : "text-white"}`}>
@@ -223,9 +214,7 @@ function Beranda() {
                   document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
                   setActiveSection(item.id);
                 }}
-                className={`px-4 py-3 rounded-lg text-sm font-medium transition ${
-                  activeSection === item.id ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition ${activeSection === item.id ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"}`}
               >
                 {item.label}
               </button>
@@ -259,16 +248,10 @@ function Beranda() {
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 md:px-10 text-center py-12">
           <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
             <img src={logo} alt="BookIn" className="w-6 h-6 md:w-8 md:h-8" />
-            <span className="uppercase tracking-[0.35em] text-xs text-white font-semibold inline-block">
-              Modern Library Platform
-            </span>
+            <span className="uppercase tracking-[0.35em] text-xs text-white font-semibold inline-block">Modern Library Platform</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 md:mb-6">
-            Build a smarter, faster library experience.
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-white/90 leading-relaxed mb-6 md:mb-10 max-w-2xl mx-auto">
-            BookIn brings your collection, members, and loan workflow into one polished interface designed for modern libraries.
-          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 md:mb-6">Build a smarter, faster library experience.</h1>
+          <p className="text-xs sm:text-sm md:text-base text-white/90 leading-relaxed mb-6 md:mb-10 max-w-2xl mx-auto">BookIn brings your collection, members, and loan workflow into one polished interface designed for modern libraries.</p>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
             <button
               onClick={() => navigate("/login")}
@@ -295,7 +278,7 @@ function Beranda() {
       </section>
 
       {/* STATS */}
-      <div className="bg-gradient-to-b from-white to-blue-50 py-20 md:py-28 px-4 md:px-6">
+      <div className="bg-linear-to-b from-white to-blue-50 py-20 md:py-28 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">Trusted by Libraries Worldwide</h2>
@@ -332,7 +315,12 @@ function Beranda() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {features.map((f, i) => (
-                <div key={i} data-aos="fade-up" data-aos-delay={i * 100} className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-3xl shadow-sm hover:shadow-md border border-blue-100 hover:border-blue-300 transition-all duration-300 hover:-translate-y-1">
+                <div
+                  key={i}
+                  data-aos="fade-up"
+                  data-aos-delay={i * 100}
+                  className="bg-linear-to-br from-blue-50 to-white p-6 rounded-3xl shadow-sm hover:shadow-md border border-blue-100 hover:border-blue-300 transition-all duration-300 hover:-translate-y-1"
+                >
                   <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 text-white">{f.icon}</div>
                   <h3 className="font-bold text-gray-900 text-base mb-2">{f.title}</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
@@ -352,10 +340,7 @@ function Beranda() {
             <button onClick={() => navigate("/login")} className="bg-white hover:bg-slate-100 active:scale-95 text-blue-700 font-semibold px-7 py-3 rounded-full text-sm transition-all">
               Start for Free
             </button>
-            <button
-              onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
-              className="border border-white/30 hover:border-blue-200 text-white px-7 py-3 rounded-full text-sm font-medium transition-all"
-            >
+            <button onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })} className="border border-white/30 hover:border-blue-200 text-white px-7 py-3 rounded-full text-sm font-medium transition-all">
               Learn More
             </button>
           </div>
