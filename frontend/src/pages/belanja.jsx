@@ -104,7 +104,6 @@ export default function Belanja() {
 
     fetchNotifications();
   }, []);
-
   const navigate = useNavigate();
 
   const fetchNotifications = async () => {
@@ -144,7 +143,7 @@ export default function Belanja() {
   const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
-const fetchGenreBooks = async (category) => {
+const fetchGenreBooks = (category) => {
   if (activeCategory === category) {
     setActiveCategory(null);
     setGenreBooks([]);
@@ -158,8 +157,7 @@ const fetchGenreBooks = async (category) => {
 
   const localGenreBooks = localBooks.filter(
     (book) =>
-      normalize(book.category) ===
-      normalize(query)
+      normalize(book.category).includes(normalize(query))
   );
 
   setGenreBooks(localGenreBooks);
@@ -260,8 +258,9 @@ const fetchGenreBooks = async (category) => {
 
 const handleSearch = async () => {
   if (!search.trim()) return;
+  setIsSearching(true);
+
   try {
-    setIsSearching(true);
       await axios.post("http://localhost:3000/api/search-history", {
         user_id: user.id,
         keyword: search,
@@ -269,8 +268,6 @@ const handleSearch = async () => {
 
       }
     );
-
-
       // FILTER LOCAL BOOKS
     const filteredLocalBooks = localBooks.filter(
         (book) =>
@@ -286,20 +283,16 @@ const handleSearch = async () => {
     setMode("search");
 
     setTimeout(() => {
-
-      genreSectionRef.current
-      ?.scrollIntoView({
+      genreSectionRef.current?.scrollIntoView({
         behavior: "smooth",
       });
-       }, 100);
-
+    }, 100);
   } catch (err) {
     console.log(err);
   } finally {
-
     setIsSearching(false);
   }
-  };
+};
 
   const categories = [
     {
@@ -690,7 +683,6 @@ const handleSearch = async () => {
             workKey={book.workKey}
             title={book.title}
             author={book.author}
-            cover={book.cover}
             isLocal={book.isLocal}
             cover_url={book.cover_url}
             price={book.price}
@@ -723,7 +715,6 @@ const handleSearch = async () => {
               workKey={book.workKey}
               title={book.title}
               author={book.author}
-              cover={book.cover}
               isLocal={book.isLocal}
               cover_url={book.cover_url}
               price={book.price}
@@ -754,7 +745,6 @@ const handleSearch = async () => {
           workKey={book.workKey}
           title={book.title}
           author={book.author}
-          cover={book.cover}
           isLocal={book.isLocal}
           cover_url={book.cover_url}
           price={book.price}
@@ -822,11 +812,9 @@ const handleSearch = async () => {
 
 /* ================= BOOK CARD ================= */
 function BookCard({
-  showNotif = () => {},
+  workKey,
   title,
   author,
-  cover,
-  workKey,
   price,
   stock,
   isLocal,
@@ -836,39 +824,25 @@ function BookCard({
   setCart,
   setIsBuyOpen,
   setSelectedBook,
-}) {
-
+  showNotif = () => {},
+}){
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
-  
+
   const getImageSrc = () => {
-    // LOCAL BOOK
-    if (isLocal) {
-      if (!cover_url) return "/no-image.png";
+    if (!isLocal) return "/no-image.png";
+    if (!cover_url) return "/no-image.png";
+    if (cover_url.startsWith("http")) return cover_url;
 
-      if (cover_url.startsWith("http")) {
-        return cover_url;
-      }
-
-      return `http://localhost:3000/uploads/${cover_url}`;
-    }
-
-    // API BOOK (OpenLibrary)
-    if (cover) {
-      return `https://covers.openlibrary.org/b/id/${cover}-M.jpg`;
-    }
-
-    return "/no-image.png";
+    return `http://localhost:3000/uploads/${cover_url}`;
   };
 
   const imageSrc = getImageSrc();
 
- const fetchDescription = async () => {
-  setDescription(
-    localdescription || "No description available."
-  );
-};
+  const fetchDescription = () => {
+    setDescription(localdescription || "No description available.");
+  };
 
   // ================= HANDLE BUY =================
   const handleBuy = () => {
@@ -902,7 +876,6 @@ function BookCard({
       if (!user) {
         return showNotif("Please login first");
       }
-
       const payload = {
         user_id: user.id,
         book_key: isLocal ? `local-${title}-${author}` : workKey,
@@ -1056,6 +1029,7 @@ function BookCard({
             {imageSrc ? (
             <img
               src={imageSrc}
+              
               className="w-full h-full object-cover"
               alt={title}
             />
@@ -1139,7 +1113,6 @@ function BukuTerlaris({ data, cart, setCart, setIsBuyOpen, setSelectedBook, show
               workKey={book.workKey}
               title={book.title}
               author={book.author}
-              cover={book.cover}
               isLocal={book.isLocal}
               cover_url={book.cover_url}
               price={book.price}
@@ -1194,7 +1167,6 @@ function BukuTerbaru({ data, cart, setCart, setIsBuyOpen, setSelectedBook, showN
                 workKey={book.workKey}
                 title={book.title}
                 author={book.author}
-                cover={book.cover}
                 isLocal={book.isLocal}
                 cover_url={book.cover_url}
                 price={book.price}

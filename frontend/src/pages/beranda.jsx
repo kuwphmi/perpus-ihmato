@@ -3,7 +3,7 @@ import "aos/dist/aos.css";
 import { useEffect, useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi";
 import logo from "../assets/logo.png";
-import { FiDollarSign, FiUser, FiBookOpen, FiShield, FiSearch, FiArrowRight } from "react-icons/fi";
+import { FiTrendingDown, FiUser, FiBookOpen, FiShield, FiSearch, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 import banner1 from "../assets/banner1.png";
@@ -15,27 +15,29 @@ function Beranda() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState("beranda");
+  const [activeSection, setActiveSection] = useState("dashboard");
   const [isClicking, setIsClicking] = useState(false);
 
   useEffect(() => {
     AOS.init({ duration: 900, once: true, easing: "ease-out-cubic" });
+    const timeout = setTimeout(() => setIsLoading(false), 300);
+    window.scrollTo({ top: 0, behavior: "instant" });
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
     const handleActiveSection = () => {
       const scrollY = window.scrollY;
-
-      const beranda = document.getElementById("dashboard");
-      const keunggulan = document.getElementById("benefits");
+      const benefits = document.getElementById("benefits");
       const cta = document.getElementById("cta");
 
       if (isClicking) return;
 
-      if (cta && scrollY >= cta.offsetTop - 100) {
+      if (cta && scrollY >= cta.offsetTop - 120) {
         setActiveSection("cta");
-      } else if (benefits && scrollY >= benefits.offsetTop - 100) {
+      } else if (benefits && scrollY >= benefits.offsetTop - 120) {
         setActiveSection("benefits");
       } else {
         setActiveSection("dashboard");
@@ -44,7 +46,7 @@ function Beranda() {
 
     window.addEventListener("scroll", handleActiveSection);
     return () => window.removeEventListener("scroll", handleActiveSection);
-  }, []);
+  }, [isClicking]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -60,44 +62,44 @@ function Beranda() {
   }, []);
 
   const slides = [
-  {
-    img: banner1,
-    title: "Modern Library System",
-    subtitle: "Manage books more easily, quickly, and efficiently",
-    anim: "fade-right",
-  },
-  {
-    img: banner2,
-    title: "Fast & Practical Access",
-    subtitle: "All collection data in one place",
-    anim: "fade-up",
-  },
-  {
-    img: banner3,
-    title: "Digital Library",
-    subtitle: "The future solution for modern libraries",
-    anim: "fade-left",
-  },
-];
+    {
+      img: banner1,
+      title: "Modern Library Management",
+      subtitle: "Manage books, loans, and users in one polished platform.",
+      anim: "fade-right",
+    },
+    {
+      img: banner2,
+      title: "Fast & Practical Access",
+      subtitle: "Give your library staff and members a smooth digital experience.",
+      anim: "fade-up",
+    },
+    {
+      img: banner3,
+      title: "Smart Library Workflow",
+      subtitle: "Transform your library operations with intuitive tools.",
+      anim: "fade-left",
+    },
+  ];
 
   const features = [
   {
-    icon: <FiDollarSign className="text-2xl text-blue-600" />,
+    icon: <FiTrendingDown className="text-2xl text-white" />,
     title: "Cost-Effective Operations",
     desc: "Manage your library without complicated infrastructure such as servers or dedicated rooms.",
   },
   {
-    icon: <FiUser className="text-2xl text-blue-600" />,
+    icon: <FiUser className="text-2xl text-white" />,
     title: "Easy to Use",
     desc: "Designed to be simple and comfortable for everyone across multiple devices.",
   },
   {
-    icon: <FiBookOpen className="text-2xl text-blue-600" />,
+    icon: <FiBookOpen className="text-2xl text-white" />,
     title: "Complete & Diverse Collection",
     desc: "A wide variety of content is available to meet your reading needs.",
   },
   {
-    icon: <FiShield className="text-2xl text-blue-600" />,
+    icon: <FiShield className="text-2xl text-white" />,
     title: "Reliable Full Support",
     desc: "Supported by a professional team ready to assist your operations smoothly.",
   },
@@ -110,83 +112,84 @@ function Beranda() {
   { value: "99%", label: "User Satisfaction" },
 ];
 
+  useEffect(() => {
+    if (isLoading) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isLoading]);
+
   return (
     <div className="min-h-screen bg-white font-sans">
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white text-center p-4">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-14 w-14 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+            <p className="text-sm text-gray-600 font-medium">Loading BookIn...</p>
+          </div>
+        </div>
+      )}
       {/* NAVBAR */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-white shadow-md border-b border-gray-100" : "bg-transparent"}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition duration-200 ease-out ${scrolled ? "bg-white shadow-md border-b border-gray-100" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="logo" className="w-12 h-12 object-contain" />
-            <span className={`font-bold text-base tracking-tight ${scrolled ? "text-blue-700" : "text-white"}`}></span>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="BookIn logo" className="w-12 h-12 object-contain" />
+            <div>
+              <p className={`font-bold text-base tracking-tight ${scrolled ? "text-blue-700" : "text-white"}`}>BookIn</p>
+              <p className={`text-xs ${scrolled ? "text-slate-500" : "text-white/80"}`}>Smart Library</p>
+            </div>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            {["Dashboard", "Benefits", "Get Started"].map((item, i) => (
-              <a
+            {[
+              { label: "Home", id: "dashboard" },
+              { label: "Benefits", id: "benefits" },
+              { label: "Get Started", id: "cta" },
+            ].map((item, i) => (
+              <button
                 key={i}
-                href={item === "Benefits" ? "#Benefits" : item === "Start for Free" ? "#cta" : "#"}
-                onClick={(e) => {
-                  e.preventDefault();
+                type="button"
+                onClick={() => {
                   setIsClicking(true);
-
-                  if (item === "Dashboard") {
-                    document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" });
-                    setActiveSection("dashboard");
-                  }
-
-                  if (item === "Benefits") {
-                    document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" });
-                    setActiveSection("benefits");
-                  }
-
-                  if (item === "Get Started") {
-                    document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
-                    setActiveSection("cta");
-                  }
-
-                  setTimeout(() => {
-                    setIsClicking(false);
-                  }, 500);
+                  document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                  setActiveSection(item.id);
+                  setTimeout(() => setIsClicking(false), 500);
                 }}
                 className={`text-sm font-medium transition-colors ${
-                  item === "Dashboard"
-                    ? activeSection === "dashboard"
-                      ? "text-blue-600 font-semibold"
-                      : scrolled
-                        ? "text-gray-600 hover:text-blue-600"
-                        : "text-white/80 hover:text-white"
-                    : item === "benefits"
-                      ? activeSection === "Benefits"
-                        ? "text-blue-600 font-semibold"
-                        : scrolled
-                          ? "text-gray-600 hover:text-blue-600"
-                          : "text-white/80 hover:text-white"
-                      : item === "Get Started"
-                        ? activeSection === "cta"
-                          ? "text-blue-600 font-semibold"
-                          : scrolled
-                            ? "text-gray-600 hover:text-blue-600"
-                            : "text-white/80 hover:text-white"
-                        : scrolled
-                          ? "text-gray-600 hover:text-blue-600"
-                          : "text-white/80 hover:text-white"
+                  activeSection === item.id
+                    ? scrolled
+                      ? "text-blue-700 font-semibold"
+                      : "text-white font-semibold"
+                    : scrolled
+                      ? "text-gray-600 hover:text-blue-700"
+                      : "text-white/90 hover:text-white"
                 }`}
               >
-                {item}
-              </a>
+                {item.label}
+              </button>
             ))}
-            <button onClick={() => navigate("/login")} className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-medium px-5 py-2 rounded-full transition-all duration-200">
+            <button
+              onClick={() => navigate("/login")}
+              className={`${scrolled ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-blue-700 hover:bg-slate-100"} active:scale-95 text-sm font-medium px-5 py-2 rounded-full transition-all duration-200`}
+            >
               Login
             </button>
           </div>
 
           {/* Mobile */}
           <div className="md:hidden flex items-center gap-2">
-            <button onClick={() => navigate("/login")} className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-1.5 rounded-full transition-all">
+            <button
+              onClick={() => navigate("/login")}
+              className={`${scrolled ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-blue-700 hover:bg-slate-100"} text-xs font-medium px-4 py-1.5 rounded-full transition-all`}
+            >
               Login
             </button>
-            <button onClick={() => setMenuOpen(true)} className={`text-2xl ${scrolled ? "text-gray-700" : "text-white"}`}>
+            <button onClick={() => setMenuOpen(true)} className={`text-2xl ${scrolled ? "text-blue-700" : "text-white"}`}>
               <FiMenu />
             </button>
           </div>
@@ -207,29 +210,25 @@ function Beranda() {
           </div>
 
           <div className="flex flex-col gap-1 px-4 py-6">
-            {["Beranda", "benefits", "Mulai Gratis"].map((item, i) => (
-              <a
+            {[
+              { label: "Home", id: "dashboard" },
+              { label: "Benefits", id: "benefits" },
+              { label: "Get Started", id: "cta" },
+            ].map((item, i) => (
+              <button
                 key={i}
-                href={item === "Benefits" ? "#benefits" : item === "Mulai Gratis" ? "#cta" : "#"}
+                type="button"
                 onClick={() => {
                   setMenuOpen(false);
-
-                  if (item === "Dashboard") setActiveSection("dashboard");
-                  if (item === "Benefits") setActiveSection("benefits");
-                  if (item === "Mulai Gratis") setActiveSection("cta");
+                  document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                  setActiveSection(item.id);
                 }}
                 className={`px-4 py-3 rounded-lg text-sm font-medium transition ${
-                  item === "Beranda" && activeSection === "beranda"
-                    ? "text-blue-600 bg-blue-50"
-                    : item === "benefits" && activeSection === "benefits"
-                      ? "text-blue-600 bg-blue-50"
-                      : item === "Mulai Gratis" && activeSection === "cta"
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:bg-gray-50"
+                  activeSection === item.id ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                {item}
-              </a>
+                {item.label}
+              </button>
             ))}
           </div>
           <div className="px-4 mt-auto pb-8">
@@ -249,95 +248,81 @@ function Beranda() {
       </div>
 
       {/* HERO */}
-<div id="dashboard" className="relative w-full h-screen overflow-hidden">
-  <div
-    className="flex h-full transition-transform duration-700 ease-in-out"
-    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-  >
-    {slides.map((slide, i) => (
-      <div key={i} className="min-w-full relative h-full">
-        <img
-          src={slide.img}
-          className="w-full h-full object-cover"
-          alt={slide.title}
-        />
-
-        <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/60" />
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div data-aos={slide.anim}>
-            <p className="text-blue-300 text-sm font-medium tracking-widest uppercase mb-3">
-              Digital Library
-            </p>
-
-            <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
-              {slide.title}
-            </h1>
-
-            <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto">
-              {slide.subtitle}
-            </p>
-
-            <div className="flex gap-3 justify-center flex-wrap">
-              <button
-  onClick={() => navigate("/login")}
-  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all"
->
-                <FiSearch className="text-base" /> Search Books
-              </button>
-
-              <button
-                onClick={() => navigate("/login")}
-                className="flex items-center gap-2 border border-white/60 hover:bg-white/10 text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all"
-              >
-                Register Now <FiArrowRight />
-              </button>
-            </div>
-          </div>
+      <section id="dashboard" className="relative overflow-hidden min-h-screen flex items-center justify-center pt-20 md:pt-0">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img src={slides[currentSlide].img} alt="hero" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
-      </div>
-    ))}
-  </div>
 
-        {/* Indicators */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {slides.map((_, i) => (
-            <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? "w-8 bg-blue-400" : "w-2 bg-white/40"}`} />
-          ))}
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 md:px-10 text-center py-12">
+          <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
+            <img src={logo} alt="BookIn" className="w-6 h-6 md:w-8 md:h-8" />
+            <span className="uppercase tracking-[0.35em] text-xs text-white font-semibold inline-block">
+              Modern Library Platform
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 md:mb-6">
+            Build a smarter, faster library experience.
+          </h1>
+          <p className="text-xs sm:text-sm md:text-base text-white/90 leading-relaxed mb-6 md:mb-10 max-w-2xl mx-auto">
+            BookIn brings your collection, members, and loan workflow into one polished interface designed for modern libraries.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+            <button
+              onClick={() => navigate("/login")}
+              className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 hover:bg-slate-100 active:scale-95 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold transition-all"
+            >
+              Get Started
+            </button>
+            <button
+              onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-flex items-center justify-center gap-2 border border-white/40 hover:border-white hover:bg-white/10 active:scale-95 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium transition-all"
+            >
+              Explore Features
+            </button>
+          </div>
         </div>
 
         {/* Wave */}
-        <div className="absolute bottom-0 left-0 w-full z-10 hidden md:block">
+        <div className="absolute bottom-0 left-0 w-full z-20 hidden md:block">
           <svg viewBox="0 0 1440 80" className="w-full" preserveAspectRatio="none">
             <path fill="#ffffff" d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" />
           </svg>
         </div>
-        <div className="absolute bottom-0 left-0 w-full h-8 bg-white z-10 md:hidden" />
-      </div>
+        <div className="absolute bottom-0 left-0 w-full h-6 sm:h-8 bg-white z-20 md:hidden" />
+      </section>
 
       {/* STATS */}
-      <div className="bg-white py-10">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="bg-gradient-to-b from-white to-blue-50 py-20 md:py-28 px-4 md:px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">Trusted by Libraries Worldwide</h2>
+            <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">BookIn is powering modern library management across institutions of all sizes</p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {stats.map((s, i) => (
-              <div key={i} data-aos="fade-up" data-aos-delay={i * 100} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-blue-600">{s.value}</p>
-                <p className="text-sm text-gray-500 mt-1">{s.label}</p>
+              <div key={i} data-aos="fade-up" data-aos-delay={i * 100} className="group text-center">
+                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-transparent hover:border-blue-100">
+                  <p className="text-3xl sm:text-4xl md:text-5xl font-black text-blue-600 mb-3 group-hover:text-blue-700 transition-colors">{s.value}</p>
+                  <p className="text-xs sm:text-sm md:text-base text-gray-700 font-semibold">{s.label}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* FITUR */}
-     <div id="benefits" className="bg-blue-50 py-20 px-6 md:px-10">
+      {/* FEATURES */}
+      <div id="benefits" className="bg-white py-20 md:py-28 px-6 md:px-10">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12" data-aos="fade-up">
-            <p className="text-blue-600 text-sm font-semibold tracking-widest uppercase mb-2">Why BookIn?</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
-              Digitalisasi Mudah untuk <br className="hidden md:block" /> Your Library
+          <div className="text-center mb-16" data-aos="fade-up">
+            <p className="text-blue-600 text-xs sm:text-sm font-bold tracking-widest uppercase mb-3">Why BookIn?</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Easy Digitization for <br className="hidden md:block" /> Your Library
             </h2>
-            <p className="text-gray-500 mt-3 max-w-xl mx-auto text-sm leading-relaxed">We are here to simplify digital library management in a modern and efficient way.</p>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">We are here to simplify digital library management in a modern and efficient way.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-10 items-center">
@@ -345,12 +330,12 @@ function Beranda() {
               <img src={foto} alt="preview" className="w-64 md:w-80 h-80 md:h-96 object-cover rounded-3xl shadow-xl" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {features.map((f, i) => (
-                <div key={i} data-aos="fade-up" data-aos-delay={i * 100} className="bg-white p-5 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all duration-200 hover:-translate-y-1">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3">{f.icon}</div>
-                  <h3 className="font-semibold text-gray-800 text-sm mb-1.5">{f.title}</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+                <div key={i} data-aos="fade-up" data-aos-delay={i * 100} className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-3xl shadow-sm hover:shadow-md border border-blue-100 hover:border-blue-300 transition-all duration-300 hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 text-white">{f.icon}</div>
+                  <h3 className="font-bold text-gray-900 text-base mb-2">{f.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -359,32 +344,44 @@ function Beranda() {
       </div>
 
       {/* CTA */}
-      <div id="cta" className="bg-blue-700 py-16 px-6 text-center" data-aos="fade-up">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Ready to Digitize Your Library?</h2>
-        <p className="text-blue-200 text-sm mb-7 max-w-md mx-auto">Join thousands of libraries that trust BookIn.</p>
-        <div className="flex gap-3 justify-center flex-wrap">
-          <button onClick={() => navigate("/login")} className="bg-white hover:bg-blue-50 active:scale-95 text-blue-700 font-semibold px-7 py-2.5 rounded-full text-sm transition-all">
-            Start for Free
-          </button>
-          
+      <section id="cta" className="bg-blue-600 py-20 md:py-28 px-6 text-center" data-aos="fade-up">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Ready to simplify your library operations?</h2>
+          <p className="text-blue-100 text-base md:text-lg mb-10 leading-relaxed">Start using BookIn today for faster loans, better inventory control, and happier readers.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => navigate("/login")} className="bg-white hover:bg-slate-100 active:scale-95 text-blue-700 font-semibold px-7 py-3 rounded-full text-sm transition-all">
+              Start for Free
+            </button>
+            <button
+              onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
+              className="border border-white/30 hover:border-blue-200 text-white px-7 py-3 rounded-full text-sm font-medium transition-all"
+            >
+              Learn More
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* FOOTER */}
       <footer className="bg-gray-900 text-white py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="logo" className="w-7 h-7 object-contain opacity-80" />
-            <span className="font-bold text-blue-400"></span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md">
+              <img src={logo} alt="BookIn logo" className="w-6 h-6 object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">BookIn</p>
+              <p className="text-xs text-slate-400">Modern Library Platform</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 text-center">© {new Date().getFullYear()} BukuIn. All rights reserved.</p>
+          <p className="text-xs text-gray-500 text-center">© {new Date().getFullYear()} BookIn. All rights reserved.</p>
           <div className="flex gap-5 text-xs text-gray-400">
-            <a href="#" className="hover:text-white transition">
+            <button type="button" onClick={() => navigate("/privacy")} className="hover:text-white transition">
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-white transition">
+            </button>
+            <button type="button" onClick={() => navigate("/terms")} className="hover:text-white transition">
               Terms & Conditions
-            </a>
+            </button>
           </div>
         </div>
       </footer>

@@ -286,15 +286,15 @@ const submitLoanRequest = async () => {
 
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>
 
-            {book.cover ? (
-              <img
-                src={`https://covers.openlibrary.org/b/id/${book.cover}-M.jpg`}
-                alt={book.title}
-                className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-              />
-            ) : (
-              "No Cover"
-            )}
+          {book.cover ? (
+           <img
+              src={book.cover}
+              alt={book.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="text-gray-400 text-sm">No Cover</div>
+          )}
 
             {/* LOVE BUTTON */}
             <button

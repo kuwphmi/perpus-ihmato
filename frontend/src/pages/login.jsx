@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 // ─── Password Strength Helper ──────────────────────────────────────────────
@@ -351,13 +351,13 @@ function RegisterForm({ onSwitch }) {
 
             <span className="text-sm text-gray-500 leading-relaxed">
               I agree to the{" "}
-              <a href="#" className="text-blue-700 hover:underline">
+              <Link to="/terms" className="text-blue-700 hover:underline">
                 Terms & Conditions
-              </a>{" "}
+              </Link>{" "}
               and{" "}
-              <a href="#" className="text-blue-700 hover:underline">
+              <Link to="/privacy" className="text-blue-700 hover:underline">
                 Privacy Policy
-              </a>
+              </Link>
             </span>
           </label>
 
