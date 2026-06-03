@@ -6,7 +6,6 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 
-
 import supabase from "./src/config/supabase.js";
 import "./src/config/passport.js";
 
@@ -23,10 +22,7 @@ import historyRoutes from "./src/routes/historyRoutes.js";
 import favGenreRoutes from "./src/routes/favGenreRoutes.js";
 import searchHistoryRoutes from "./src/routes/searchHistoryRoutes.js";
 import recommendationRoutes from "./src/routes/recommendationRoutes.js";
-import {
-  checkDueReminders, 
-  checkLateLoans,
-} from "./src/controllers/loanController.js";
+import { checkDueReminders, checkLateLoans } from "./src/controllers/loanController.js";
 
 const app = express();
 
@@ -243,96 +239,72 @@ app.post("/api/loan-requests", async (req, res) => {
    TAMBAH CART
 ======================= */
 app.post("/api/cart", async (req, res) => {
-
   try {
-
-    const {
-      user_id,
-      title,
-      author,
-      cover,
-      price,
-      stock,
-    } = req.body;
+    const { user_id, title, author, cover, price, stock } = req.body;
 
     // ================= CEK ITEM SUDAH ADA =================
 
-  const cleanTitle = title.trim().toLowerCase();
+    const cleanTitle = title.trim().toLowerCase();
 
-const { data: existing, error: existingError } = await supabase
-  .from("cart")
-  .select("*")
-  .eq("user_id", user_id);
+    const { data: existing, error: existingError } = await supabase.from("cart").select("*").eq("user_id", user_id);
 
-if (existingError) {
-  return res.json({
-    status: false,
-    message: existingError.message,
-  });
-}
+    if (existingError) {
+      return res.json({
+        status: false,
+        message: existingError.message,
+      });
+    }
 
-const sameBook = (existing || []).find(
-  (item) =>
-    item.title?.trim().toLowerCase() === cleanTitle
-);
+    const sameBook = (existing || []).find((item) => item.title?.trim().toLowerCase() === cleanTitle);
 
-if (sameBook) {
+    if (sameBook) {
+      await supabase
+        .from("cart")
+        .update({
+          qty: (sameBook.qty || 1) + 1,
+        })
+        .eq("id", sameBook.id);
 
-  await supabase
-    .from("cart")
-    .update({
-      qty: (sameBook.qty || 1) + 1,
-    })
-    .eq("id", sameBook.id);
-
-  return res.json({
-    status: true,
-    message: "Qty updated",
-  });
-
-}
+      return res.json({
+        status: true,
+        message: "Qty updated",
+      });
+    }
 
     // ================= INSERT BARU =================
 
-    const { data, error } =
-      await supabase
-        .from("cart")
-        .insert([
-          {
-            user_id,
-            title,
-            author,
-            cover,
-            price,
-            stock,
-            qty: 1,
-          },
-        ])
-        .select();
+    const { data, error } = await supabase
+      .from("cart")
+      .insert([
+        {
+          user_id,
+          title,
+          author,
+          cover,
+          price,
+          stock,
+          qty: 1,
+        },
+      ])
+      .select();
 
     if (error) {
-
       return res.json({
         status: false,
         message: error.message,
       });
-
     }
 
     return res.json({
       status: true,
       data: data?.[0] || null,
     });
-
   } catch (err) {
-
     return res.json({
       status: false,
       message: err.message,
     });
-
   }
-
 });
 /* =======================
    GET CART
@@ -1080,10 +1052,7 @@ app.get("/api/history/detail/:id", async (req, res) => {
 app.get("/api/loans/user/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
-  const { data, error } = await supabase
-    .from("loans")
-    .select("*")
-    .eq("user_id", user_id);
+  const { data, error } = await supabase.from("loans").select("*").eq("user_id", user_id);
 
   if (error) {
     return res.json({ status: false, message: error.message });
@@ -1098,17 +1067,20 @@ app.get("/api/loans/user/:user_id", async (req, res) => {
 checkDueReminders();
 checkLateLoans();
 
-setInterval(async () => {
+setInterval(
+  async () => {
+    await checkDueReminders();
 
-  await checkDueReminders();
-
-  await checkLateLoans();
-
-}, 1000 * 60 * 60);
+    await checkLateLoans();
+  },
+  1000 * 60 * 60,
+);
 
 /* =======================
    START SERVER
 ======================= */
-app.listen(3000, () => {
-  console.log("Server jalan di http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
