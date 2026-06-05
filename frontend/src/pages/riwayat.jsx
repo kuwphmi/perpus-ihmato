@@ -66,10 +66,8 @@ export default function Riwayat() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/notifications/${user.id}`);
-
+      const res = await fetch(`${API_BASE}/notifications/${user.id}`);
       const data = await res.json();
-
       setNotifications(data);
     } catch (err) {
       console.log(err);
@@ -260,16 +258,10 @@ export default function Riwayat() {
                   e.stopPropagation();
 
                   if (!isNotifOpen) {
-                    await fetch(`http://localhost:3000/api/notifications/read/${user.id}`, {
+                    await fetch(`${API_BASE}/notifications/read/${user.id}`, {
                       method: "PUT",
                     });
-
-                    setNotifications((prev) =>
-                      prev.map((n) => ({
-                        ...n,
-                        is_read: true,
-                      })),
-                    );
+                    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
                   }
 
                   setIsNotifOpen(!isNotifOpen);

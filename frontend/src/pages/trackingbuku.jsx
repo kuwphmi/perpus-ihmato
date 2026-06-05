@@ -12,6 +12,8 @@ import Floating from "./floating";
 export default function Trackingbuku() {
   const navigate = useNavigate();
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -60,28 +62,10 @@ export default function Trackingbuku() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      const res = await axios.get(`http://localhost:3000/api/notifications/${user.id}`);
-
-      setNotifications(res.data || []);
-
-      const unread = res.data.filter((item) => !item.is_read).length;
-
-      setUnreadCount(unread);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   const fetchCart = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-
-      const res = await axios.get(`http://localhost:3000/api/cart/${user.id}`);
-
+      const res = await axios.get(`${API_BASE}/cart/${user.id}`);
       setCart(res.data.data || []);
     } catch (err) {
       console.log(err);
@@ -91,11 +75,8 @@ export default function Trackingbuku() {
   const fetchOrders = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-
-      const res = await fetch(`http://localhost:3000/api/payment/${user.id}`);
-
+      const res = await fetch(`${API_BASE}/payment/${user.id}`);
       const data = await res.json();
-
       setOrders(data);
     } catch (err) {
       console.log(err);
@@ -154,7 +135,7 @@ export default function Trackingbuku() {
     setIsCancelling(true);
     setCancelError(null);
     try {
-      await axios.delete(`http://localhost:3000/api/payment/cancel/${id}`);
+      await axios.delete(`${API_BASE}/payment/cancel/${id}`);
 
       // Show success message
       setSuccessMessage("Order cancelled successfully!");
@@ -252,16 +233,10 @@ export default function Trackingbuku() {
                   e.stopPropagation();
 
                   if (!isNotifOpen) {
-                    await fetch(`http://localhost:3000/api/notifications/read/${user.id}`, {
+                    await fetch(`${API_BASE}/notifications/read/${user.id}`, {
                       method: "PUT",
                     });
-
-                    setNotifications((prev) =>
-                      prev.map((n) => ({
-                        ...n,
-                        is_read: true,
-                      })),
-                    );
+                    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
                   }
 
                   setIsNotifOpen(!isNotifOpen);

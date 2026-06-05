@@ -10,34 +10,26 @@ export const createTransaction = async (req, res) => {
     const { user_id, items, address_id, delivery_type } = req.body;
 
     if (!user_id || !items || items.length === 0) {
-      return res.status(400).json({
-        message: "user_id dan items wajib",
-      });
+      return res.status(400).json({ message: "user_id dan items wajib" });
     }
 
     const order_id = `ORDER-${Date.now()}`;
+    const gross_amount = items.reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
 
-    const gross_amount = items.reduce((sum, item) => {
-      return sum + item.price * (item.qty || 1);
-    }, 0);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
-const parameter = {
-  transaction_details: {
-    order_id,
-    gross_amount,
-  },
-
-  item_details: items.map((item) => ({
-    id: item.book_key,
-    price: item.price,
-    quantity: item.qty || 1,
-    name: item.title,
-  })),
-
-  callbacks: {
-    finish: "http://localhost:5173/trackingorder",
-  },
-};
+    const parameter = {
+      transaction_details: { order_id, gross_amount },
+      item_details: items.map((item) => ({
+        id: item.book_key,
+        price: item.price,
+        quantity: item.qty || 1,
+        name: item.title,
+      })),
+      callbacks: {
+        finish: `${frontendUrl}/trackingorder`,
+      },
+    };
 
     const transaction = await snap.createTransaction(parameter);
 
@@ -76,13 +68,7 @@ const parameter = {
 ========================= */
 export const midtransNotification = async (req, res) => {
   try {
-    const {
-      order_id,
-      transaction_status,
-      status_code,
-      gross_amount,
-      signature_key,
-    } = req.body;
+    const { order_id, transaction_status, status_code, gross_amount, signature_key } = req.body;
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY;
 
@@ -109,10 +95,7 @@ export const midtransNotification = async (req, res) => {
       order_status = "cancelled";
     }
 
-    const { error } = await supabase
-      .from("payments")
-      .update({ payment_status, order_status })
-      .eq("order_id", order_id);
+    const { error } = await supabase.from("payments").update({ payment_status, order_status }).eq("order_id", order_id);
 
     if (error) throw error;
 
@@ -130,11 +113,7 @@ export const getPayments = async (req, res) => {
   try {
     const { user_id } = req.params;
 
-    const { data, error } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("user_id", user_id)
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("payments").select("*").eq("user_id", user_id).order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -151,11 +130,7 @@ export const cancelOrder = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: order, error: fetchError } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data: order, error: fetchError } = await supabase.from("payments").select("*").eq("id", id).single();
 
     if (fetchError) throw fetchError;
 
@@ -169,10 +144,7 @@ export const cancelOrder = async (req, res) => {
       });
     }
 
-    const { error } = await supabase
-      .from("payments")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("payments").delete().eq("id", id);
 
     if (error) throw error;
 

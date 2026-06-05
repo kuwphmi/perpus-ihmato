@@ -91,7 +91,7 @@ function LoginForm({ onSwitch, onForgot }) {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:3000/api/login", {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/login`, {
         email,
         password,
       });
@@ -193,7 +193,7 @@ function LoginForm({ onSwitch, onForgot }) {
 
         <button
           onClick={() => {
-            window.location.href = "http://localhost:3000/api/auth/google";
+            window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
           }}
           className="flex items-center justify-center gap-2.5 h-11 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
         >
@@ -244,7 +244,7 @@ function RegisterForm({ onSwitch }) {
     }
 
     try {
-      const res = await axios.post("http://localhost:3000/api/register", {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/register`, {
         name: form.firstName + " " + form.lastName,
 
         email: form.email,
@@ -380,10 +380,9 @@ function ForgotPasswordForm({ onBack }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:3000/api/forgot-password", { email });
-      console.log(res.data); // ← tambah ini
-      // Kirim request ke API lupa password
-      await axios.post("http://localhost:3000/api/forgot-password", { email });
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/forgot-password`, { email });
+      console.log(res.data);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/forgot-password`, { email });
       setSent(true);
     } catch (error) {
       console.log(error);

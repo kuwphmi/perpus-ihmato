@@ -41,7 +41,7 @@ export default function Notifikasi() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const res = await axios.get(`http://localhost:3000/api/notifications/${user.id}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/notifications/${user.id}`);
 
       setNotifications(res.data || []);
     } catch (err) {

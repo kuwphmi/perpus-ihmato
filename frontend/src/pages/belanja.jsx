@@ -51,7 +51,7 @@ const getBookCover = (book) => {
     if (book.cover_url.startsWith("http")) {
       return book.cover_url;
     }
-    return `http://localhost:3000/uploads/${book.cover_url}`;
+    return `${import.meta.env.VITE_API_BASE_URL}/uploads/${book.cover_url}`;
   }
   return "/no-image.png";
 };
@@ -110,7 +110,7 @@ export default function Belanja() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const res = await fetch(`http://localhost:3000/api/notifications/${user.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications/${user.id}`);
 
       const data = await res.json();
 
@@ -168,7 +168,7 @@ export default function Belanja() {
   /* ================= FETCH DATA ================= */
   useEffect(() => {
     // FETCH LOCAL BOOKS
-    fetch("http://localhost:3000/api/buku/shop")
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/buku/shop`)
       .then((res) => res.json())
       .then((localData) => {
         console.log("LOCAL DATA:", localData);
@@ -201,7 +201,7 @@ export default function Belanja() {
 
         if (!user) return;
 
-        const res = await axios.get(`http://localhost:3000/api/cart/${user.id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cart/${user.id}`);
 
         setCart(res.data.data);
       } catch (err) {
@@ -252,7 +252,7 @@ export default function Belanja() {
     setIsSearching(true);
 
     try {
-      await axios.post("http://localhost:3000/api/search-history", {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/search-history`, {
         user_id: user.id,
         keyword: search,
         source: "belanja",
@@ -388,7 +388,7 @@ export default function Belanja() {
                   e.stopPropagation();
 
                   if (!isNotifOpen) {
-                    await fetch(`http://localhost:3000/api/notifications/read/${user.id}`, {
+                    await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications/read/${user.id}`, {
                       method: "PUT",
                     });
 
@@ -796,7 +796,9 @@ function BookCard({ workKey, title, author, price, stock, isLocal, cover_url, lo
     if (!cover_url) return "/no-image.png";
     if (cover_url.startsWith("http")) return cover_url;
 
-    return `http://localhost:3000/uploads/${cover_url}`;
+    // Ambil base URL tanpa /api (karena file statis di /uploads)
+    const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "");
+    return `${baseUrl}/uploads/${cover_url}`;
   };
 
   const imageSrc = getImageSrc();
@@ -843,10 +845,10 @@ function BookCard({ workKey, title, author, price, stock, isLocal, cover_url, lo
         stock,
       };
 
-      await axios.post("http://localhost:3000/api/cart", payload);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/cart`, payload);
 
       // REFRESH CART
-      const cartRes = await axios.get(`http://localhost:3000/api/cart/${user.id}`);
+      const cartRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cart/${user.id}`);
 
       setCart(cartRes.data.data || []);
 

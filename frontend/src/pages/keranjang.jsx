@@ -55,9 +55,7 @@ export default function Keranjang() {
   const fetchCart = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-
-      const res = await axios.get(`http://localhost:3000/api/cart/${user.id}`);
-
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cart/${user.id}`);
       if (res.data.status) {
         setCart(res.data.data);
       }
@@ -107,19 +105,16 @@ export default function Keranjang() {
 
   const updateQty = async (id, qty, stock) => {
     if (qty < 1) return;
-
     if (qty > stock) {
-      showNotif(`Stock hanya tersedia ${stock}`, "error");
+      showNotif(`Stock is limited ${stock}`, "error");
       return;
     }
-
     try {
-      await axios.put(`http://localhost:3000/api/cart/${id}`, { qty });
-
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/cart/${id}`, { qty });
       fetchCart();
     } catch (err) {
       console.log(err);
-      showNotif("Gagal update quantity", "error");
+      showNotif("Failed to update quantity", "error");
     }
   };
 
@@ -128,10 +123,8 @@ export default function Keranjang() {
   ========================= */
   const handleRemove = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/cart/${id}`);
-
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/cart/${id}`);
       setCart(cart.filter((item) => item.id !== id));
-
       setSelectedItems(selectedItems.filter((item) => item !== id));
     } catch (err) {
       console.log(err);

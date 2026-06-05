@@ -1,5 +1,7 @@
 const run = async () => {
-  const res = await fetch("http://localhost:3000/api/payment/create", {
+  const API_BASE = process.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
+  const res = await fetch(`${API_BASE}/payment/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -77,31 +77,21 @@ export default function CourierPage() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/admin/courier-orders");
-
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/courier-orders`);
       const data = await res.json();
-
       setOrders(data);
     } catch (err) {
       console.log(err);
     }
   };
 
-  /* ================= UPDATE STATUS ================= */
   const updateStatus = async (id, status) => {
     try {
-      await fetch(`http://localhost:3000/api/admin/orders/${id}/status`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${id}/status`, {
         method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          order_status: status,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_status: status }),
       });
-
       fetchOrders();
     } catch (err) {
       console.log(err);
@@ -128,7 +118,7 @@ export default function CourierPage() {
           top-5
           left-1/2
           -translate-x-1/2
-          z-[99999]
+          z-99999
           animate-[fadeIn_.3s_ease]
         "
         >

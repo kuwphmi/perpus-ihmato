@@ -88,16 +88,12 @@ export default function Favorit() {
 
   const submitLoanRequest = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/loan-requests", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/loan-requests`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: user.id,
           book_key: selectedBook.cover + "_" + selectedBook.title,
-
           title: selectedBook.title,
           author: selectedBook.author,
           cover: selectedBook.cover,
@@ -112,7 +108,6 @@ export default function Favorit() {
       }
 
       showNotif("Borrow request submitted");
-
       setShowBorrowPopup(false);
       setSelectedBook(null);
     } catch (err) {

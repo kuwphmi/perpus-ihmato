@@ -104,7 +104,7 @@ export default function Profil() {
 
       if (!userData?.id) return;
 
-      const res = await axios.get(`http://localhost:3000/api/address/${userData.id}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/address/${userData.id}`);
 
       setAddresses(res.data);
     } catch (err) {
@@ -135,7 +135,7 @@ export default function Profil() {
 
       formData.append("gender", user.gender);
 
-      const res = await axios.put("http://localhost:3000/api/update-profile", formData);
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/update-profile`, formData);
 
       if (res.data.status) {
         setUser(res.data.user);
@@ -169,7 +169,7 @@ export default function Profil() {
 
         return;
       }
-      const res = await axios.put("http://localhost:3000/api/update-profile", {
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/update-profile`, {
         id: user.id,
         name: user.name,
         phone: user.phone,
@@ -205,7 +205,7 @@ export default function Profil() {
 
   const setPrimaryAddress = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/address/primary/${id}`);
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/address/primary/${id}`);
 
       fetchAddresses();
     } catch (err) {

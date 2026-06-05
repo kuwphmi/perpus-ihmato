@@ -41,7 +41,7 @@ export default function Checkout() {
   const removeCartItems = async (cartItemIds) => {
     try {
       // Hapus setiap item dari cart
-      await Promise.all(cartItemIds.map((id) => axios.delete(`http://localhost:3000/api/cart/${id}`)));
+      await Promise.all(cartItemIds.map((id) => axios.delete(`${import.meta.env.VITE_API_BASE_URL}/cart/${id}`)));
       console.log("Cart items removed successfully");
     } catch (err) {
       console.log("Error removing cart items:", err);
@@ -63,7 +63,7 @@ export default function Checkout() {
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
 
-      const res = await axios.get(`http://localhost:3000/api/address/${userData.id}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/address/${userData.id}`);
 
       const data = Array.isArray(res.data) ? res.data : [];
 
@@ -86,7 +86,7 @@ export default function Checkout() {
 
       const userData = JSON.parse(localStorage.getItem("user"));
 
-      const res = await axios.post("http://localhost:3000/api/payment/create", {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/payment/create`, {
         user_id: userData.id,
         items,
         address_id: deliveryType === "delivery" ? selectedAddress.id : null,

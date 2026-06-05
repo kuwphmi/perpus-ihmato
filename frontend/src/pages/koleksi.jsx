@@ -104,7 +104,7 @@ export default function HalamanUtama() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const res = await fetch(`http://localhost:3000/api/notifications/${user.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications/${user.id}`);
       const data = await res.json();
 
       setNotifications(data);
@@ -172,7 +172,7 @@ export default function HalamanUtama() {
       // ================= SAVE SEARCH HISTORY =================
       const user = JSON.parse(localStorage.getItem("user"));
 
-      await axios.post("http://localhost:3000/api/search-history", {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/search-history`, {
         user_id: user.id,
         keyword: search,
         source: "koleksi",
@@ -210,9 +210,9 @@ export default function HalamanUtama() {
       };
 
       const [historyRes, favRes, loanRes] = await Promise.all([
-        axios.get(`http://localhost:3000/api/search-history/${userId}`),
-        axios.get(`http://localhost:3000/api/fav-genres/${userId}`),
-        axios.get(`http://localhost:3000/api/loans/user/${userId}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/search-history/${userId}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/fav-genres/${userId}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/loans/user/${userId}`),
       ]);
 
       const history = historyRes.data?.data || [];
@@ -243,7 +243,7 @@ export default function HalamanUtama() {
 
   const fetchLocalBooks = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/buku");
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/buku`);
 
       console.log("RES:", res.data);
       console.log("DATA:", res.data.data);
@@ -306,7 +306,7 @@ export default function HalamanUtama() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const res = await fetch("http://localhost:3000/api/loan-requests", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/loan-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -558,7 +558,7 @@ export default function HalamanUtama() {
                   e.stopPropagation();
 
                   if (!isNotifOpen) {
-                    await fetch(`http://localhost:3000/api/notifications/read/${user.id}`, {
+                    await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications/read/${user.id}`, {
                       method: "PUT",
                     });
 

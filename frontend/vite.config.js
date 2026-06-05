@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
+  // Arahkan Vite ke folder root untuk mencari .env
+  envDir: "../", // <--- tambahkan baris ini
+
   server: {
     headers: {
       "Content-Security-Policy": `

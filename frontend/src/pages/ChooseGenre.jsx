@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  FiArrowRight,
-  FiCheck,
-  FiBookOpen,
-  FiClock,
-  FiSearch,
-} from "react-icons/fi";
+import { FiArrowRight, FiCheck, FiBookOpen, FiClock, FiSearch } from "react-icons/fi";
 import { GiSpellBook } from "react-icons/gi";
 import { MdOutlinePalette } from "react-icons/md";
 import { LuChefHat } from "react-icons/lu";
@@ -93,49 +87,43 @@ export default function ChooseGenre() {
 
   const toggleGenre = (genre) => {
     if (selectedGenres.includes(genre)) {
-      setSelectedGenres(
-        selectedGenres.filter((g) => g !== genre)
-      );
+      setSelectedGenres(selectedGenres.filter((g) => g !== genre));
     } else {
-      setSelectedGenres([
-        ...selectedGenres,
-        genre,
-      ]);
+      setSelectedGenres([...selectedGenres, genre]);
     }
   };
 
   const handleContinue = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!user?.id) {
-      alert("User not found");
-      return;
+      if (!user?.id) {
+        alert("User not found");
+        return;
+      }
+
+      if (!Array.isArray(selectedGenres)) {
+        alert("Genres invalid");
+        return;
+      }
+
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/fav-genres`, {
+        user_id: user.id,
+        genres: selectedGenres,
+      });
+
+      navigate("/koleksi");
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+      alert("Failed save favorite genres");
     }
-
-    if (!Array.isArray(selectedGenres)) {
-      alert("Genres invalid");
-      return;
-    }
-
-    await axios.post("http://localhost:3000/api/fav-genres", {
-      user_id: user.id,
-      genres: selectedGenres, // ✅ FIX DI SINI
-    });
-
-    navigate("/koleksi");
-
-  } catch (err) {
-    console.log(err.response?.data || err.message);
-    alert("Failed save favorite genres");
-  }
-};
+  };
 
   return (
     <div
       className="
       min-h-screen
-      bg-gradient-to-br
+      bg-linear-to-br
       from-[#eef4ff]
       via-[#f8fbff]
       to-[#edf7ff]
@@ -147,10 +135,10 @@ export default function ChooseGenre() {
       <div
         className="
         absolute
-        top-[-100px]
-        right-[-100px]
-        w-[350px]
-        h-[350px]
+        -top-25
+        -right-25
+        w-87.5
+        h-87.5
         bg-blue-300/30
         rounded-full
         blur-3xl
@@ -160,10 +148,10 @@ export default function ChooseGenre() {
       <div
         className="
         absolute
-        bottom-[-120px]
-        left-[-100px]
+        -bottom-30
+        -left-25
         w-[320px]
-        h-[320px]
+        h-80
         bg-cyan-300/20
         rounded-full
         blur-3xl
@@ -228,9 +216,7 @@ export default function ChooseGenre() {
             items-end
           "
           >
-            <p className="text-sm text-gray-500 mb-2">
-              Setup Progress
-            </p>
+            <p className="text-sm text-gray-500 mb-2">Setup Progress</p>
 
             <div
               className="
@@ -245,7 +231,7 @@ export default function ChooseGenre() {
               <div
                 className="
                 h-full
-                bg-gradient-to-r
+                bg-linear-to-r
                 from-blue-500
                 to-cyan-400
                 rounded-full
@@ -253,9 +239,7 @@ export default function ChooseGenre() {
                 duration-500
               "
                 style={{
-                  width: `${(selectedGenres.length / 3) *
-                    100
-                    }%`,
+                  width: `${(selectedGenres.length / 3) * 100}%`,
                 }}
               />
             </div>
@@ -268,7 +252,7 @@ export default function ChooseGenre() {
           relative
           overflow-hidden
           rounded-[40px]
-          bg-gradient-to-br
+          bg-linear-to-br
           from-blue-600
           via-blue-500
           to-cyan-400
@@ -283,8 +267,8 @@ export default function ChooseGenre() {
           <div
             className="
             absolute
-            top-[-50px]
-            right-[-50px]
+            -top-12.5
+            -right-12.5
             w-52
             h-52
             bg-white/10
@@ -295,7 +279,7 @@ export default function ChooseGenre() {
           <div
             className="
             absolute
-            bottom-[-40px]
+            -bottom-10
             left-[30%]
             w-40
             h-40
@@ -319,7 +303,7 @@ export default function ChooseGenre() {
               mb-6
             "
             >
-               Smart Recommendation System
+              Smart Recommendation System
             </div>
 
             <h2
@@ -331,8 +315,7 @@ export default function ChooseGenre() {
               max-w-3xl
             "
             >
-              Tell us what
-              books you love.
+              Tell us what books you love.
             </h2>
 
             <p
@@ -344,11 +327,7 @@ export default function ChooseGenre() {
               leading-relaxed
             "
             >
-              Select genres you enjoy and
-              we’ll personalize your reading
-              experience with recommendations
-              tailored specifically to your
-              interests.
+              Select genres you enjoy and we’ll personalize your reading experience with recommendations tailored specifically to your interests.
             </p>
           </div>
         </div>
@@ -400,34 +379,28 @@ export default function ChooseGenre() {
         "
         >
           {genres.map((genre, i) => {
-            const isSelected =
-              selectedGenres.includes(
-                genre.name
-              );
+            const isSelected = selectedGenres.includes(genre.name);
 
             return (
               <button
                 key={i}
-                onClick={() =>
-                  toggleGenre(
-                    genre.name
-                  )
-                }
+                onClick={() => toggleGenre(genre.name)}
                 className={`
                   group
                   relative
                   overflow-hidden
-                  rounded-[32px]
+                  rounded-4xl
                   transition-all
                   duration-300
 
-                  ${isSelected
-                    ? `
+                  ${
+                    isSelected
+                      ? `
                         scale-[1.03]
                         shadow-2xl
                         ${genre.glow}
                       `
-                    : `
+                      : `
                         hover:-translate-y-2
                       `
                   }
@@ -438,7 +411,7 @@ export default function ChooseGenre() {
                   className={`
                   relative
                   h-48
-                  rounded-[32px]
+                  rounded-4xl
                   p-6
                   flex
                   flex-col
@@ -447,9 +420,10 @@ export default function ChooseGenre() {
                   duration-300
                   border
 
-                  ${isSelected
+                  ${
+                    isSelected
                       ? `
-                        bg-gradient-to-br
+                        bg-linear-to-br
                         ${genre.color}
                         border-transparent
                         text-white
@@ -461,7 +435,7 @@ export default function ChooseGenre() {
                        text-blue-600
                         hover:bg-white
                       `
-                    }
+                  }
                 `}
                 >
                   {/* BG LIGHT */}
@@ -507,10 +481,7 @@ export default function ChooseGenre() {
                     transition-all
                     duration-300
 
-                    ${isSelected
-                        ? "scale-110"
-                        : "group-hover:scale-110"
-                      }
+                    ${isSelected ? "scale-110" : "group-hover:scale-110"}
                   `}
                   >
                     {genre.icon}
@@ -532,10 +503,7 @@ export default function ChooseGenre() {
                       text-sm
                       mt-1
 
-                      ${isSelected
-                          ? "text-white/80"
-                          : "text-gray-500"
-                        }
+                      ${isSelected ? "text-white/80" : "text-gray-500"}
                     `}
                     >
                       Explore collection
@@ -551,7 +519,7 @@ export default function ChooseGenre() {
         <div
           className="
           mt-12
-          rounded-[32px]
+          rounded-4xl
           bg-white/80
           backdrop-blur-xl
           border
@@ -575,8 +543,7 @@ export default function ChooseGenre() {
               text-gray-900
             "
             >
-              {selectedGenres.length} Genres
-              Selected
+              {selectedGenres.length} Genres Selected
             </h3>
 
             <p
@@ -585,9 +552,7 @@ export default function ChooseGenre() {
               mt-1
             "
             >
-              Select at least 3 genres to
-              continue your personalized
-              journey.
+              Select at least 3 genres to continue your personalized journey.
             </p>
           </div>
 
@@ -607,15 +572,16 @@ export default function ChooseGenre() {
               duration-300
               shadow-xl
 
-              ${selectedGenres.length >= 3
-                ? `
-                    bg-gradient-to-r
+              ${
+                selectedGenres.length >= 3
+                  ? `
+                    bg-linear-to-r
                     from-blue-600
                     to-cyan-500
                     hover:scale-105
                     hover:shadow-blue-400/40
                   `
-                : `
+                  : `
                     bg-gray-300
                     cursor-not-allowed
                     shadow-none
@@ -624,7 +590,6 @@ export default function ChooseGenre() {
             `}
           >
             Continue
-
             <FiArrowRight
               className="
               text-lg

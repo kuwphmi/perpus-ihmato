@@ -65,43 +65,31 @@ export default function ChatAI() {
 
     const userMessage = input;
 
-    // tampilkan user
     setMessages((prev) => [...prev, { role: "user", text: userMessage }, { role: "bot", text: "..." }]);
-
     setInput("");
 
     try {
-      // truncate client-side to reduce token usage
       const truncated = userMessage.trim().slice(0, 600);
       const lang = detectLanguage(truncated);
 
-      const res = await fetch("http://localhost:3000/api/ai/chat", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: truncated, lang }),
       });
 
       const data = await res.json();
       const botReply = data?.message?.trim() || (lang === "id" ? "Maaf, saya tidak bisa menjawab itu." : "Sorry, I can't answer that.");
 
-      // replace loading jadi jawaban asli
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "bot",
-          text: botReply,
-        };
+        updated[updated.length - 1] = { role: "bot", text: botReply };
         return updated;
       });
     } catch (error) {
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "bot",
-          text: "Server error 😭",
-        };
+        updated[updated.length - 1] = { role: "bot", text: "Server error 😭" };
         return updated;
       });
     }
@@ -163,15 +151,13 @@ shadow-md
           </div>
 
           {/* TEXT */}
-<div className="flex-1">
-  <h1 className="font-bold text-[18px]">Liby</h1>
+          <div className="flex-1">
+            <h1 className="font-bold text-[18px]">Liby</h1>
 
-  <p className="text-[11px] font-semibold text-blue-100/80 mt-1">
-    Liby only answers library-related questions: find books, borrow,
-    history, payments, profile, orders, and recommendations.
-    Chat history is saved while you are logged in.
-  </p>
-</div>
+            <p className="text-[11px] font-semibold text-blue-100/80 mt-1">
+              Liby only answers library-related questions: find books, borrow, history, payments, profile, orders, and recommendations. Chat history is saved while you are logged in.
+            </p>
+          </div>
         </div>
       </div>
 
