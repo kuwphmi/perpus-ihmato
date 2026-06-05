@@ -26,6 +26,9 @@ import { checkDueReminders, checkLateLoans } from "./src/controllers/loanControl
 
 const app = express();
 
+const frontendUrl = process.env.FRONTEND_URL || "https://bookin.biz.id";
+app.use(cors({ origin: frontendUrl }));
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
