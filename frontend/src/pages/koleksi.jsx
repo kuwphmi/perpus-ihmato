@@ -72,8 +72,8 @@ export default function HalamanUtama() {
       icon: <FaRegHeart />,
     },
     {
-      name: "Textbook",
-      icon: <FiBook />,
+      name: "History",
+      icon: <FiClock />,
     },
     {
       name: "Children",
@@ -209,24 +209,52 @@ export default function HalamanUtama() {
         scoreMap[genre] = (scoreMap[genre] || 0) + score;
       };
 
-      const [historyRes, favRes, loanRes] = await Promise.all([
-        axios.get(`http://localhost:3000/api/search-history/${userId}`),
+      const [favRes, loanRes] = await Promise.all([
         axios.get(`http://localhost:3000/api/fav-genres/${userId}`),
         axios.get(`http://localhost:3000/api/loans/user/${userId}`),
       ]);
 
-      const history = historyRes.data?.data || [];
       const favGenres = favRes.data?.data || [];
       const loans = loanRes.data?.data || [];
+console.log("LOANS:", JSON.stringify(loans, null, 2));      // semua pinjaman
+     loans.forEach((loan) => {
+  console.log("LOAN CATEGORY:", loan.category);
+  addScore(loan.category, 5);
+});
 
-      addScore(loans[0]?.category, 5);
-      addScore(history[0]?.keyword, 3);
-      addScore(favGenres[favGenres.length - 1]?.category, 2);
+      // semua fav genre
+      favGenres.forEach((item) => {
+        addScore(item.category, 3);
+      });
 
-      const fallback = localBooks.slice(0, 8);
+      const sortedGenres = Object.entries(scoreMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([genre]) => genre.toLowerCase());
+      console.log("SCORE MAP:", scoreMap);
+      console.log("SORTED GENRES:", sortedGenres);
+      const filteredBooks = localBooks.filter((book) =>
+        sortedGenres.some((genre) =>
+          book.category?.toLowerCase().includes(genre)
+        )
+      );
 
-      setRekomendasi(fallback);
-      setPopupRekomendasi(fallback.slice(0, 1));
+      const shuffledBooks = [...filteredBooks].sort(
+        () => Math.random() - 0.5
+      );
+
+      const result =
+        shuffledBooks.length > 0
+          ? shuffledBooks.slice(0, 20)
+          : [...localBooks]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 20);
+
+      setRekomendasi(result);
+
+      setPopupRekomendasi(
+        result.length > 0 ? [result[0]] : []
+      );
+
       setShowRecommendPopup(true);
     } catch (err) {
       console.log(err);
@@ -264,8 +292,6 @@ export default function HalamanUtama() {
 
       setLocalBooks(books);
 
-      // tampilkan semua buku sebagai rekomendasi awal
-      setRekomendasi(books);
     } catch (err) {
       console.log("borrow books error:", err);
     }
@@ -298,9 +324,18 @@ export default function HalamanUtama() {
 
     if (justLoggedIn === "true") {
       setShowRecommendPopup(true);
-      localStorage.removeItem("justLoggedIn"); // biar cuma sekali
+      localStorage.removeItem("justLoggedIn");
     }
   }, []);
+
+
+  // TARUH DI SINI
+  useEffect(() => {
+    if (localBooks.length > 0 && user?.id) {
+      fetchRekomendasi(user.id);
+    }
+  }, [localBooks, user]);
+
 
   const submitLoanRequest = async () => {
     try {
@@ -316,6 +351,7 @@ export default function HalamanUtama() {
           title: selectedBook.title,
           author: selectedBook.author,
           cover: selectedBook.cover_url,
+            category: selectedBook.category,
         }),
       });
 
@@ -811,7 +847,7 @@ export default function HalamanUtama() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {(activeCategory ? genreBooks : localBooks).map((book, i) => (
+          {(activeCategory ? genreBooks : rekomendasi).slice(0, 20).map((book, i) => (
             <div key={i} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
               <div className="relative h-44 md:h-60 bg-linear-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300 z-10"></div>

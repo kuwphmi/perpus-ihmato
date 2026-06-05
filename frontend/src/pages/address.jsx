@@ -331,24 +331,20 @@ export default function Address() {
         await axios.put(
           `http://localhost:3000/api/address/primary/${id}`
         );
+        setEditId(null);
+
+        setShowForm(false);
 
         fetchAddresses();
 
-        showNotif(
-          "Main address updated"
-        );
-
-        // BALIK KE CHECKOUT
         if (
           location.search.includes(
             "from=checkout"
           )
         ) {
-
           setTimeout(() => {
             navigate(-1);
           }, 700);
-
         }
 
       } catch (err) {

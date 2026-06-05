@@ -13,16 +13,40 @@ export const saveFavGenres = async (req, res) => {
       });
     }
 
-    const payload = categories.map((category) => ({
+    // hapus duplikat
+    const uniqueCategories = [
+      ...new Set(
+        categories.map((c) => c.trim())
+      ),
+    ];
+
+    // maksimal 3 genre
+    if (uniqueCategories.length > 3) {
+      return res.status(400).json({
+        status: false,
+        message: "Maximum 3 favorite genres",
+      });
+    }
+
+    // hapus genre lama user
+    const { error: deleteError } = await supabase
+      .from("fav_genres")
+      .delete()
+      .eq("user_id", user_id);
+
+    if (deleteError) throw deleteError;
+
+    // simpan genre baru
+    const payload = uniqueCategories.map((category) => ({
       user_id,
       category,
     }));
 
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from("fav_genres")
       .insert(payload);
 
-    if (error) throw error;
+    if (insertError) throw insertError;
 
     return res.json({
       status: true,
@@ -37,41 +61,3 @@ export const saveFavGenres = async (req, res) => {
     });
   }
 };
-
-/* ================= DELETE OLD GENRES ================= */
-
-export const deleteFavGenres =
-  async (req, res) => {
-
-    const { user_id } =
-      req.params;
-
-    try {
-
-      const { error } =
-        await supabase
-          .from("fav_genres")
-          .delete()
-          .eq("user_id", user_id);
-
-      if (error)
-        throw error;
-
-      res.json({
-        status: true,
-        message:
-          "Old genres deleted",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        status: false,
-        error: err.message,
-      });
-
-    }
-
-  };
