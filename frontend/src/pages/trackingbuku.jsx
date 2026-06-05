@@ -52,19 +52,18 @@ export default function Trackingbuku() {
     fetchOrders();
     fetchNotifications();
     fetchCart();
-
     const interval = setInterval(() => {
       fetchOrders();
       fetchNotifications();
       fetchCart();
-    }, 5000);
-
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchCart = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData?.id) return;
       const res = await axios.get(`${API_BASE}/cart/${user.id}`);
       setCart(res.data.data || []);
     } catch (err) {
@@ -72,10 +71,25 @@ export default function Trackingbuku() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData?.id) return;
+      const res = await axios.get(`${API_BASE}/notifications/${userData.id}`);
+      const data = res.data.data || [];
+      setNotifications(data);
+      const unread = data.filter((n) => !n.is_read).length;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/payment/${user.id}`);
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData?.id) return;
+      const res = await fetch(`${API_BASE}/payment/${userData.id}`);
       const data = await res.json();
       setOrders(data);
     } catch (err) {
@@ -1081,19 +1095,7 @@ bg-yellow-100
             <p className="text-center text-sm text-gray-500 mt-1">Pickup Order Confirmation</p>
 
             {/* COVER */}
-            <img
-              src={`https://covers.openlibrary.org/b/id/${pickupOrder.cover}-L.jpg`}
-              alt={pickupOrder.title}
-              className="
-          w-36
-          h-52
-          object-cover
-          rounded-lg
-          mx-auto
-          mt-6
-          shadow-lg
-        "
-            />
+            <img src={pickupOrder.cover} alt={pickupOrder.title} />
 
             {/* BOOK TITLE */}
             <h3 className="text-xl font-bold text-center mt-4 text-gray-800">{pickupOrder.title}</h3>
