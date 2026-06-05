@@ -1,54 +1,52 @@
 import supabase from "../config/supabase.js";
 
-export const createLoanRequest = async (
-  req,
-  res
-) => {
-
+export const createLoanRequest = async (req, res) => {
   try {
-
     const {
       user_id,
       title,
       author,
       cover,
       book_key,
+      category,
     } = req.body;
 
     // cek pinjaman aktif
-    const {
-      data: existingLoans,
-      error: checkError,
-    } = await supabase
+    const { data: existingLoans, error: checkError } = await supabase
       .from("loan_requests")
       .select("*")
       .eq("user_id", user_id)
-      .in("status", [
-        "pending",
-        "approved",
-      ]);
+      .in("status", ["pending", "approved"]);
 
-    if (checkError)
-      throw checkError;
+    if (checkError) throw checkError;
 
-    // maksimal 2 buku
-    if (
-      existingLoans.length >= 2
-    ) {
-
+    // limit 2 buku
+    if (existingLoans.length >= 2) {
       return res.json({
         status: false,
-        message:
-          "Borrow limit reached",
+        message: "Borrow limit reached",
       });
-
     }
 
-    // insert request
-    const {
-      data,
-      error,
-    } = await supabase
+    // cek buku yang sama
+    const { data: sameBook } = await supabase
+      .from("loan_requests")
+      .select("*")
+      .eq("user_id", user_id)
+      .eq("book_key", book_key)
+      .in("status", ["pending", "approved", "borrowed"]);
+
+    if (sameBookError) throw sameBookError;
+
+    if (sameBook.length > 0) {
+      return res.json({
+        status: false,
+        message: "You already requested this book",
+      });
+    }
+
+    // ✅ INSERT REQUEST (ini yang hilang di flow kamu)
+    const { data, error } = await supabase
       .from("loan_requests")
       .insert([
         {
@@ -57,36 +55,29 @@ export const createLoanRequest = async (
           author,
           cover,
           book_key,
-          status:
-            "pending",
+          category,
+          status: "pending",
         },
       ])
       .select();
 
-    if (error)
-      throw error;
+    if (error) throw error;
 
-    res.json({
+    return res.json({
       status: true,
-      message:
-        "Borrow request submitted",
+      message: "Borrow request submitted",
       data,
     });
 
   } catch (error) {
-
     console.log(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
-      message:
-        error.message,
+      message: error.message,
     });
-
   }
-
 };
-
 export const approveLoan = async (
   req,
   res
@@ -150,32 +141,16 @@ export const approveLoan = async (
       .from("loans")
       .insert([
         {
-          user_id:
-            requestData.user_id,
-
-          title:
-            requestData.title,
-
-          author:
-            requestData.author,
-
-          cover:
-            requestData.cover,
-
-          book_key:
-            requestData.book_key,
-
-          loan_date:
-            new Date(),
-
-          due_date:
-            dueDate,
-
-          status:
-            "borrowed",
-
-          receipt_code:
-            receiptCode,
+          user_id: requestData.user_id,
+          title: requestData.title,
+          author: requestData.author,
+          cover: requestData.cover,
+          book_key: requestData.book_key,
+          category: requestData.category,
+          loan_date: new Date(),
+          due_date: dueDate,
+          status: "borrowed",
+          receipt_code: receiptCode,
         },
       ])
       .select();
@@ -272,7 +247,7 @@ export const checkBorrowLimit =
     }
   };
 
-    export const checkDueReminders = async () => {
+export const checkDueReminders = async () => {
 
   try {
 
@@ -327,11 +302,11 @@ export const checkBorrowLimit =
 
 };
 
-  export const checkLateLoans = async () => {
+export const checkLateLoans = async () => {
   try {
 
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
 
     const todayStr = today.toISOString().split("T")[0];
 
@@ -345,7 +320,7 @@ export const checkBorrowLimit =
     for (const loan of loans) {
 
       const dueDate = new Date(loan.due_date);
-      dueDate.setHours(0,0,0,0);
+      dueDate.setHours(0, 0, 0, 0);
 
       if (today <= dueDate) continue;
 
@@ -381,7 +356,7 @@ export const checkBorrowLimit =
         ]);
     }
 
-  } 
+  }
   catch (err) {
     console.log(err);
   }

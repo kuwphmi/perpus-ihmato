@@ -36,7 +36,7 @@ export default function ChooseGenre() {
     },
 
     {
-      name: "Cooking",
+      name: "Recipe",
       icon: <LuChefHat />,
       color: "from-orange-500 to-amber-500",
       glow: "shadow-orange-500/30",
@@ -64,22 +64,22 @@ export default function ChooseGenre() {
     },
 
     {
-      name: "Business",
+      name: "Religion",
       icon: <FiSearch />,
       color: "from-blue-500 to-indigo-500",
       glow: "shadow-blue-500/30",
     },
 
     {
-      name: "Mystery",
-      icon: <FiSearch />,
+      name: "Biograpies",
+      icon: <FiUser />,
       color: "from-slate-600 to-slate-800",
       glow: "shadow-slate-500/30",
     },
 
     {
-      name: "Technology",
-      icon: <FiBookOpen />,
+      name: "Science Fiction",
+      icon: <FiGlobe />,
       color: "from-indigo-500 to-blue-600",
       glow: "shadow-indigo-500/30",
     },
