@@ -715,8 +715,8 @@ export default function Belanja() {
           <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">All Books</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {filterBooks(localBooks).map((book, index) => (
-              <BookCard
+{filterBooks(localBooks).slice(0, 20).map((book, index) => (
+                  <BookCard
                 key={index}
                 workKey={book.workKey}
                 title={book.title}
