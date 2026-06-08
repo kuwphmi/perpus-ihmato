@@ -294,14 +294,13 @@ export default function ManageOrder() {
         text-white
       "
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={18} />
           </button>
 
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Shop Books</h1>
 
-            <p className="text-emerald-100 mt-2">Add and manage all shop books</p>
           </div>
         </div>
       </div>
@@ -378,9 +377,13 @@ export default function ManageOrder() {
           </div>
 
           {/* DESCRIPTION */}
-          <textarea name="description" value={bookForm.description} onChange={handleChange} placeholder="Description" className="w-full border p-3 rounded-xl mt-5 h-36" />
-
-          {/* BUTTON */}
+          <textarea
+  name="description"
+  value={bookForm.description}
+  onChange={handleChange}
+  placeholder="Description"
+  className="w-full border p-3 rounded-xl mt-5 h-28 resize-none overflow-y-auto"
+/>
           <div className="flex gap-3 mt-6">
             <button onClick={isEdit ? handleUpdate : handleAdd} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold">
               {isEdit ? "Update Book" : "Submit"}
@@ -427,7 +430,16 @@ export default function ManageOrder() {
                       </p>
                     </div>
 
-                    <p className="text-gray-600 text-sm mt-4">{book.description}</p>
+                    <div
+  className="
+    text-gray-600 text-sm mt-4
+    h-20 overflow-y-auto
+    border rounded-lg p-2 bg-gray-50
+    scrollbar-hide
+  "
+>
+  {book.description}
+</div>
 
                     <div className="flex gap-3 mt-5">
                       <button onClick={() => handleEditClick(book)} className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl">

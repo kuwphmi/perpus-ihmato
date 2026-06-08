@@ -340,7 +340,7 @@ export default function HalamanUtama() {
   };
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen pt-10">
       {notif && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-9999 animate-bounce">
           <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-medium">{notif}</div>
@@ -496,23 +496,23 @@ export default function HalamanUtama() {
         </div>
       )}
 
-      {/* NAVBAR ATAS (TETAP) */}
-      <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
-        <div className="flex gap-6">
-          {[
-            { name: "Home", path: "/koleksi" },
-            { name: "History", path: "/riwayat" },
-            { name: "Shop", path: "/belanja" },
-          ].map((item, i) => (
-            <Link key={i} to={item.path} className="px-3 py-1 hover:text-blue-200">
-              {item.name}
-            </Link>
-          ))}
-        </div>
-      </div>
+      {/* NAVBAR BIRU (FIXED) */}
+<div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-[60]">
+  <div className="flex gap-6">
+    {[
+      { name: "Home", path: "/koleksi" },
+      { name: "History", path: "/riwayat" },
+      { name: "Shop", path: "/belanja" },
+    ].map((item, i) => (
+      <Link key={i} to={item.path} className="px-3 py-1 hover:text-blue-200">
+        {item.name}
+      </Link>
+    ))}
+  </div>
+</div>
 
       {/* NAVBAR */}
-      <div className="bg-white shadow sticky top-0 z-50">
+      <div className="bg-white shadow sticky top-12 z-50">
         <div className="max-w-6xl mx-auto flex items-center px-6 py-2">
           <img src={logo} className="w-12 h-12 mr-4" />
 

@@ -285,14 +285,14 @@ export default function ManageBooks() {
             text-white
           "
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={18} />
           </button>
 
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Borrow Books</h1>
 
-            <p className="text-blue-100 mt-2">Add and manage borrow books</p>
+    
           </div>
         </div>
       </div>
