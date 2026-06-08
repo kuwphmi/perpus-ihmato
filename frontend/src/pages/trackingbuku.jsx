@@ -207,7 +207,7 @@ export default function Trackingbuku() {
       )}
 
       {/* TOP NAVBAR */}
-      <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
+      <div className="hidden md:flex fixed top-0 left-0 w-full z-50 bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
         <div className="flex items-center gap-4 text-gray-100 text-sm">
           {[
             { name: "Home", path: "/koleksi" },
@@ -222,7 +222,7 @@ export default function Trackingbuku() {
       </div>
 
       {/* NAVBAR */}
-      <div className="bg-white shadow sticky top-0 z-50">
+      <div className="fixed top-12 left-0 w-full z-50 bg-white shadow">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2">
           {/* LOGO */}
           <div className="flex items-center gap-2 mr-5">
@@ -346,14 +346,8 @@ export default function Trackingbuku() {
 
       {/* HERO */}
       <section className="px-6 md:px-12 pt-10">
-        <div className="max-w-7xl mx-auto bg-linear-to-r from-blue-700 to-blue-500 rounded-4xl p-10 text-white shadow-xl relative overflow-hidden">
+        <div className="max-w-7xl mx-auto bg-white rounded-4xl p-10 text-black relative overflow-hidden">
           <div className="absolute right-0 top-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-3">Order Tracking</h1>
-
-            <p className="text-blue-100 max-w-2xl">Track your latest purchases, monitor shipping progress, and manage your bookstore orders easily.</p>
-          </div>
         </div>
       </section>
 

@@ -9,13 +9,14 @@ router.get("/dashboard", admin.getDashboard);
 /* ================= SHOP BOOKS ================= */
 router.get("/books", admin.getShopBooks);
 router.post("/books", admin.addShopBook);
+router.post("/import-books", admin.importShopBooks);
 router.put("/books/:id", admin.updateShopBook);
 router.delete("/books/:id", admin.deleteShopBook);
 
 /* ================= BORROW BOOKS ================= */
 router.get("/borrow-books", admin.getBorrowBooks);
 router.post("/borrow-books", admin.addBorrowBook);
-router.post("/import-books", admin.importBorrowBooks);
+router.post("/import-borrow-books", admin.importBorrowBooks);
 router.put("/borrow-books/:id", admin.updateBorrowBook);
 router.delete("/borrow-books/:id", admin.deleteBorrowBook);
 

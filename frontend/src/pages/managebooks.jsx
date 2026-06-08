@@ -259,7 +259,7 @@ export default function ManageBooks() {
         XLSX.utils.sheet_to_json(sheet);
 
       const res = await fetch(
-        `${API_BASE}/admin/import-books`,
+        `${API_BASE}/admin/import-borrow-books`,
         {
           method: "POST",
           headers: {
@@ -351,15 +351,13 @@ export default function ManageBooks() {
             text-white
           "
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={18} />
           </button>
 
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Borrow Books</h1>
-
             <p className="text-blue-100 mt-2">Add and manage borrow books</p>
-            
           </div>
         </div>
       </div>
@@ -367,40 +365,49 @@ export default function ManageBooks() {
       {/* CONTENT */}
       <div className="p-8">
 
-        <div className="flex justify-end gap-3 mb-6 items-center">
-
+      <div className="flex flex-wrap justify-end items-center gap-3 mb-6">
+  {/* FILE PREVIEW */}
   {excelFile && (
-    <div className="bg-white px-4 py-2 rounded-xl shadow text-sm">
-      📁 {excelFile.name}
+    <div
+      className="
+        flex items-center gap-2
+        bg-white
+        px-4 py-2
+        rounded-xl
+        shadow
+        border
+      "
+    >
+      <span className="text-sm truncate max-w-[220px]">
+        📁 {excelFile.name}
+      </span>
+
+      <button
+        onClick={() => setExcelFile(null)}
+        className="
+          text-red-500
+          hover:text-red-700
+          font-bold
+          text-lg
+        "
+      >
+        ×
+      </button>
     </div>
   )}
 
-  {excelFile && (
-    <button
-      onClick={handleImportExcel}
-      className="
-        bg-emerald-600
-        text-white
-        px-4
-        py-2
-        rounded-xl
-        hover:bg-emerald-700
-      "
-    >
-      Upload Excel
-    </button>
-  )}
-
+  {/* IMPORT BUTTON */}
   <label
     className="
       bg-white
+      border
       text-blue-600
-      px-4
-      py-2
+      px-4 py-2
       rounded-xl
       font-semibold
       cursor-pointer
       hover:bg-blue-50
+      transition
     "
   >
     📥 Import Excel
@@ -409,26 +416,46 @@ export default function ManageBooks() {
       type="file"
       accept=".xlsx,.xls,.csv"
       className="hidden"
-      onChange={(e) => setExcelFile(e.target.files[0])}
+      onChange={(e) =>
+        setExcelFile(e.target.files[0])
+      }
     />
   </label>
 
+  {/* UPLOAD BUTTON */}
+  {excelFile && (
+    <button
+      onClick={handleImportExcel}
+      className="
+        bg-emerald-600
+        text-white
+        px-4 py-2
+        rounded-xl
+        font-semibold
+        hover:bg-emerald-700
+        transition
+      "
+    >
+      ⬆ Upload
+    </button>
+  )}
+
+  {/* TEMPLATE */}
   <a
-    href="/template_books.xlsx"
+    href="/templates/template_books.xlsx"
     download
     className="
       bg-blue-600
       text-white
-      px-4
-      py-2
+      px-4 py-2
       rounded-xl
       font-semibold
       hover:bg-blue-700
+      transition
     "
   >
     📄 Download Template
   </a>
-
 </div>
     
         {/* FORM */}

@@ -299,6 +299,40 @@ export const addShopBook = async (req, res) => {
   }
 };
 
+export const importShopBooks = async (req, res) => {
+  try {
+
+    const { books } = req.body;
+
+    if (!books || books.length === 0) {
+      return res.status(400).json({
+        message: "No books found",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("books")
+      .insert(books)
+      .select();
+
+    if (error) throw error;
+
+    res.json({
+      message: `${books.length} books imported successfully`,
+      data,
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+
+  }
+};
+
 /* UPDATE SHOP BOOK */
 export const updateShopBook = async (req, res) => {
   try {

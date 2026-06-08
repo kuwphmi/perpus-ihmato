@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
@@ -8,18 +9,13 @@ export default function ManageOrder() {
   const navigate = useNavigate();
 
   const [books, setBooks] = useState([]);
-
+  const [excelFile, setExcelFile] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [previewCover, setPreviewCover] = useState("");
-
   const [isEdit, setIsEdit] = useState(false);
-
   const [selectedId, setSelectedId] = useState(null);
-
   const [notif, setNotif] = useState("");
   const [notifType, setNotifType] = useState("info");
-
   const [bookForm, setBookForm] = useState({
     title: "",
     author: "",
@@ -51,6 +47,7 @@ export default function ManageOrder() {
         return "bg-blue-500";
     }
   };
+
 
   // ================= FETCH SHOP BOOKS =================
   const fetchBooks = async () => {
@@ -245,6 +242,76 @@ export default function ManageOrder() {
     }
   };
 
+    const handleImportExcel = async () => {
+    if (!excelFile) {
+      showNotif("Please select excel file", "warning");
+      return;
+    }
+  
+    try {
+      const reader = new FileReader();
+  
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+  
+        const workbook = XLSX.read(data, {
+          type: "array",
+        });
+  
+        const sheet =
+          workbook.Sheets[
+            workbook.SheetNames[0]
+          ];
+  
+        const jsonData =
+          XLSX.utils.sheet_to_json(sheet);
+          console.log(jsonData[0]);
+  
+        const res = await fetch(
+          `${API_BASE}/admin/import-books`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              books: jsonData,
+            }),
+          }
+        );
+  
+        const result =
+          await res.json();
+  
+        if (!res.ok) {
+          throw new Error(
+            result.message
+          );
+        }
+  
+        showNotif(
+          result.message,
+          "success"
+        );
+  
+        fetchBooks();
+      };
+  
+      reader.readAsArrayBuffer(
+        excelFile
+      );
+  
+    } catch (err) {
+      console.error(err);
+  
+      showNotif(
+        "Import failed",
+        "error"
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f7ff]">
       {/* NOTIFICATION TOAST */}
@@ -294,20 +361,112 @@ export default function ManageOrder() {
         text-white
       "
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={18} />
           </button>
 
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Shop Books</h1>
 
-            <p className="text-emerald-100 mt-2">Add and manage all shop books</p>
           </div>
         </div>
       </div>
 
       {/* CONTENT */}
       <div className="p-8">
+<div className="flex flex-wrap justify-end items-center gap-3 mb-6">
+  {/* FILE PREVIEW */}
+  {excelFile && (
+    <div
+      className="
+        flex items-center gap-2
+        bg-white
+        px-4 py-2
+        rounded-xl
+        shadow
+        border
+      "
+    >
+      <span className="text-sm truncate max-w-[220px]">
+        📁 {excelFile.name}
+      </span>
+
+      <button
+        onClick={() => setExcelFile(null)}
+        className="
+          text-red-500
+          hover:text-red-700
+          font-bold
+          text-lg
+        "
+      >
+        ×
+      </button>
+    </div>
+  )}
+
+  {/* IMPORT BUTTON */}
+  <label
+    className="
+      bg-white
+      border
+      text-blue-600
+      px-4 py-2
+      rounded-xl
+      font-semibold
+      cursor-pointer
+      hover:bg-blue-50
+      transition
+    "
+  >
+    📥 Import Excel
+
+    <input
+      type="file"
+      accept=".xlsx,.xls,.csv"
+      className="hidden"
+      onChange={(e) =>
+        setExcelFile(e.target.files[0])
+      }
+    />
+  </label>
+
+  {/* UPLOAD BUTTON */}
+  {excelFile && (
+    <button
+      onClick={handleImportExcel}
+      className="
+        bg-emerald-600
+        text-white
+        px-4 py-2
+        rounded-xl
+        font-semibold
+        hover:bg-emerald-700
+        transition
+      "
+    >
+      ⬆ Upload
+    </button>
+  )}
+
+  {/* TEMPLATE */}
+ <a
+  href="/templates/template_books.xlsx"
+  download
+  className="
+    bg-emerald-600
+    text-white
+    px-4 py-2
+    rounded-xl
+    font-semibold
+    hover:bg-emerald-700
+    transition
+  "
+>
+    📄 Download Template
+  </a>
+</div>
+
         {/* FORM */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">{isEdit ? "Edit Shop Book" : "Add Shop Book"}</h2>
@@ -378,9 +537,13 @@ export default function ManageOrder() {
           </div>
 
           {/* DESCRIPTION */}
-          <textarea name="description" value={bookForm.description} onChange={handleChange} placeholder="Description" className="w-full border p-3 rounded-xl mt-5 h-36" />
-
-          {/* BUTTON */}
+          <textarea
+  name="description"
+  value={bookForm.description}
+  onChange={handleChange}
+  placeholder="Description"
+  className="w-full border p-3 rounded-xl mt-5 h-28 resize-none overflow-y-auto"
+/>
           <div className="flex gap-3 mt-6">
             <button onClick={isEdit ? handleUpdate : handleAdd} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold">
               {isEdit ? "Update Book" : "Submit"}
@@ -427,7 +590,16 @@ export default function ManageOrder() {
                       </p>
                     </div>
 
-                    <p className="text-gray-600 text-sm mt-4">{book.description}</p>
+                    <div
+  className="
+    text-gray-600 text-sm mt-4
+    h-20 overflow-y-auto
+    border rounded-lg p-2 bg-gray-50
+    scrollbar-hide
+  "
+>
+  {book.description}
+</div>
 
                     <div className="flex gap-3 mt-5">
                       <button onClick={() => handleEditClick(book)} className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl">

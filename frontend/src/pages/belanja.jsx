@@ -350,7 +350,7 @@ export default function Belanja() {
       )}
       {/* ================= NAVBAR ================= */}
 
-      <div className="hidden md:flex bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium">
+      <div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-[60]">
         <div className="flex gap-6">
           {[
             { name: "Home", path: "/koleksi" },
@@ -365,7 +365,7 @@ export default function Belanja() {
       </div>
 
       {/* ================= NAVBAR ================= */}
-      <header className="sticky top-0 z-50 bg-white shadow">
+      <header className="fixed top-12 left-0 w-full z-50 bg-white shadow">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2">
           {/* LOGO */}
           <div className="flex items-center gap-2 mr-5">
@@ -715,8 +715,8 @@ export default function Belanja() {
           <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">All Books</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {filterBooks(localBooks).map((book, index) => (
-              <BookCard
+{filterBooks(localBooks).slice(0, 20).map((book, index) => (
+                  <BookCard
                 key={index}
                 workKey={book.workKey}
                 title={book.title}
