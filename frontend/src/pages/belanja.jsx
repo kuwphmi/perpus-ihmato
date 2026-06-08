@@ -350,7 +350,7 @@ export default function Belanja() {
       )}
       {/* ================= NAVBAR ================= */}
 
-      <div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-[60]">
+      <div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-60">
         <div className="flex gap-6">
           {[
             { name: "Home", path: "/koleksi" },
@@ -715,24 +715,26 @@ export default function Belanja() {
           <h2 className="text-3xl font-bold text-blue-700 mb-10 text-center">All Books</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-{filterBooks(localBooks).slice(0, 20).map((book, index) => (
-                  <BookCard
-                key={index}
-                workKey={book.workKey}
-                title={book.title}
-                author={book.author}
-                isLocal={book.isLocal}
-                cover_url={book.cover_url}
-                price={book.price}
-                stock={book.stock}
-                localdescription={book.description}
-                cart={cart}
-                setCart={setCart}
-                setIsBuyOpen={setIsBuyOpen}
-                setSelectedBook={setSelectedBook}
-                showNotif={showNotif}
-              />
-            ))}
+            {filterBooks(localBooks)
+              .slice(0, 20)
+              .map((book, index) => (
+                <BookCard
+                  key={index}
+                  workKey={book.workKey}
+                  title={book.title}
+                  author={book.author}
+                  isLocal={book.isLocal}
+                  cover_url={book.cover_url}
+                  price={book.price}
+                  stock={book.stock}
+                  localdescription={book.description}
+                  cart={cart}
+                  setCart={setCart}
+                  setIsBuyOpen={setIsBuyOpen}
+                  setSelectedBook={setSelectedBook}
+                  showNotif={showNotif}
+                />
+              ))}
           </div>
         </section>
       )}

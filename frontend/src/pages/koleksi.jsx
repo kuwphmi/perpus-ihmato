@@ -93,14 +93,14 @@ export default function HalamanUtama() {
     },
   ];
 
-const handleDetail = (book) => {
-  setShowRecommendPopup(false); // tutup popup rekomendasi
+  const handleDetail = (book) => {
+    setShowRecommendPopup(false); // tutup popup rekomendasi
 
-  setSelectedBook(book);
-  setShowDetailPopup(true);
+    setSelectedBook(book);
+    setShowDetailPopup(true);
 
-  setBookDescription(book.description || "No description available");
-};
+    setBookDescription(book.description || "No description available");
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -200,73 +200,57 @@ const handleDetail = (book) => {
     }
   };
 
-const fetchRekomendasi = async (userId) => {
-  try {
-    if (!userId) return;
+  const fetchRekomendasi = async (userId) => {
+    try {
+      if (!userId) return;
 
-    const scoreMap = {};
+      const scoreMap = {};
 
-    const addScore = (genre, score) => {
-      if (!genre) return;
-      scoreMap[genre] = (scoreMap[genre] || 0) + score;
-    };
+      const addScore = (genre, score) => {
+        if (!genre) return;
+        scoreMap[genre] = (scoreMap[genre] || 0) + score;
+      };
 
-    const [favRes, loanRes] = await Promise.all([
-      axios.get(`${import.meta.env.VITE_API_BASE_URL}/fav-genres/${userId}`),
-      axios.get(`${import.meta.env.VITE_API_BASE_URL}/loans/user/${userId}`),
-    ]);
+      const [favRes, loanRes] = await Promise.all([axios.get(`${import.meta.env.VITE_API_BASE_URL}/fav-genres/${userId}`), axios.get(`${import.meta.env.VITE_API_BASE_URL}/loans/user/${userId}`)]);
 
-    const favGenres = favRes.data?.data || [];
-    const loans = loanRes.data?.data || [];
+      const favGenres = favRes.data?.data || [];
+      const loans = loanRes.data?.data || [];
 
-    loans.forEach((loan) => {
-      addScore(loan.category, 5);
-    });
+      loans.forEach((loan) => {
+        addScore(loan.category, 5);
+      });
 
-    favGenres.forEach((item) => {
-      addScore(item.category, 3);
-    });
+      favGenres.forEach((item) => {
+        addScore(item.category, 3);
+      });
 
-    const sortedGenres = Object.entries(scoreMap)
-      .sort((a, b) => b[1] - a[1])
-      .map(([genre]) => genre.toLowerCase());
+      const sortedGenres = Object.entries(scoreMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([genre]) => genre.toLowerCase());
 
-    const filteredBooks = localBooks.filter((book) =>
-      sortedGenres.some((genre) =>
-        book.category?.toLowerCase().includes(genre)
-      )
-    );
+      const filteredBooks = localBooks.filter((book) => sortedGenres.some((genre) => book.category?.toLowerCase().includes(genre)));
 
-    const shuffledBooks = [...filteredBooks].sort(
-      () => Math.random() - 0.5
-    );
+      const shuffledBooks = [...filteredBooks].sort(() => Math.random() - 0.5);
 
-    const result =
-      shuffledBooks.length > 0
-        ? shuffledBooks.slice(0, 20)
-        : [...localBooks]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 20);
+      const result = shuffledBooks.length > 0 ? shuffledBooks.slice(0, 20) : [...localBooks].sort(() => Math.random() - 0.5).slice(0, 20);
 
-    setRekomendasi(result);
+      setRekomendasi(result);
 
-    setPopupRekomendasi(
-      result.length > 0 ? [result[0]] : []
-    );
+      setPopupRekomendasi(result.length > 0 ? [result[0]] : []);
 
-    setShowRecommendPopup(true);
-  } catch (err) {
-    console.log(err);
-
-    if (localBooks.length > 0) {
-      const fallback = localBooks.slice(0, 8);
-
-      setRekomendasi(fallback);
-      setPopupRekomendasi(fallback.slice(0, 1));
       setShowRecommendPopup(true);
+    } catch (err) {
+      console.log(err);
+
+      if (localBooks.length > 0) {
+        const fallback = localBooks.slice(0, 8);
+
+        setRekomendasi(fallback);
+        setPopupRekomendasi(fallback.slice(0, 1));
+        setShowRecommendPopup(true);
+      }
     }
-  }
-};
+  };
 
   const fetchLocalBooks = async () => {
     try {
@@ -294,11 +278,11 @@ const fetchRekomendasi = async (userId) => {
       console.log("borrow books error:", err);
     }
   };
-useEffect(() => {
-  if (localBooks.length > 0 && user?.id) {
-    fetchRekomendasi(user.id);
-  }
-}, [localBooks, user]);
+  useEffect(() => {
+    if (localBooks.length > 0 && user?.id) {
+      fetchRekomendasi(user.id);
+    }
+  }, [localBooks, user]);
 
   const genreMap = {
     Art: "art",
@@ -381,43 +365,31 @@ useEffect(() => {
       )}
 
       {/* RECOMMEND POPUP */}
-{showRecommendPopup && rekomendasi[0] && (
-  <div className="fixed inset-0 z-9999 bg-black/40 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-2xl max-w-sm w-full text-center">
-      <h2 className="text-lg font-bold text-blue-700 mb-4">
-        Recommended For You ✨
-      </h2>
+      {showRecommendPopup && rekomendasi[0] && (
+        <div className="fixed inset-0 z-9999 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl max-w-sm w-full text-center">
+            <h2 className="text-lg font-bold text-blue-700 mb-4">Recommended For You ✨</h2>
 
-     <div
-  onClick={() => {
-    setShowRecommendPopup(false);
-    handleDetail(rekomendasi[0]);
-  }}
-  className="cursor-pointer"
->
-        <img
-          src={rekomendasi[0].cover_url}
-          className="w-full h-64 object-cover rounded-xl"
-        />
+            <div
+              onClick={() => {
+                setShowRecommendPopup(false);
+                handleDetail(rekomendasi[0]);
+              }}
+              className="cursor-pointer"
+            >
+              <img src={rekomendasi[0].cover_url} className="w-full h-64 object-cover rounded-xl" />
 
-        <h3 className="mt-3 font-semibold">
-          {rekomendasi[0].title}
-        </h3>
+              <h3 className="mt-3 font-semibold">{rekomendasi[0].title}</h3>
 
-        <p className="text-sm text-gray-500">
-          {rekomendasi[0].author}
-        </p>
-      </div>
+              <p className="text-sm text-gray-500">{rekomendasi[0].author}</p>
+            </div>
 
-      <button
-        onClick={() => setShowRecommendPopup(false)}
-        className="mt-4 text-sm text-gray-500"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
+            <button onClick={() => setShowRecommendPopup(false)} className="mt-4 text-sm text-gray-500">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* BORROW POPUP */}
       {showBorrowPopup && (
@@ -523,6 +495,7 @@ useEffect(() => {
                       isLocal: selectedBook?.isLocal,
                       firstSentence: selectedBook?.firstSentence,
                       subjects: selectedBook?.subjects,
+                      description: selectedBook?.description,
                     };
 
                     setFavorites([...favorites, newFavorite]);
@@ -548,19 +521,19 @@ useEffect(() => {
       )}
 
       {/* NAVBAR BIRU (FIXED) */}
-<div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-[60]">
-  <div className="flex gap-6">
-    {[
-      { name: "Home", path: "/koleksi" },
-      { name: "History", path: "/riwayat" },
-      { name: "Shop", path: "/belanja" },
-    ].map((item, i) => (
-      <Link key={i} to={item.path} className="px-3 py-1 hover:text-blue-200">
-        {item.name}
-      </Link>
-    ))}
-  </div>
-</div>
+      <div className="hidden md:flex fixed top-0 left-0 w-full bg-blue-600 text-white px-10 py-3 items-center justify-end text-sm font-medium z-60">
+        <div className="flex gap-6">
+          {[
+            { name: "Home", path: "/koleksi" },
+            { name: "History", path: "/riwayat" },
+            { name: "Shop", path: "/belanja" },
+          ].map((item, i) => (
+            <Link key={i} to={item.path} className="px-3 py-1 hover:text-blue-200">
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* NAVBAR */}
       <div className="bg-white shadow sticky top-12 z-50">

@@ -235,73 +235,53 @@ export default function ManageBooks() {
   };
 
   const handleImportExcel = async () => {
-  if (!excelFile) {
-    showNotif("Please select excel file", "warning");
-    return;
-  }
+    if (!excelFile) {
+      showNotif("Please select excel file", "warning");
+      return;
+    }
 
-  try {
-    const reader = new FileReader();
+    try {
+      const reader = new FileReader();
 
-    reader.onload = async (e) => {
-      const data = new Uint8Array(e.target.result);
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
 
-      const workbook = XLSX.read(data, {
-        type: "array",
-      });
+        const workbook = XLSX.read(data, {
+          type: "array",
+        });
 
-      const sheet =
-        workbook.Sheets[
-          workbook.SheetNames[0]
-        ];
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-      const jsonData =
-        XLSX.utils.sheet_to_json(sheet);
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-      const res = await fetch(
-        `${API_BASE}/admin/import-borrow-books`,
-        {
+        const res = await fetch(`${API_BASE}/admin/import-borrow-books`, {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             books: jsonData,
           }),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          throw new Error(result.message);
         }
-      );
 
-      const result =
-        await res.json();
+        showNotif(result.message, "success");
 
-      if (!res.ok) {
-        throw new Error(
-          result.message
-        );
-      }
+        fetchBooks();
+      };
 
-      showNotif(
-        result.message,
-        "success"
-      );
+      reader.readAsArrayBuffer(excelFile);
+    } catch (err) {
+      console.error(err);
 
-      fetchBooks();
-    };
-
-    reader.readAsArrayBuffer(
-      excelFile
-    );
-
-  } catch (err) {
-    console.error(err);
-
-    showNotif(
-      "Import failed",
-      "error"
-    );
-  }
-};
+      showNotif("Import failed", "error");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f4f7ff]">
@@ -364,12 +344,11 @@ export default function ManageBooks() {
 
       {/* CONTENT */}
       <div className="p-8">
-
-      <div className="flex flex-wrap justify-end items-center gap-3 mb-6">
-  {/* FILE PREVIEW */}
-  {excelFile && (
-    <div
-      className="
+        <div className="flex flex-wrap justify-end items-center gap-3 mb-6">
+          {/* FILE PREVIEW */}
+          {excelFile && (
+            <div
+              className="
         flex items-center gap-2
         bg-white
         px-4 py-2
@@ -377,28 +356,26 @@ export default function ManageBooks() {
         shadow
         border
       "
-    >
-      <span className="text-sm truncate max-w-[220px]">
-        📁 {excelFile.name}
-      </span>
+            >
+              <span className="text-sm truncate max-w-55">📁 {excelFile.name}</span>
 
-      <button
-        onClick={() => setExcelFile(null)}
-        className="
+              <button
+                onClick={() => setExcelFile(null)}
+                className="
           text-red-500
           hover:text-red-700
           font-bold
           text-lg
         "
-      >
-        ×
-      </button>
-    </div>
-  )}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
-  {/* IMPORT BUTTON */}
-  <label
-    className="
+          {/* IMPORT BUTTON */}
+          <label
+            className="
       bg-white
       border
       text-blue-600
@@ -409,24 +386,16 @@ export default function ManageBooks() {
       hover:bg-blue-50
       transition
     "
-  >
-    📥 Import Excel
+          >
+            📥 Import Excel
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => setExcelFile(e.target.files[0])} />
+          </label>
 
-    <input
-      type="file"
-      accept=".xlsx,.xls,.csv"
-      className="hidden"
-      onChange={(e) =>
-        setExcelFile(e.target.files[0])
-      }
-    />
-  </label>
-
-  {/* UPLOAD BUTTON */}
-  {excelFile && (
-    <button
-      onClick={handleImportExcel}
-      className="
+          {/* UPLOAD BUTTON */}
+          {excelFile && (
+            <button
+              onClick={handleImportExcel}
+              className="
         bg-emerald-600
         text-white
         px-4 py-2
@@ -435,16 +404,16 @@ export default function ManageBooks() {
         hover:bg-emerald-700
         transition
       "
-    >
-      ⬆ Upload
-    </button>
-  )}
+            >
+              ⬆ Upload
+            </button>
+          )}
 
-  {/* TEMPLATE */}
-  <a
-    href="/templates/template_books.xlsx"
-    download
-    className="
+          {/* TEMPLATE */}
+          <a
+            href="/templates/template_books.xlsx"
+            download
+            className="
       bg-blue-600
       text-white
       px-4 py-2
@@ -453,11 +422,11 @@ export default function ManageBooks() {
       hover:bg-blue-700
       transition
     "
-  >
-    📄 Download Template
-  </a>
-</div>
-    
+          >
+            📄 Download Template
+          </a>
+        </div>
+
         {/* FORM */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">{isEdit ? "Edit Borrow Book" : "Add Borrow Book"}</h2>
