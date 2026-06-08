@@ -15,6 +15,7 @@ router.delete("/books/:id", admin.deleteShopBook);
 /* ================= BORROW BOOKS ================= */
 router.get("/borrow-books", admin.getBorrowBooks);
 router.post("/borrow-books", admin.addBorrowBook);
+router.post("/import-books", admin.importBorrowBooks);
 router.put("/borrow-books/:id", admin.updateBorrowBook);
 router.delete("/borrow-books/:id", admin.deleteBorrowBook);
 

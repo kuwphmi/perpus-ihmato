@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 import { Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export default function ManageBooks() {
   const [books, setBooks] = useState([]);
-
+  const [excelFile, setExcelFile] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [previewCover, setPreviewCover] = useState("");
-
   const [isEdit, setIsEdit] = useState(false);
-
   const [selectedId, setSelectedId] = useState(null);
-
   const [notif, setNotif] = useState("");
   const [notifType, setNotifType] = useState("info");
 
@@ -237,6 +234,75 @@ export default function ManageBooks() {
     }
   };
 
+  const handleImportExcel = async () => {
+  if (!excelFile) {
+    showNotif("Please select excel file", "warning");
+    return;
+  }
+
+  try {
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+
+      const workbook = XLSX.read(data, {
+        type: "array",
+      });
+
+      const sheet =
+        workbook.Sheets[
+          workbook.SheetNames[0]
+        ];
+
+      const jsonData =
+        XLSX.utils.sheet_to_json(sheet);
+
+      const res = await fetch(
+        `${API_BASE}/admin/import-books`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            books: jsonData,
+          }),
+        }
+      );
+
+      const result =
+        await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          result.message
+        );
+      }
+
+      showNotif(
+        result.message,
+        "success"
+      );
+
+      fetchBooks();
+    };
+
+    reader.readAsArrayBuffer(
+      excelFile
+    );
+
+  } catch (err) {
+    console.error(err);
+
+    showNotif(
+      "Import failed",
+      "error"
+    );
+  }
+};
+
   return (
     <div className="min-h-screen bg-[#f4f7ff]">
       {/* HEADER */}
@@ -293,12 +359,78 @@ export default function ManageBooks() {
             <h1 className="text-4xl font-bold text-white">Manage Borrow Books</h1>
 
             <p className="text-blue-100 mt-2">Add and manage borrow books</p>
+            
           </div>
         </div>
       </div>
 
       {/* CONTENT */}
       <div className="p-8">
+
+        <div className="flex justify-end gap-3 mb-6 items-center">
+
+  {excelFile && (
+    <div className="bg-white px-4 py-2 rounded-xl shadow text-sm">
+      📁 {excelFile.name}
+    </div>
+  )}
+
+  {excelFile && (
+    <button
+      onClick={handleImportExcel}
+      className="
+        bg-emerald-600
+        text-white
+        px-4
+        py-2
+        rounded-xl
+        hover:bg-emerald-700
+      "
+    >
+      Upload Excel
+    </button>
+  )}
+
+  <label
+    className="
+      bg-white
+      text-blue-600
+      px-4
+      py-2
+      rounded-xl
+      font-semibold
+      cursor-pointer
+      hover:bg-blue-50
+    "
+  >
+    📥 Import Excel
+
+    <input
+      type="file"
+      accept=".xlsx,.xls,.csv"
+      className="hidden"
+      onChange={(e) => setExcelFile(e.target.files[0])}
+    />
+  </label>
+
+  <a
+    href="/template_books.xlsx"
+    download
+    className="
+      bg-blue-600
+      text-white
+      px-4
+      py-2
+      rounded-xl
+      font-semibold
+      hover:bg-blue-700
+    "
+  >
+    📄 Download Template
+  </a>
+
+</div>
+    
         {/* FORM */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">{isEdit ? "Edit Borrow Book" : "Add Borrow Book"}</h2>

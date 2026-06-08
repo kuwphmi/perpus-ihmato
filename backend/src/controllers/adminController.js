@@ -119,6 +119,40 @@ export const addBorrowBook = async (req, res) => {
   }
 };
 
+// ================= IMPORT BORROW BOOKS =================
+export const importBorrowBooks = async (req, res) => {
+  try {
+    const books = req.body.books;
+
+    if (!books || books.length === 0) {
+      return res.status(400).json({
+        message: "No books found",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("borrow_books")
+      .insert(books)
+      .select();
+
+    if (error) throw error;
+
+    res.json({
+      status: true,
+      message: `${books.length} books imported successfully`,
+      data,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
 /* ================= UPDATE BORROW BOOK ================= */
 
 export const updateBorrowBook = async (req, res) => {
