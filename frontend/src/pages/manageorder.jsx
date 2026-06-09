@@ -7,7 +7,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api
 
 export default function ManageOrder() {
   const navigate = useNavigate();
-
+  const [search, setSearch] = useState("");
   const [books, setBooks] = useState([]);
   const [excelFile, setExcelFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +27,17 @@ export default function ManageOrder() {
   });
 
   const categories = ["art", "science fiction", "fantasy", "biographies", "recipe", "romance", "textbook", "children", "medicine", "religion"];
+  const filteredBooks = books.filter((book) =>
+  [book.title, book.author, book.category]
+    .join(" ")
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
+
+const booksToDisplay =
+  search.trim() === ""
+    ? books.slice(0, 6)
+    : filteredBooks;
 
   // Toast Notification
   const showNotif = (message, type = "info") => {
@@ -451,7 +462,7 @@ export default function ManageOrder() {
 
   {/* TEMPLATE */}
  <a
-  href="/templates/template_books.xlsx"
+  href="/templates/template_books_shop.xlsx"
   download
   className="
     bg-emerald-600
@@ -560,14 +571,31 @@ export default function ManageOrder() {
         {/* BOOK LIST */}
         <div>
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Shop Books</h2>
+          <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by title or author..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="
+              w-full md:w-96
+              border
+              rounded-xl
+              px-4 py-3
+              focus:outline-none
+              focus:ring-2
+              focus:ring-emerald-500
+            "
+          />
+        </div>
 
           {loading ? (
             <p>Loading...</p>
-          ) : books.length === 0 ? (
+          ) : booksToDisplay.length === 0 ? (
             <p>No books available.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {books.map((book) => (
+              {booksToDisplay.map((book) => (
                 <div key={book.id} className="bg-white rounded-2xl overflow-hidden shadow-md">
                   <img src={book.cover} alt={book.title} className="h-60 w-full object-cover" />
 

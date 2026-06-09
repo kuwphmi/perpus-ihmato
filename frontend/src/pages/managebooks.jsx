@@ -14,6 +14,7 @@ export default function ManageBooks() {
   const [selectedId, setSelectedId] = useState(null);
   const [notif, setNotif] = useState("");
   const [notifType, setNotifType] = useState("info");
+  const [search, setSearch] = useState("");
 
   const [bookForm, setBookForm] = useState({
     title: "",
@@ -27,6 +28,17 @@ export default function ManageBooks() {
   const navigate = useNavigate();
 
   const categories = ["art", "science fiction", "fantasy", "biographies", "recipe", "romance", "textbook", "children", "medicine", "religion"];
+  const filteredBooks = books.filter((book) =>
+  [book.title, book.author, book.category]
+    .join(" ")
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
+
+  const booksToDisplay =
+    search.trim() === ""
+      ? books.slice(0, 6)
+      : filteredBooks;
 
   // Toast Notification
   const showNotif = (message, type = "info") => {
@@ -532,39 +544,103 @@ export default function ManageBooks() {
         {/* LIST */}
         <div>
           <h2 className="text-3xl font-bold mb-6">Borrow Book List</h2>
+          <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by title or author..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="
+              w-full md:w-96
+              border
+              rounded-xl
+              px-4 py-3
+              focus:outline-none
+              focus:ring-2
+              focus:ring-emerald-500
+            "
+          />
+        </div>
 
           {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {books.map((book) => (
-                <div key={book.id} className="bg-white rounded-2xl shadow-md overflow-hidden">
-                  <img src={book.cover} alt={book.title} className="h-60 w-full object-cover" />
-
-                  <div className="p-5">
-                    <h3 className="text-2xl font-bold">{book.title}</h3>
-
-                    <p className="text-gray-500">{book.author}</p>
-
-                    <p className="mt-2">Stock: {book.stock}</p>
-
-                    <div className="flex gap-3 mt-5">
-                      <button onClick={() => handleEditClick(book)} className="bg-yellow-400 text-white px-4 py-2 rounded-xl flex items-center gap-2">
-                        <Pencil size={15} />
-                        Edit
-                      </button>
-
-                      <button onClick={() => handleDelete(book.id)} className="bg-red-500 text-white px-4 py-2 rounded-xl flex items-center gap-2">
-                        <Trash2 size={15} />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <p>Loading...</p>
+      ) : booksToDisplay.length === 0 ? (
+        <div className="bg-white rounded-xl p-6 text-center text-gray-500">
+          No books found.
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {booksToDisplay.map((book) => (
+            <div
+              key={book.id}
+              className="bg-white rounded-2xl shadow-md overflow-hidden"
+            >
+              <img
+                src={book.cover}
+                alt={book.title}
+                className="h-60 w-full object-cover"
+              />
+
+              <div className="p-5">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {book.title}
+                </h3>
+
+                <p className="text-gray-500 mt-1">
+                  {book.author}
+                </p>
+
+                <div className="mt-4 text-sm text-gray-700">
+                  <p>
+                    <span className="font-semibold">
+                      Category:
+                    </span>{" "}
+                    {book.category}
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">
+                      Stock:
+                    </span>{" "}
+                    {book.stock}
+                  </p>
+                </div>
+
+                {/* DESCRIPTION */}
+                <div
+                  className="
+                    text-gray-600 text-sm mt-4
+                    h-20 overflow-y-auto
+                    border rounded-lg p-2 bg-gray-50
+                    scrollbar-hide
+                  "
+                >
+                  {book.description}
+                </div>
+
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => handleEditClick(book)}
+                    className="bg-yellow-400 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+                  >
+                    <Pencil size={15} />
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(book.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+                  >
+                    <Trash2 size={15} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      </div>
       </div>
     </div>
   );
