@@ -59,7 +59,6 @@ const booksToDisplay =
     }
   };
 
-
   // ================= FETCH SHOP BOOKS =================
   const fetchBooks = async () => {
     try {
@@ -253,73 +252,53 @@ const booksToDisplay =
     }
   };
 
-    const handleImportExcel = async () => {
+  const handleImportExcel = async () => {
     if (!excelFile) {
       showNotif("Please select excel file", "warning");
       return;
     }
-  
+
     try {
       const reader = new FileReader();
-  
+
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
-  
+
         const workbook = XLSX.read(data, {
           type: "array",
         });
-  
-        const sheet =
-          workbook.Sheets[
-            workbook.SheetNames[0]
-          ];
-  
-        const jsonData =
-          XLSX.utils.sheet_to_json(sheet);
-          console.log(jsonData[0]);
-  
-        const res = await fetch(
-          `${API_BASE}/admin/import-books`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-            body: JSON.stringify({
-              books: jsonData,
-            }),
-          }
-        );
-  
-        const result =
-          await res.json();
-  
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        console.log(jsonData[0]);
+
+        const res = await fetch(`${API_BASE}/admin/import-books`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            books: jsonData,
+          }),
+        });
+
+        const result = await res.json();
+
         if (!res.ok) {
-          throw new Error(
-            result.message
-          );
+          throw new Error(result.message);
         }
-  
-        showNotif(
-          result.message,
-          "success"
-        );
-  
+
+        showNotif(result.message, "success");
+
         fetchBooks();
       };
-  
-      reader.readAsArrayBuffer(
-        excelFile
-      );
-  
+
+      reader.readAsArrayBuffer(excelFile);
     } catch (err) {
       console.error(err);
-  
-      showNotif(
-        "Import failed",
-        "error"
-      );
+
+      showNotif("Import failed", "error");
     }
   };
 
@@ -378,18 +357,17 @@ const booksToDisplay =
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Shop Books</h1>
-
           </div>
         </div>
       </div>
 
       {/* CONTENT */}
       <div className="p-8">
-<div className="flex flex-wrap justify-end items-center gap-3 mb-6">
-  {/* FILE PREVIEW */}
-  {excelFile && (
-    <div
-      className="
+        <div className="flex flex-wrap justify-end items-center gap-3 mb-6">
+          {/* FILE PREVIEW */}
+          {excelFile && (
+            <div
+              className="
         flex items-center gap-2
         bg-white
         px-4 py-2
@@ -397,28 +375,26 @@ const booksToDisplay =
         shadow
         border
       "
-    >
-      <span className="text-sm truncate max-w-[220px]">
-        📁 {excelFile.name}
-      </span>
+            >
+              <span className="text-sm truncate max-w-55">📁 {excelFile.name}</span>
 
-      <button
-        onClick={() => setExcelFile(null)}
-        className="
+              <button
+                onClick={() => setExcelFile(null)}
+                className="
           text-red-500
           hover:text-red-700
           font-bold
           text-lg
         "
-      >
-        ×
-      </button>
-    </div>
-  )}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
-  {/* IMPORT BUTTON */}
-  <label
-    className="
+          {/* IMPORT BUTTON */}
+          <label
+            className="
       bg-white
       border
       text-blue-600
@@ -429,24 +405,16 @@ const booksToDisplay =
       hover:bg-blue-50
       transition
     "
-  >
-    📥 Import Excel
+          >
+            📥 Import Excel
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => setExcelFile(e.target.files[0])} />
+          </label>
 
-    <input
-      type="file"
-      accept=".xlsx,.xls,.csv"
-      className="hidden"
-      onChange={(e) =>
-        setExcelFile(e.target.files[0])
-      }
-    />
-  </label>
-
-  {/* UPLOAD BUTTON */}
-  {excelFile && (
-    <button
-      onClick={handleImportExcel}
-      className="
+          {/* UPLOAD BUTTON */}
+          {excelFile && (
+            <button
+              onClick={handleImportExcel}
+              className="
         bg-emerald-600
         text-white
         px-4 py-2
@@ -455,28 +423,28 @@ const booksToDisplay =
         hover:bg-emerald-700
         transition
       "
-    >
-      ⬆ Upload
-    </button>
-  )}
+            >
+              ⬆ Upload
+            </button>
+          )}
 
-  {/* TEMPLATE */}
- <a
-  href="/templates/template_books_shop.xlsx"
-  download
-  className="
-    bg-emerald-600
-    text-white
-    px-4 py-2
-    rounded-xl
-    font-semibold
-    hover:bg-emerald-700
-    transition
-  "
->
-    📄 Download Template
-  </a>
-</div>
+          {/* TEMPLATE */}
+        <a
+          href="/templates/template_books_shop.xlsx"
+          download
+          className="
+            bg-emerald-600
+            text-white
+            px-4 py-2
+            rounded-xl
+            font-semibold
+            hover:bg-emerald-700
+            transition
+          "
+          >
+            📄 Download Template
+          </a>
+        </div>
 
         {/* FORM */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
@@ -548,13 +516,7 @@ const booksToDisplay =
           </div>
 
           {/* DESCRIPTION */}
-          <textarea
-  name="description"
-  value={bookForm.description}
-  onChange={handleChange}
-  placeholder="Description"
-  className="w-full border p-3 rounded-xl mt-5 h-28 resize-none overflow-y-auto"
-/>
+          <textarea name="description" value={bookForm.description} onChange={handleChange} placeholder="Description" className="w-full border p-3 rounded-xl mt-5 h-28 resize-none overflow-y-auto" />
           <div className="flex gap-3 mt-6">
             <button onClick={isEdit ? handleUpdate : handleAdd} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold">
               {isEdit ? "Update Book" : "Submit"}
@@ -619,15 +581,15 @@ const booksToDisplay =
                     </div>
 
                     <div
-  className="
+                      className="
     text-gray-600 text-sm mt-4
     h-20 overflow-y-auto
     border rounded-lg p-2 bg-gray-50
     scrollbar-hide
   "
->
-  {book.description}
-</div>
+                    >
+                      {book.description}
+                    </div>
 
                     <div className="flex gap-3 mt-5">
                       <button onClick={() => handleEditClick(book)} className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl">
