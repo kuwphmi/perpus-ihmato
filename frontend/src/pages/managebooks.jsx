@@ -279,7 +279,8 @@ export default function ManageBooks() {
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.message);
+          showNotif(result.message, "warning");
+          return;
         }
 
         showNotif(result.message, "success");

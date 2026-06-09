@@ -29,21 +29,25 @@ export const createLoanRequest = async (req, res) => {
     }
 
     // cek buku yang sama
-    const { data: sameBook } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("user_id", user_id)
-      .eq("book_key", book_key)
-      .in("status", ["pending", "approved", "borrowed"]);
+    const {
+  data: existingRequest,
+  error: existingRequestError,
+} = await supabase
+  .from("loan_requests")
+  .select("*")
+  .eq("user_id", user_id)
+  .eq("book_key", book_key)
+  .in("status", ["pending", "approved"]);
 
-    if (sameBookError) throw sameBookError;
+if (existingRequestError) throw existingRequestError;
 
-    if (sameBook.length > 0) {
-      return res.json({
-        status: false,
-        message: "You already requested this book",
-      });
-    }
+if (existingRequest.length > 0) {
+  return res.json({
+    status: false,
+    message:
+      "You already have a borrow request for this book.",
+  });
+}
 
     // ✅ INSERT REQUEST (ini yang hilang di flow kamu)
     const { data, error } = await supabase
@@ -70,13 +74,26 @@ export const createLoanRequest = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+  console.log(error);
 
-    return res.status(500).json({
+  // Supabase duplicate key
+  if (
+    error.code === "23505" ||
+    error.message?.includes("duplicate key") ||
+    error.message?.includes("unique")
+  ) {
+    return res.json({
       status: false,
-      message: error.message,
+      message:
+        "You already have an active request for this book.",
     });
   }
+
+  return res.status(500).json({
+    status: false,
+    message: "Something went wrong. Please try again.",
+  });
+}
 };
 export const approveLoan = async (
   req,

@@ -109,9 +109,15 @@ export default function Favorit() {
       const data = await res.json();
 
       if (!data.status) {
-        showNotif(data.message);
-        return;
-      }
+  showNotif(
+    data.message ||
+    "This book is currently borrowed and cannot be borrowed again."
+  );
+
+  setShowBorrowPopup(false);
+
+  return;
+}
 
       showNotif("Borrow request submitted");
       setShowBorrowPopup(false);
