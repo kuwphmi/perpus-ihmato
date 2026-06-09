@@ -695,82 +695,241 @@ export default function AdminPerpustakaan() {
     [bookView],
   );
 
-  const getOrderSteps = (type) => {
-    if (type === "pickup") {
-      return [
-        { key: "waiting_payment", label: "Waiting Payment", icon: Clock3 },
-        { key: "processing", label: "Processing", icon: RefreshCcw },
-        { key: "ready_pickup", label: "Ready Pickup", icon: PackageCheck },
-        { key: "completed", label: "Completed", icon: CheckCircle2 },
-      ];
-    }
+const getOrderSteps = (type) => {
+  if (type === "pickup") {
     return [
-      { key: "waiting_payment", label: "Waiting Payment", icon: Clock3 },
-      { key: "processing", label: "Processing", icon: RefreshCcw },
-      { key: "shipping", label: "Shipping", icon: Truck },
-      { key: "completed", label: "Completed", icon: PackageCheck },
+      {
+        key: "waiting_payment",
+        label: "Waiting Payment",
+        desc: "Waiting for customer payment",
+        icon: Clock3,
+      },
+      {
+        key: "processing",
+        label: "Processing",
+        desc: "Order is being prepared",
+        icon: RefreshCcw,
+      },
+      {
+        key: "ready_pickup",
+        label: "Ready Pickup",
+        desc: "Ready to be collected",
+        icon: PackageCheck,
+      },
+      {
+        key: "completed",
+        label: "Completed",
+        desc: "Order finished",
+        icon: CheckCircle2,
+      },
     ];
-  };
+  }
 
-  const OrderModal = ({ order, onClose }) => {
-    const orderSteps = getOrderSteps(order.delivery_type);
-    const currentStep = orderSteps.findIndex((s) => s.key === order.order_status?.toLowerCase());
-    const nextStatus = currentStep < orderSteps.length - 1 ? orderSteps[currentStep + 1]?.key : null;
-    const isCancelled = order.order_status?.toLowerCase() === "cancelled";
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+  return [
+    {
+      key: "waiting_payment",
+      label: "Waiting Payment",
+      desc: "Waiting for payment confirmation",
+      icon: Clock3,
+    },
+    {
+      key: "processing",
+      label: "Processing",
+      desc: "Order is being processed",
+      icon: RefreshCcw,
+    },
+    {
+      key: "shipping",
+      label: "Shipping",
+      desc: "Order is on the way",
+      icon: Truck,
+    },
+    {
+      key: "completed",
+      label: "Completed",
+      desc: "Order delivered",
+      icon: PackageCheck,
+    },
+  ];
+};
+
+const OrderModal = ({ order, onClose }) => {
+  const orderSteps = getOrderSteps(order.delivery_type);
+
+  const currentIndex = orderSteps.findIndex(
+    (s) => s.key === order.order_status?.toLowerCase()
+  );
+
+  const nextStatus =
+    currentIndex < orderSteps.length - 1
+      ? orderSteps[currentIndex + 1]?.key
+      : null;
+
+  const isCancelled =
+    order.order_status?.toLowerCase() === "cancelled";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+
+        {/* HEADER */}
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div>
+            <h3 className="font-bold text-lg">Order Details</h3>
+            <p className="text-sm text-slate-500">
+              {order.order_id || `#${order.id}`}
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* BODY */}
+        <div className="px-6 py-4 space-y-4">
+
+          {/* INFO */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-400">Buyer</p>
+              <p className="font-semibold">{order.user_id || "-"}</p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-400">Book</p>
+              <p className="font-semibold">{order.title || "-"}</p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-400">Total</p>
+              <p className="font-bold text-blue-600">
+                {order.amount
+                  ? `Rp ${Number(order.amount).toLocaleString("id-ID")}`
+                  : "-"}
+              </p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-400">Date</p>
+              <p className="font-semibold">
+                {order.created_at || "-"}
+              </p>
+            </div>
+          </div>
+
+          {/* TRACKING */}
+          {!isCancelled && (
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">Order Details</h3>
-              <p className="text-sm text-slate-500">{order.order_id || `#${order.id}`}</p>
-            </div>
-            <button type="button" onClick={onClose} className="rounded-full w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-              ✕
-            </button>
-          </div>
+              <h4 className="text-xs font-bold uppercase text-slate-400 mb-3">
+                Order Tracking
+              </h4>
 
-          <div className="px-6 py-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg bg-slate-50 p-3">
-                <div className="text-xs text-slate-400 mb-1">Buyer</div>
-                <div className="font-semibold text-slate-800">{order.user_id || "-"}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50 p-3">
-                <div className="text-xs text-slate-400 mb-1">Book</div>
-                <div className="font-semibold text-slate-800">{order.title || "-"}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50 p-3">
-                <div className="text-xs text-slate-400 mb-1">Total</div>
-                <div className="font-bold text-blue-700">{order.amount ? `Rp ${Number(order.amount).toLocaleString("id-ID")}` : "-"}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50 p-3">
-                <div className="text-xs text-slate-400 mb-1">Date</div>
-                <div className="font-semibold text-slate-800">{order.created_at || "-"}</div>
+              <div className="relative">
+                <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-slate-200" />
+
+                <div className="space-y-4">
+                  {orderSteps.map((step, idx) => {
+                    const done = idx <= currentIndex;
+                    const active = idx === currentIndex;
+                    const Icon = step.icon;
+
+                    return (
+                      <div
+                        key={step.key}
+                        className="relative flex items-start gap-3 pl-10"
+                      >
+                        <div
+                          className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center border ${
+                            done
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-white text-slate-400 border-slate-300"
+                          }`}
+                        >
+                          {done ? (
+                            "✔"
+                          ) : (
+                            <Icon className="w-4 h-4" />
+                          )}
+                        </div>
+
+                        <div className={done ? "" : "opacity-40"}>
+                          <p
+                            className={`text-sm font-semibold ${
+                              active ? "text-blue-600" : "text-slate-700"
+                            }`}
+                          >
+                            {step.label}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {step.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="border-t border-slate-100 px-6 py-4 flex gap-3 flex-wrap">
-            {nextStatus && !isCancelled && (
-              <button type="button" onClick={() => updateOrderStatus(order.id, nextStatus)} className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
-                Move to: {orderSteps.find((s) => s.key === nextStatus)?.label}
-              </button>
-            )}
-            <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-              Close
+          {isCancelled && (
+            <div className="bg-rose-50 text-rose-600 p-3 rounded-lg text-sm font-medium text-center">
+              Order cancelled
+            </div>
+          )}
+        </div>
+
+        {/* FOOTER ACTION */}
+        <div className="border-t px-6 py-4 flex gap-2">
+
+          {nextStatus && !isCancelled && (
+            <button
+              onClick={() =>
+                updateOrderStatus(order.id, nextStatus)
+              }
+              className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold"
+            >
+              Next:{" "}
+              {orderSteps.find(
+                (s) => s.key === nextStatus
+              )?.label}
             </button>
-          </div>
+          )}
+
+          {!["completed", "cancelled"].includes(
+            order.order_status?.toLowerCase()
+          ) && (
+            <button
+              onClick={() =>
+                updateOrderStatus(order.id, "cancelled")
+              }
+              className="px-4 py-2 rounded-xl border text-rose-600 border-rose-200"
+            >
+              Cancel
+            </button>
+          )}
+
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl border"
+          >
+            Close
+          </button>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-900 font-sans">
       <aside className={`${sidebarOpen ? "w-64" : "w-20"} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col z-20`}>
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
-          {sidebarOpen && <span className="font-bold text-xl text-blue-600 tracking-tight">BukuIn Admin</span>}
+          {sidebarOpen && <span className="font-bold text-xl text-blue-600 tracking-tight">BookIn Admin</span>}
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors mx-auto">
             <Menu size={20} />
           </button>
@@ -963,6 +1122,13 @@ export default function AdminPerpustakaan() {
             </div>
           </div>
         </div>
+      )}
+
+         {selectedOrder && (
+        <OrderModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
       )}
     </div>
   );

@@ -78,7 +78,7 @@ export default function Belanja() {
   const [cart, setCart] = useState([]);
 
   const [user, setUser] = useState({});
-  const [currentSlide, setCurrentSlide] = useState(0);
+  
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Beranda");
   const [isBuyOpen, setIsBuyOpen] = useState(false);
@@ -140,7 +140,6 @@ export default function Belanja() {
     Religion: "religion",
   };
 
-  const banners = [banner5, banner4, banner6, banner9, banner5];
 
   /* ================= GENRE MAP ================= */
   const fetchGenreBooks = (category) => {
@@ -213,13 +212,7 @@ export default function Belanja() {
   }, []);
 
   /* ================= SLIDER ================= */
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+  
 
   /* ================= SCROLL NAVBAR ================= */
   useEffect(() => {
@@ -600,12 +593,14 @@ export default function Belanja() {
 
       {/* ================= BANNER ================= */}
       <section className="relative w-full overflow-hidden bg-[#0B5DFF]">
-        <div className="relative w-full aspect-video md:h-[90vh]">
-          {banners.map((img, index) => (
-            <img key={index} src={img} alt="" className={`absolute inset-0 w-full h-full object-fill transition-opacity duration-700 ${currentSlide === index ? "opacity-100" : "opacity-0"}`} />
-          ))}
-        </div>
-      </section>
+  <div className="relative w-full aspect-video md:h-[90vh]">
+    <img
+      src={banner9}
+      alt="Banner"
+      className="w-full h-full object-fill"
+    />
+  </div>
+</section>
 
       {/* ================= SEARCH ================= */}
       <section className="relative z-20 mt-2 md:-mt-6 px-4 md:px-20">
@@ -745,44 +740,114 @@ export default function Belanja() {
       </div>
 
       {/* FOOTER */}
-      <footer className="mt-20 bg-gray-900 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-10">
-          {/* BRAND */}
+{/* FOOTER */}
+<footer className="relative mt-20 bg-black text-white overflow-hidden">
+  {/* BACKGROUND EFFECT */}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-blue-600/10 blur-3xl rounded-full"></div>
+
+  <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-16">
+    {/* TOP */}
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* BRAND */}
+      <div>
+        <div className="flex items-center gap-4 mb-6">
+          <img
+            src={logo}
+            alt="BookIn"
+            className="w-14 h-14 rounded-2xl object-cover"
+          />
+
           <div>
-            <h2 className="text-2xl font-bold text-blue-400 mb-3">BookIn</h2>
+            <h2 className="text-3xl font-bold">
+              Book<span className="text-blue-500">In</span>
+            </h2>
 
-            <p className="text-gray-400 text-sm leading-relaxed">Discover thousands of books, explore new worlds, and enjoy a modern digital library experience.</p>
-          </div>
-
-          {/* MENU */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Navigation</h3>
-
-            <div className="flex flex-col gap-2 text-gray-400 text-sm">
-              <Link to="/koleksi" className="hover:text-white">
-                Home
-              </Link>
-
-              <Link to="/belanja" className="hover:text-white">
-                Shop
-              </Link>
-              <Link to="/trackingbuku" className="hover:text-white">
-                Orders
-              </Link>
-            </div>
-          </div>
-
-          {/* CONTACT */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">About</h3>
-
-            <p className="text-gray-400 text-sm leading-relaxed">Built for book lovers who want a simple, elegant, and interactive reading platform.</p>
+            <p className="text-sm text-gray-500">
+              Modern Digital Library & Bookstore
+            </p>
           </div>
         </div>
 
-        {/* BOTTOM */}
-        <div className="border-t border-gray-800 py-4 text-center text-sm text-gray-500">© 2026 BukuIn. All rights reserved.</div>
-      </footer>
+        <p className="text-gray-400 leading-relaxed max-w-xl">
+          Discover thousands of books, borrow educational resources,
+          and purchase your favorite titles through a seamless and
+          modern platform built for every reader.
+        </p>
+      </div>
+
+      {/* SERVICES */}
+      <div className="grid md:grid-cols-2 gap-5">
+        <div
+          className="
+            rounded-[28px]
+            border border-white/10
+            bg-white/5
+            backdrop-blur-xl
+            p-7
+            hover:bg-white/8
+            transition-all
+          "
+        >
+          <span className="text-xs uppercase tracking-[0.2em] text-blue-400">
+            Service
+          </span>
+
+          <h3 className="text-2xl font-bold mt-3">
+            Book Borrowing
+          </h3>
+
+          <p className="text-gray-400 mt-4 leading-relaxed text-sm">
+            Borrow books directly from the library collection through
+            a simple and efficient borrowing system.
+          </p>
+        </div>
+
+        <div
+          className="
+            rounded-[28px]
+            border border-white/10
+            bg-white/5
+            backdrop-blur-xl
+            p-7
+            hover:bg-white/8
+            transition-all
+          "
+        >
+          <span className="text-xs uppercase tracking-[0.2em] text-blue-400">
+            Service
+          </span>
+
+          <h3 className="text-2xl font-bold mt-3">
+            Book Purchase
+          </h3>
+
+          <p className="text-gray-400 mt-4 leading-relaxed text-sm">
+            Purchase your favorite books with secure transactions and
+            a convenient checkout experience.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* DIVIDER */}
+    <div className="mt-14 border-t border-white/10"></div>
+
+    {/* BOTTOM */}
+    <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p className="text-sm text-gray-500">
+        © 2026 BookIn. All rights reserved.
+      </p>
+
+      <div className="flex items-center gap-6 text-sm text-gray-500">
+        <span>Digital Library</span>
+        <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+        <span>Book Store</span>
+        <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+        <span>Modern Reading Experience</span>
+      </div>
+    </div>
+  </div>
+</footer>
     </div>
   );
 }
