@@ -126,6 +126,7 @@ export const importBorrowBooks = async (req, res) => {
 
     if (!books || books.length === 0) {
       return res.status(400).json({
+        status: false,
         message: "No books found",
       });
     }
@@ -145,6 +146,17 @@ export const importBorrowBooks = async (req, res) => {
 
   } catch (err) {
     console.error(err);
+
+    if (
+      err.message.includes("unique_borrow_book") ||
+      err.message.includes("duplicate key")
+    ) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Some books already exist in the borrow collection and cannot be imported.",
+      });
+    }
 
     res.status(500).json({
       status: false,
@@ -301,7 +313,6 @@ export const addShopBook = async (req, res) => {
 
 export const importShopBooks = async (req, res) => {
   try {
-
     const { books } = req.body;
 
     if (!books || books.length === 0) {
@@ -318,18 +329,27 @@ export const importShopBooks = async (req, res) => {
     if (error) throw error;
 
     res.json({
+      status: true,
       message: `${books.length} books imported successfully`,
       data,
     });
 
   } catch (err) {
-
     console.error(err);
 
+    // DETEKSI DUPLIKAT
+    if (err.message.includes("unique_book")) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Some books already exist in the database. Duplicate books cannot be imported.",
+      });
+    }
+
     res.status(500).json({
+      status: false,
       message: err.message,
     });
-
   }
 };
 
