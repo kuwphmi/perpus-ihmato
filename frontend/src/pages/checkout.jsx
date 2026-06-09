@@ -50,10 +50,7 @@ export default function Checkout() {
 
   const subtotal = items.reduce((acc, item) => acc + item.price * (item.qty || 1), 0);
 
-  const shipping = deliveryType === "pickup" ? 0 : 5000;
-  const serviceFee = 2000;
-
-  const total = subtotal + shipping + serviceFee;
+const total = subtotal;
 
   useEffect(() => {
     fetchAddress();
@@ -386,18 +383,6 @@ export default function Checkout() {
               <span>Rp {subtotal.toLocaleString("id-ID")}</span>
             </div>
 
-            <div className="flex justify-between text-gray-600">
-              <span>Shipping Fee</span>
-
-              <span>Rp {shipping.toLocaleString("id-ID")}</span>
-            </div>
-
-            <div className="flex justify-between text-gray-600">
-              <span>Service Fee</span>
-
-              <span>Rp {serviceFee.toLocaleString("id-ID")}</span>
-            </div>
-
             <div className="border-t border-blue-100 pt-5 flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">Total</span>
 
@@ -421,25 +406,22 @@ export default function Checkout() {
           </div>
 
           <div>
-  <h3 className="font-semibold text-lg mb-4">Platform</h3>
+            <h3 className="font-semibold text-lg mb-4">Navigation</h3>
 
-  <div className="space-y-3 text-sm text-gray-400">
-    <div className="flex items-center justify-between">
-      <span>Digital Library</span>
-      <span className="text-blue-400">Active</span>
-    </div>
+            <div className="flex flex-col gap-2 text-gray-400 text-sm">
+              <Link to="/koleksi" className="hover:text-white">
+                Home
+              </Link>
 
-    <div className="flex items-center justify-between">
-      <span>Book System</span>
-      <span className="text-blue-400">Modern</span>
-    </div>
+              <Link to="/belanja" className="hover:text-white">
+                Shop
+              </Link>
 
-    <div className="flex items-center justify-between">
-      <span>Service</span>
-      <span className="text-blue-400">Borrow & Buy</span>
-    </div>
-  </div>
-</div>
+              <Link to="/riwayat" className="hover:text-white">
+                History
+              </Link>
+            </div>
+          </div>
 
           <div>
             <h3 className="font-semibold text-lg mb-4">About</h3>

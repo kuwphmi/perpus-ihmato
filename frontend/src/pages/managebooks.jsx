@@ -350,7 +350,6 @@ export default function ManageBooks() {
           {/* TITLE */}
           <div>
             <h1 className="text-4xl font-bold text-white">Manage Borrow Books</h1>
-            <p className="text-blue-100 mt-2">Add and manage borrow books</p>
           </div>
         </div>
       </div>
